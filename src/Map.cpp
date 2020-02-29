@@ -45,6 +45,7 @@ bool Map::load(const std::string& filename)
 	})->get();
 	m_backgroundLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxBackgroundLayer->getTiles(), nullptr);	
 
+
 	m_viewPort.w = Game::WIDTH;
    	m_viewPort.h = Game::HEIGHT;	
     return true;
