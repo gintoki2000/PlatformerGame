@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "TileLayer.h"
 #include "Game.h"
+#include "TileSet.h"
 #include "tmxlite/Map.hpp"
 #include "tmxlite/TileLayer.hpp"
 #include "NTTiledMapAnimatedTile.h"
@@ -16,6 +17,8 @@ Map::~Map()
     delete m_frontLayer;
     delete m_mainLayer;
     delete m_backgroundLayer;
+	for(auto tileSet : m_tileSets)
+			delete tileSet;
 }
 
 bool Map::load(const std::string& filename)
@@ -26,6 +29,11 @@ bool Map::load(const std::string& filename)
         return false;
     }
 
+	for(const auto& tmxTileSet : tmxMap.getTilesets())
+	{
+			m_tileSets.push_back(new TileSet(tmxTileSet, Game::getInstance()->getRenderer()));
+	}
+
 	const int width = static_cast<int>(tmxMap.getTileCount().x);
 	const int height = static_cast<int>(tmxMap.getTileCount().y);
 	const int tileWidth = static_cast<int>(tmxMap.getTileSize().x);
@@ -35,15 +43,15 @@ bool Map::load(const std::string& filename)
     tmx::TileLayer* tmxMainLayer = (tmx::TileLayer*) std::find_if(std::begin(layers), std::end(layers), [=](const tmx::Layer::Ptr& layer)->bool{
         return layer->getName() == "main-layer";
     })->get();
-	m_mainLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxMainLayer->getTiles(), nullptr);
+	m_mainLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxMainLayer->getTiles(), m_tileSets);
 	tmx::TileLayer* tmxFrontLayer = (tmx::TileLayer*) std::find_if(std::begin(layers), std::end(layers), [=](const tmx::Layer::Ptr& layer)->bool{
-        return layer->getName() == "main-layer";
+        return layer->getName() == "front-layer";
 	})->get();
-	m_frontLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxFrontLayer->getTiles(), nullptr);	
+	m_frontLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxFrontLayer->getTiles(), m_tileSets);	
 	tmx::TileLayer* tmxBackgroundLayer = (tmx::TileLayer*) std::find_if(std::begin(layers), std::end(layers), [=](const tmx::Layer::Ptr& layer)->bool{
-        return layer->getName() == "main-layer";
+        return layer->getName() == "background-layer";
 	})->get();
-	m_backgroundLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxBackgroundLayer->getTiles(), nullptr);	
+	m_backgroundLayer = new TileLayer(width, height, tileWidth, tileHeight, tmxBackgroundLayer->getTiles(), m_tileSets);	
 
 
 	m_viewPort.w = Game::WIDTH;
@@ -56,8 +64,9 @@ void Map::tick(float dt)
 	NTTiledMapAnimatedTile::updateBaseTime();
 }
 
-void Map::paint(SDL_Renderer *renderer)
+void Map::paint()
 {
+	SDL_Renderer* renderer = Game::getInstance()->getRenderer();
 	m_backgroundLayer->draw(renderer, m_viewPort);
 	m_mainLayer->draw(renderer, m_viewPort);
 	m_frontLayer->draw(renderer, m_viewPort);

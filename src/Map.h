@@ -3,7 +3,9 @@
 #include "NTRect.h"
 #include "SDL.h"
 #include <string>
+#include <vector>
 class TileLayer;
+class TileSet;
 class Map
 {
 public:
@@ -15,14 +17,17 @@ public:
 
     void tick(float dt);
 
-    void paint(SDL_Renderer* renderer);
+    void paint();
 
 private:
     TileLayer* m_frontLayer;
     TileLayer* m_mainLayer;
     TileLayer* m_backgroundLayer;
 
+	std::vector<TileSet*> m_tileSets;
+
 	NTRect m_viewPort;
+
 };
 
 #endif // MAP_H

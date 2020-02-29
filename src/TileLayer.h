@@ -7,7 +7,7 @@ class TileLayer : public NTTiledMap
 {
 public:
     TileLayer(int width, int height, int tileWidth, int tileHeight,
-              const std::vector<tmx::TileLayer::Tile>& tiles, TileSet* tileSet);
+              const std::vector<tmx::TileLayer::Tile>& tiles, const std::vector<TileSet*>& tileSets);
 };
 
 #endif // TILELAYER_H

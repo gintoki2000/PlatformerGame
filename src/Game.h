@@ -21,6 +21,8 @@ public:
 
     bool isRunning() const { return m_isRunning; }
 
+	static Game* getInstance() {return instance; }
+
 private:
     bool m_isRunning;
     SDL_Renderer* m_renderer;
