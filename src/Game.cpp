@@ -5,7 +5,7 @@
 
 Game* Game::instance = nullptr;
 
-Game::Game() : m_isRunning(false), m_renderer(nullptr), m_window(nullptr) {}
+Game::Game() : m_isRunning(false), m_renderer(nullptr), m_window(nullptr) { instance = this; }
 
 Game::~Game()
 {
