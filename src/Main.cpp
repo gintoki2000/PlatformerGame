@@ -10,6 +10,7 @@ int main()
             {
                 game.tick(1.f / 60.f);
                 game.paint();
+				SDL_Delay(100);
             }
         }
 

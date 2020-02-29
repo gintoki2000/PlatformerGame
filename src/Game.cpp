@@ -2,6 +2,7 @@
 #include "Map.h"
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_render.h"
 
 Game* Game::instance = nullptr;
 
@@ -39,6 +40,8 @@ bool Game::init() {
     return false;
   }
 
+  SDL_RenderSetScale(m_renderer, SCALE_X, SCALE_Y);
+
   const char* filename = "asserts/test-map.tmx";
 
   if(!m_map.load(filename))
@@ -65,4 +68,5 @@ void Game::tick(float dt)
 void Game::paint()
 {
     m_map.paint();
+	SDL_RenderPresent(m_renderer);
 }

@@ -35,6 +35,8 @@ private:
 public:
     static const int WIDTH = 480;
     static const int HEIGHT = 320;
+	static const int SCALE_X = 2;
+	static const int SCALE_Y = 2;
 };
 
 #endif // GAME_H

@@ -17,7 +17,7 @@ public:
 
     bool hasTile(std::size_t id) const
     {
-        return id >= getFirstGID() && id <= getFirstGID();
+        return id >= getFirstGID() && id <= getLastGID();
     }
 
   private:

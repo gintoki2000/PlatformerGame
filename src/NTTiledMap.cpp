@@ -3,8 +3,10 @@
 #include "NTTextureRegion.h"
 #include "NTTiledMapCell.h"
 #include "NTTiledMapTile.h"
+#include "SDL_render.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 NTTiledMap::NTTiledMap(int width, int height, int tileWidth, int tileHeight)
 {
     init(width, height, tileWidth, tileHeight);
@@ -68,20 +70,18 @@ void NTTiledMap::draw(SDL_Renderer* renderer, const NTRect& viewport)
             NTTiledMapCell* cell = m_cells[x + y * m_width];
             if (cell == nullptr)
             {
-                dstrect.x += m_tileWidth;
                 continue;
             }
             NTTiledMapTile* tile = cell->getTile();
             if (tile == nullptr)
             {
-                dstrect.x += m_tileWidth;
                 continue;
             }
+			dstrect.x = x * m_tileWidth + m_positionX - viewport.x;
+			dstrect.y = y * m_tileHeight + m_positionY - viewport.y;
             const NTTextureRegion& textureRegion = tile->getTextureRegion();
             textureRegion.draw(renderer, &dstrect);
-            dstrect.x += m_tileWidth;
         }
-        dstrect.y += m_tileHeight;
     }
 }
 
