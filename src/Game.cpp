@@ -47,6 +47,7 @@ bool Game::init() {
        return false;
   }
 
+  m_isRunning = true;
   return true;
 }
 
