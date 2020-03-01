@@ -1,5 +1,6 @@
 #include "TileSet.h"
 #include "NTTileLayerTile.h"
+#include "SDL_render.h"
 #include "tmxlite/Tileset.hpp"
 #include "SDL_image.h"
 #include "NTRect.h"
@@ -39,6 +40,7 @@ TileSet::~TileSet()
 		{
 				delete tile;
 		}
+		SDL_DestroyTexture(m_texture);
 }
 
 NTTileLayerTile* TileSet::getTile(std::size_t id)
