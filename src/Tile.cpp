@@ -14,11 +14,11 @@ Tile::Tile(
 	{
             std::size_t size = tmxTile.animation.frames.size();
 			std::vector<NTTextureRegion> frames(size);
-            std::vector<Uint32> intervals;
+            std::vector<Uint32> intervals(size);
 			std::size_t index = 0;
             for(const auto& frame : tmxTile.animation.frames)
 			{
-					frames[index] = staticTiles[frame.tileID];
+					frames[index] = staticTiles[frame.tileID - 1];
 					intervals[index] = frame.duration;
 					++index;
 			}

@@ -5,9 +5,10 @@ Uint32 NTTileLayerAnimatedTile::initialTicks = 0;
 Uint32 NTTileLayerAnimatedTile::baseTicks = 0;
 
 NTTileLayerAnimatedTile::NTTileLayerAnimatedTile(const std::vector<NTTextureRegion> &frames, const std::vector<unsigned int> &intervals):
-    m_frames(frames), m_intervals(intervals)
+    m_frames(frames), m_intervals(intervals), m_animationDuration(0)
 {
-
+	for(const auto& interval : intervals)
+			m_animationDuration += interval;
 }
 
 const NTTextureRegion& NTTileLayerAnimatedTile::getTextureRegion()
@@ -16,7 +17,7 @@ const NTTextureRegion& NTTileLayerAnimatedTile::getTextureRegion()
 		 for(std::size_t i = 0; i < m_frames.size(); ++i)
 		 {
 				 Uint32 interval = m_intervals[i];
-				 if(interval <= currentTicks)
+                 if(currentTicks <= interval)
 						 return m_frames[i];
 				 currentTicks -= interval;
 		 }	
