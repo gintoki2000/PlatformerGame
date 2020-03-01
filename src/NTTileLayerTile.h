@@ -1,10 +1,10 @@
 #ifndef NT_TILED_MAP_TILE_H
 #define NT_TILED_MAP_TILE_H
 #include "NTTextureRegion.h"
-class NTTiledMapTile {
+class NTTileLayerTile {
 public:
-  NTTiledMapTile(){};
-  virtual ~NTTiledMapTile() {}
+  NTTileLayerTile(){}
+  virtual ~NTTileLayerTile() {}
 
   virtual const NTTextureRegion &getTextureRegion() = 0;
 };

@@ -1,7 +1,6 @@
 #include "TileSet.h"
-#include "NTTiledMapTile.h"
+#include "NTTileLayerTile.h"
 #include "tmxlite/Tileset.hpp"
-#include "NTTiledMapStaticTile.h"
 #include "SDL_image.h"
 #include "NTRect.h"
 #include "Tile.h"
@@ -42,7 +41,7 @@ TileSet::~TileSet()
 		}
 }
 
-NTTiledMapTile* TileSet::getTile(std::size_t id)
+NTTileLayerTile* TileSet::getTile(std::size_t id)
 {
 		if(!hasTile(id))
 				return nullptr;

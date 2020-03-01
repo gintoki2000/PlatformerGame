@@ -2,12 +2,12 @@
 #define TILELAYER_H
 #include "tmxlite/TileLayer.hpp"
 #include "TileSet.h"
-#include "NTTiledMap.h"
-class TileLayer : public NTTiledMap
+#include "NTTileLayer.h"
+class TileLayer : public NTTileLayer
 {
 public:
     TileLayer(int width, int height, int tileWidth, int tileHeight,
-              const std::vector<tmx::TileLayer::Tile>& tiles, const std::vector<TileSet*>& tileSets);
+              const tmx::TileLayer& tmxLayer, const std::vector<TileSet*>& tileSets);
 };
 
 #endif // TILELAYER_H

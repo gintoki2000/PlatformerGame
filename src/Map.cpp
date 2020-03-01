@@ -1,6 +1,6 @@
 #include "Map.h"
 #include "Game.h"
-#include "NTTiledMapAnimatedTile.h"
+#include "NTTileLayerAnimatedTile.h"
 #include "SDL_keyboard.h"
 #include "SDL_render.h"
 #include "TileLayer.h"
@@ -11,7 +11,7 @@
 Map::Map() :
     m_frontLayer(nullptr), m_mainLayer(nullptr), m_backgroundLayer(nullptr)
 {
-    NTTiledMapAnimatedTile::initBaseTime();
+    NTTileLayerAnimatedTile::initBaseTime();
 }
 
 Map::~Map()
@@ -51,7 +51,7 @@ bool Map::load(const std::string& filename)
             })
             ->get();
     m_mainLayer = new TileLayer(width, height, tileWidth, tileHeight,
-                                tmxMainLayer->getTiles(), m_tileSets);
+                                *tmxMainLayer, m_tileSets);
     tmx::TileLayer* tmxFrontLayer =
         (tmx::TileLayer*)std::find_if(
             std::begin(layers), std::end(layers),
@@ -60,7 +60,7 @@ bool Map::load(const std::string& filename)
             })
             ->get();
     m_frontLayer = new TileLayer(width, height, tileWidth, tileHeight,
-                                 tmxFrontLayer->getTiles(), m_tileSets);
+                                 *tmxFrontLayer, m_tileSets);
     tmx::TileLayer* tmxBackgroundLayer =
         (tmx::TileLayer*)std::find_if(
             std::begin(layers), std::end(layers),
@@ -70,7 +70,7 @@ bool Map::load(const std::string& filename)
             ->get();
     m_backgroundLayer =
         new TileLayer(width, height, tileWidth, tileHeight,
-                      tmxBackgroundLayer->getTiles(), m_tileSets);
+                      *tmxBackgroundLayer, m_tileSets);
 
     m_viewPort.w = Game::WIDTH;
     m_viewPort.h = Game::HEIGHT;
@@ -81,7 +81,7 @@ bool Map::load(const std::string& filename)
 
 void Map::tick(float dt)
 {
-    NTTiledMapAnimatedTile::updateBaseTime();
+    NTTileLayerAnimatedTile::updateBaseTime();
     const Uint8* keyBroadState = SDL_GetKeyboardState(nullptr);
     if (keyBroadState[SDL_SCANCODE_UP])
     {
@@ -91,6 +91,15 @@ void Map::tick(float dt)
     {
         m_viewPort.y += 16;
     }
+	if (keyBroadState[SDL_SCANCODE_LEFT])
+	{
+		m_viewPort.x -= 16;
+	}
+
+	if (keyBroadState[SDL_SCANCODE_RIGHT])
+	{
+		m_viewPort.x += 16;
+	}
 }
 void Map::paint()
 {

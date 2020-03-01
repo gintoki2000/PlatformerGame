@@ -1,6 +1,6 @@
 #ifndef MY_TILE_SET_H
 #define MY_TILE_SET_H
-#include "NTTiledMapTile.h"
+#include "NTTileLayerTile.h"
 #include "tmxlite/Tileset.hpp"
 class TileSet
 {
@@ -9,7 +9,7 @@ public:
 
     ~TileSet();
 
-    NTTiledMapTile* getTile(std::size_t id);
+    NTTileLayerTile* getTile(std::size_t id);
 
     std::size_t getFirstGID() const { return m_firstGID; }
 
@@ -21,7 +21,7 @@ public:
     }
 
   private:
-    std::vector<NTTiledMapTile*> m_tiles;
+    std::vector<NTTileLayerTile*> m_tiles;
     std::size_t m_tileCount;
     std::size_t m_firstGID;
     SDL_Texture* m_texture;

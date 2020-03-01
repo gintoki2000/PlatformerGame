@@ -8,11 +8,15 @@ project(my-game LANGUAGES CXX)
 set(SOURCE_FILES 
 	#base type 
 	src/NTTextureRegion.cpp
+        src/NTVec.cpp
+
+        src/NTLayer.cpp
 
 	#base tiled map
-	src/NTTiledMap.cpp
-	src/NTTiledMapCell.cpp
-	src/NTTiledMapAnimatedTile.cpp
+	src/NTTileLayer.cpp
+	src/NTTileLayerCell.cpp
+	src/NTTileLayerAnimatedTile.cpp
+	src/NTTileLayerStaticTile.cpp
 
 	#main
 	src/Main.cpp
@@ -20,14 +24,18 @@ set(SOURCE_FILES
 	src/Map.cpp
 	src/TileSet.cpp
 	src/Tile.cpp
-        src/TileLayer.cpp
+    src/TileLayer.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)
 	find_package(SDL2_image)
 	set(TMXLITE_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/tmxlite/linux/libtmxlite.a)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(TMXLITE_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/tmxlite/windows/)
+	set(TMXLITE_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/tmxlite/windows)
+	set(SDL2_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libraries/SDL2/include)
+	set(SDL2_LIBRARIES ${CMAKE_SOURCE_DIR}/libraries/SDL2/windows)
+	set(SDL2_IMAGE_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libraries/SDL2_image/include)
+	set(SDL2_IMAGE_LIBRARIES ${CMAKE_SOURCE_DIR}/libraries/SDL2_image/windows)
 endif()
 set(TMXLITE_INCLUDE_DIR {$CMAKE_SOURCE_DIR}/libraries/tmxlite/include)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
