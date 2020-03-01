@@ -3,10 +3,10 @@
  <image source="tileset.png" width="176" height="256"/>
  <tile id="0">
   <animation>
-   <frame tileid="0" duration="100"/>
-   <frame tileid="2" duration="100"/>
-   <frame tileid="4" duration="100"/>
-   <frame tileid="6" duration="100"/>
+   <frame tileid="0" duration="1000"/>
+   <frame tileid="2" duration="1000"/>
+   <frame tileid="4" duration="1000"/>
+   <frame tileid="6" duration="1000"/>
   </animation>
  </tile>
 </tileset>
