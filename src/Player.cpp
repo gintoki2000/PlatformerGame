@@ -14,7 +14,11 @@ Player::Player() :
 {
 }
 
-Player::~Player() { SDL_DestroyTexture(m_texture); }
+Player::~Player()
+{
+    m_level->getWorld()->DestroyBody(m_body);
+    SDL_DestroyTexture(m_texture);
+}
 
 static std::vector<NTTextureRegion>
 create_sprite_sheet(SDL_Texture* texture, int startX, int startY, int rows,
@@ -30,6 +34,15 @@ create_sprite_sheet(SDL_Texture* texture, int startX, int startY, int rows,
             spriteSheet[i * rows + j] = NTTextureRegion(texture, rect);
         }
     return spriteSheet;
+}
+
+Player* Player::create(Level* level)
+{
+    Player* ret = new Player;
+    if (ret->initialize(level))
+        return ret;
+    delete ret;
+    return nullptr;
 }
 
 bool Player::initialize(Level* level)
@@ -59,12 +72,14 @@ bool Player::initialize(Level* level)
     bodyDef.type = b2_dynamicBody;
     bodyDef.fixedRotation = true;
     bodyDef.userData = this;
+    bodyDef.position.x = Game::WIDTH / 2.f / Constances::PPM;
+    bodyDef.position.y = Game::HEIGHT / 2.f / Constances::PPM;
 
     m_body = level->getWorld()->CreateBody(&bodyDef);
 
     b2PolygonShape shape;
     shape.SetAsBox(WIDTH / 2.f / Constances::PPM,
-                   HEIGHT / 2.f * Constances::PPM);
+                   HEIGHT / 2.f / Constances::PPM);
     b2FixtureDef fixtureDef;
     fixtureDef.userData = this;
     fixtureDef.shape = &shape;
@@ -74,17 +89,13 @@ bool Player::initialize(Level* level)
     return true;
 }
 
-void Player::update(float)
-{
-    setPositionX(m_body->GetPosition().x * Constances::PPM - WIDTH / 2.f);
-    setPositionY(m_body->GetPosition().y * Constances::PPM - HEIGHT / 2.f);
-}
+void Player::update(float dt) { m_animationTimeState += dt; }
 
 void Player::draw(SDL_Renderer* renderer, const NTRect& viewPort)
 {
-    NTRect boundingBox(getPosition().x, getPosition().y, WIDTH, HEIGHT);
-    boundingBox.x -= viewPort.x;
-    boundingBox.y -= viewPort.y;
-    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 0xff);
-    SDL_RenderDrawRect(renderer, &boundingBox);
+    const NTTextureRegion& currentFrame =
+        m_animations[m_animationState].getCurrentFrame(m_animationTimeState);
+    currentFrame.draw(renderer,
+        m_body->GetPosition().x * Constances::PPM - SPRITE_WIDTH / 2,
+        m_body->GetPosition().y * Constances::PPM - SPRITE_HEIGHT);
 }

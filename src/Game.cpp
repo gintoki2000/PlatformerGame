@@ -1,7 +1,9 @@
 #include "Game.h"
 #include "GameState.h"
+#include "MainState.h"
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_render.h"
 Game* Game::instance = nullptr;
 
 Game::Game() :
@@ -33,9 +35,9 @@ bool Game::initialize()
         return 0;
     }
 
-    if ((m_window = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED,
-                                     SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT,
-                                     SDL_WINDOW_SHOWN)) == nullptr)
+    if ((m_window = SDL_CreateWindow(
+             "My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+             WIDTH * SCALE_X, HEIGHT * SCALE_Y, SDL_WINDOW_SHOWN)) == nullptr)
     {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         return false;
@@ -49,6 +51,10 @@ bool Game::initialize()
 
     SDL_RenderSetScale(m_renderer, SCALE_X, SCALE_Y);
 
+    if ((m_state = MainState::create()) == nullptr)
+    {
+        return false;
+    }
     m_isRunning = true;
     return true;
 }
@@ -66,6 +72,8 @@ void Game::tick(float dt)
 
 void Game::paint()
 {
+    SDL_SetRenderDrawColor(m_renderer, 0x00, 0x00, 0x00, 0x00);
+    SDL_RenderClear(m_renderer);
     m_state->draw(m_renderer);
     SDL_RenderPresent(m_renderer);
 }

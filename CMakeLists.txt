@@ -18,12 +18,19 @@ set(SOURCE_FILES
 	src/NTTileLayerStaticTile.cpp
 
 	#main
+	src/Constances.cpp
 	src/Main.cpp
 	src/Game.cpp
-	src/Map.cpp
 	src/TileSet.cpp
 	src/Tile.cpp
     src/TileLayer.cpp
+	src/WorldRenderer.cpp
+
+	#game states
+	src/MainState.cpp
+
+	#level
+	src/Level.cpp
 
 	#game objects
 	src/Player.cpp

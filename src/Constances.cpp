@@ -1,3 +1,3 @@
-#include "Contances.h"
+#include "Constances.h"
 
-const b2Vec2 Contances::GRAVITY = b2Vec2(0.f, PPM * 18.f);
+const b2Vec2 Constances::GRAVITY = b2Vec2(0.f, 18.f);
