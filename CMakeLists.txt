@@ -32,6 +32,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)
 	find_package(SDL2_image)
 	set(TMXLITE_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/tmxlite/linux/libtmxlite.a)
+	set(BOX2D_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/box2d/linux/libbox2d.a)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(TMXLITE_LIBRARY ${CMAKE_SOURCE_DIR}/libraries/tmxlite/windows)
 	set(SDL2_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libraries/SDL2/include)
@@ -39,11 +40,12 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(SDL2_IMAGE_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libraries/SDL2_image/include)
 	set(SDL2_IMAGE_LIBRARIES ${CMAKE_SOURCE_DIR}/libraries/SDL2_image/windows)
 endif()
-set(TMXLITE_INCLUDE_DIR {$CMAKE_SOURCE_DIR}/libraries/tmxlite/include)
+set(TMXLITE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/libraries/tmxlite/include)
+set(BOX2D_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/libraries/box2d/include)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS} ${TMXLITE_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${TMXLITE_LIBRARY})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS} ${TMXLITE_INCLUDE_DIR} ${BOX2D_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${TMXLITE_LIBRARY} ${BOX2D_LIBRARY})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/asserts $<TARGET_FILE_DIR:${PROJECT_NAME}>/asserts
