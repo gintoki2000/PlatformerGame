@@ -3,6 +3,7 @@
 #include "NTRect.h"
 #include <string>
 class b2World;
+class Player;
 class Level
 {
   public:
@@ -28,5 +29,7 @@ class Level
     b2World* m_world;
 
 	NTRect m_viewPort;
+
+	Player* m_player;
 };
 #endif // LEVEL_H

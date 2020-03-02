@@ -1,8 +1,9 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 #include "NTLayer.h"
-#include <Box2D/Box2D.h>
-#include <Box2D/Common/b2Math.h>
+#include "Box2D/Box2D.h"
+#include "Animation.h"
+#include "NTTextureRegion.h"
 class Level;
 class Player : public NTLayer
 {
@@ -29,9 +30,11 @@ class Player : public NTLayer
   public:
     static constexpr float WIDTH = 50.f;
     static constexpr float HEIGHT = 37.f;
+	static constexpr int SPRITE_WIDTH = 50;
+	static constexpr int SPRITE_HEIGHT = 37;
 
   public:
-    Player* create(Level* level);
+    static Player* create(Level* level);
 
     ~Player() override;
 
@@ -48,8 +51,14 @@ class Player : public NTLayer
 
     AnimationState m_animationState;
 
+	float m_animationTimeState;
+
     b2Body* m_body;
 
     Level* m_level;
+
+	Animation<NTTextureRegion> m_animations[NUM_ANIMATIONS];		
+
+	SDL_Texture* m_texture;
 };
 #endif // PLAYER_H
