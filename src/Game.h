@@ -1,7 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 #include "SDL.h"
-#include "Map.h"
 class Game
 {
 public:
@@ -27,8 +26,6 @@ private:
     bool m_isRunning;
     SDL_Renderer* m_renderer;
     SDL_Window* m_window;
-
-    Map m_map;
 
     static Game* instance;
 

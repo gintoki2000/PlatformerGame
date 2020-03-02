@@ -1,5 +1,4 @@
 #include "Game.h"
-#include "Map.h"
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
@@ -42,13 +41,6 @@ bool Game::init() {
 
   SDL_RenderSetScale(m_renderer, SCALE_X, SCALE_Y);
 
-  const char* filename = "asserts/test-map.tmx";
-
-  if(!m_map.load(filename))
-  {
-       SDL_Log("Failed to load map %s", filename);
-       return false;
-  }
 
   m_isRunning = true;
   return true;
@@ -62,11 +54,9 @@ void Game::tick(float dt)
           if(event.type == SDL_QUIT)
             m_isRunning = false;
     }
-    m_map.tick(dt);
 }
 
 void Game::paint()
 {
-    m_map.paint();
 	SDL_RenderPresent(m_renderer);
 }
