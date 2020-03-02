@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 #include "SDL.h"
+class GameState;
 class Game
 {
 public:
@@ -8,7 +9,7 @@ public:
 
     ~Game();
 
-    bool init();
+    bool initialize();
 
     void tick(float dt);
 
@@ -26,6 +27,8 @@ private:
     bool m_isRunning;
     SDL_Renderer* m_renderer;
     SDL_Window* m_window;
+
+	GameState* m_state;
 
     static Game* instance;
 
