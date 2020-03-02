@@ -2,6 +2,7 @@
 #define PLAYER_H
 #include "NTLayer.h"
 #include <Box2D/Box2D.h>
+#include <Box2D/Common/b2Math.h>
 class Level;
 class Player : public NTLayer
 {
@@ -19,33 +20,36 @@ class Player : public NTLayer
         ANIMATION_ATTACK_1,
         ANIMATION_ATTACK_2,
         ANIMATION_ATTACK_3,
-		ANIMATION_AIR_ATTACK_1,
-		ANIMATION_AIR_ATTACK_2,
-		ANIMATION_AIR_ATTACK_3,
-		NUM_ANIMATIONS
+        ANIMATION_AIR_ATTACK_1,
+        ANIMATION_AIR_ATTACK_2,
+        ANIMATION_AIR_ATTACK_3,
+        NUM_ANIMATIONS
     };
 
   public:
+    static constexpr float WIDTH = 50.f;
+    static constexpr float HEIGHT = 37.f;
 
-	Player* create(Level* level);
+  public:
+    Player* create(Level* level);
 
-	~Player() override;
+    ~Player() override;
 
-	void update(float dt) override;
+    void update(float dt) override;
 
-	void draw(SDL_Renderer* renderer, const NTRect& viewPort) override;
+    void draw(SDL_Renderer* renderer, const NTRect& viewPort) override;
 
   private:
     Player();
 
-	bool initialize(Level* level);
+    bool initialize(Level* level);
 
-	bool m_isOnGround;
+    bool m_isOnGround;
 
-	AnimationState m_animationState;	
+    AnimationState m_animationState;
 
-	b2Body* m_body;
+    b2Body* m_body;
 
-	Level* m_level;
+    Level* m_level;
 };
 #endif // PLAYER_H

@@ -8,9 +8,8 @@ project(my-game LANGUAGES CXX)
 set(SOURCE_FILES 
 	#base type 
 	src/NTTextureRegion.cpp
-        src/NTVec.cpp
-
-        src/NTLayer.cpp
+    src/NTVec.cpp
+    src/NTLayer.cpp
 
 	#base tiled map
 	src/NTTileLayer.cpp
@@ -25,6 +24,9 @@ set(SOURCE_FILES
 	src/TileSet.cpp
 	src/Tile.cpp
     src/TileLayer.cpp
+
+	#game objects
+	src/Player.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)

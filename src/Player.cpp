@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Level.h"
 #include "Box2D/Box2D.h"
+#include "Constances.h"
 Player::Player():
 		m_isOnGround(false),
 		m_animationState(ANIMATION_IDLE_1),
@@ -26,6 +27,7 @@ bool Player::initialize(Level* level)
 	m_body = level->getWorld()->CreateBody(&bodyDef);
 
 	b2PolygonShape shape;
+	shape.SetAsBox(WIDTH / 2.f / Constances::PPM, HEIGHT / 2.f * Constances::PPM);
 	b2FixtureDef fixtureDef;
 	fixtureDef.userData = this;
 	fixtureDef.shape = &shape;
