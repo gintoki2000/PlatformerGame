@@ -32,6 +32,7 @@ template <class T> class Animation
             break;
         case ANIMATION_TYPE_LOOP: index = index % m_frames.size(); break;
         }
+		return index;
     }
 
     const T& getCurrentFrame(float timeState)
