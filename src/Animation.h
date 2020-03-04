@@ -5,7 +5,8 @@
 enum AnimationType
 {
     ANIMATION_TYPE_NORMAL,
-    ANIMATION_TYPE_LOOP
+    ANIMATION_TYPE_LOOP,
+    ANIMATION_TYPE_PING_PONG_LOOP
 };
 template <class T> class Animation
 {
@@ -21,23 +22,52 @@ template <class T> class Animation
 
     // stuffs methods
 
-    std::size_t getCurrentIndex(float timeState)
+    int getCurrentIndex(float timeState)
     {
-        std::size_t index = static_cast<std::size_t>(timeState / m_duration);
+        if (m_frames.size() == 1)
+        {
+            m_lastTimeState = timeState;
+            m_lastFrameIndex = 0;
+            return 0;
+        }
+        int index = static_cast<int>(timeState / m_duration);
 
         switch (m_type)
         {
         case ANIMATION_TYPE_NORMAL:
-            index = std::max(index, m_frames.size() - 1);
+            index = std::min<int>(index, m_frames.size() - 1);
             break;
         case ANIMATION_TYPE_LOOP: index = index % m_frames.size(); break;
+        case ANIMATION_TYPE_PING_PONG_LOOP:
+            index = index % (m_frames.size() * 2 - 2);
+            if (index >= m_frames.size())
+            {
+                index = m_frames.size() - 2 - (index - m_frames.size());
+            }
+            break;
         }
-		return index;
+        m_lastFrameIndex = index;
+        m_lastFrameIndex = index;
+        return index;
     }
 
     const T& getCurrentFrame(float timeState)
     {
         return m_frames[getCurrentIndex(timeState)];
+    }
+
+    bool isComplete(float timeState)
+    {
+        if (m_frames.size() == 1)
+            return true;
+
+        int index = static_cast<int>(timeState / m_duration);
+        switch (m_type)
+        {
+        case ANIMATION_TYPE_NORMAL: return index >= m_frames.size() - 1;
+        case ANIMATION_TYPE_LOOP:
+        case ANIMATION_TYPE_PING_PONG_LOOP: return false;
+        }
     }
 
     // setters and getters
@@ -53,10 +83,15 @@ template <class T> class Animation
 
     void setDuration(float duration) { m_duration = duration; }
 
+    float getLastTimeState() const { return m_lastTimeState; }
+
+    int getLastFrameIndex() const { return m_lastFrameIndex; }
+
   private:
     std::vector<T> m_frames;
     float m_duration;
     AnimationType m_type;
     float m_lastTimeState;
+    int m_lastFrameIndex;
 };
 #endif // ANIMATION_H

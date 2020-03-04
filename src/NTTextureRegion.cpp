@@ -33,3 +33,14 @@ int NTTextureRegion::draw(SDL_Renderer* renderer, int x, int y) const
 	dstrect.h = rect.h;
 	return SDL_RenderCopy(renderer, texture, &rect, &dstrect);
 }
+
+int NTTextureRegion::draw(SDL_Renderer* renderer, int x, int y, SDL_RendererFlip flip) const
+{
+
+	SDL_Rect dstrect;
+	dstrect.x = x;
+	dstrect.y = y;
+	dstrect.w = rect.w;
+	dstrect.h = rect.h;
+	return SDL_RenderCopyEx(renderer, texture, &rect, &dstrect, 0.0, nullptr, flip);
+}

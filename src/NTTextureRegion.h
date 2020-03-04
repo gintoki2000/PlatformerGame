@@ -16,6 +16,8 @@ struct NTTextureRegion {
   int draw(SDL_Renderer *renderer, const SDL_Rect *dstrect, double angle,
            const SDL_Point *center, SDL_RendererFlip flip) const;
   int draw(SDL_Renderer* renderer, int x, int y) const ;
+
+  int draw(SDL_Renderer* renderer, int x, int y, SDL_RendererFlip flip) const;
   int getWidth() const { return rect.w; }
 
   int getHeight() const { return rect.h; }
