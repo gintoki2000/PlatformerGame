@@ -2,10 +2,11 @@
 #define LEVEL_H
 #include "NTRect.h"
 #include "WorldRenderer.h"
+#include "box2d/b2_world_callbacks.h"
+#include "box2d/box2d.h"
 #include <string>
-class b2World;
 class Player;
-class Level
+class Level : public b2ContactListener 
 {
   public:
     static Level* create(const std::string& filename);
@@ -22,10 +23,18 @@ class Level
 
 	const NTRect& getViewPort() const { return m_viewPort; }
 
+	void BeginContact(b2Contact* c) override;
+
+	void EndContact(b2Contact* c) override;
+
   private:
 	Level();
 
 	bool initialize(const std::string& filename);
+
+	void createGround();
+
+	void createWall();
 
     b2World* m_world;
 
