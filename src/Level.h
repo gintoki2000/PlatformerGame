@@ -36,6 +36,8 @@ class Level : public b2ContactListener
 
 	void createWall();
 
+	void createBox(float x, float y,float width, float  height);
+
     b2World* m_world;
 
 	NTRect m_viewPort;

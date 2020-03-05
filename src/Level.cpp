@@ -22,8 +22,9 @@ bool Level::initialize(const std::string&)
         return false;
     }
 
-	createGround();
-	createWall();
+    createGround();
+    createWall();
+
     m_world->SetDebugDraw(&m_worldRenderer);
     m_worldRenderer.AppendFlags(b2Draw::e_shapeBit);
 
@@ -55,10 +56,7 @@ void Level::draw(SDL_Renderer* renderer)
     m_world->DrawDebugData();
 }
 
-void Level::BeginContact(b2Contact* c) 
-{
-	
-}
+void Level::BeginContact(b2Contact* c) {}
 
 void Level::EndContact(b2Contact* c) {}
 
@@ -68,7 +66,8 @@ void Level::createGround()
     groundBodyDef.type = b2_staticBody;
     const float GROUND_HEIGHT = 16.f;
     groundBodyDef.position.x = Game::WIDTH / 2.f / Constances::PPM;
-    groundBodyDef.position.y = (Game::HEIGHT - GROUND_HEIGHT) / Constances::PPM;
+    groundBodyDef.position.y =
+        (Game::HEIGHT - GROUND_HEIGHT / 2.f) / Constances::PPM;
     b2Body* groundBody = m_world->CreateBody(&groundBodyDef);
 
     b2FixtureDef groundFixtureDef;
@@ -82,18 +81,26 @@ void Level::createGround()
 
 void Level::createWall()
 {
-	const float WIDTH = 3.f;
-   	const float HEIGHT = 4.f;	
-	b2BodyDef bDef;
-	bDef.type = b2_staticBody;
-	bDef.position.x = 4.f;
-	bDef.position.y = Game::HEIGHT / Constances::PPM - 6.f;
-	b2Body* body = m_world->CreateBody(&bDef);
-	b2FixtureDef fDef;
-	b2PolygonShape box;
-	box.SetAsBox(WIDTH / 2.f, HEIGHT / 2.f);
-	fDef.shape = &box;
-	fDef.friction = 0.3f;
-	body->CreateFixture(&fDef);
-	
+    int width = 1.f;
+    int height = 10.f;
+    createBox(width / 2.f, height / 2.f + 10.f, width, height);
+
+	width = 6.f;
+	height = 2.f;
+	createBox(Game::WIDTH / 2.f / Constances::PPM + 5.f, Game::HEIGHT / 2.f / Constances::PPM + 5.f, width, height);
+}
+
+void Level::createBox(float x, float y, float width, float height)
+{
+    b2BodyDef bDef;
+    bDef.type = b2_staticBody;
+    bDef.position.x = x;
+    bDef.position.y = y;
+    b2Body* body = m_world->CreateBody(&bDef);
+    b2FixtureDef fDef;
+    b2PolygonShape box;
+    box.SetAsBox(width / 2.f, height / 2.f);
+    fDef.shape = &box;
+    fDef.friction = 0.2f;
+    body->CreateFixture(&fDef);
 }

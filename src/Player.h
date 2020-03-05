@@ -28,6 +28,8 @@ class Player : public b2QueryCallback
         STATE_AIR_ATTACK_3_RDY,
         STATE_AIR_ATTACK_3_END,
         STATE_WALL_SLIDE,
+        STATE_SWD_DRAW,
+        STATE_SWD_WITH,
         NUM_STATES
     };
 
@@ -39,10 +41,13 @@ class Player : public b2QueryCallback
     };
 
   public:
-    static constexpr float WIDTH = 20.f;
+    static constexpr float WIDTH = 17.f;
     static constexpr float HEIGHT = 37.f;
     static constexpr int SPRITE_WIDTH = 50;
     static constexpr int SPRITE_HEIGHT = 37;
+    static constexpr float JUMP_VEL = 13.f;
+    static constexpr float MAX_HVEL = 10.f;
+    static constexpr float RUN_ACC = 0.3f;
 
   public:
     static Player* create(Level* level);
@@ -68,7 +73,7 @@ class Player : public b2QueryCallback
 
     void checkOnGround();
 
-	void checkWallSliding();
+    void checkWallSliding();
 
     bool ReportFixture(b2Fixture* f);
 
@@ -152,6 +157,6 @@ class Player : public b2QueryCallback
         CHECK_SLIDE
     } m_checkingStatus;
 
-	bool m_isWallSliding;
+    bool m_isWallSliding;
 };
 #endif // PLAYER_H

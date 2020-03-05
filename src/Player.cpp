@@ -79,9 +79,8 @@ void Player::update(float dt)
     m_isOnGround = false;
     m_isWallSliding = false;
     updateKeyState(dt);
-    checkWallSliding();
     checkOnGround();
-    SDL_Log("is_wall_sliding=%d, is_on_ground = %d", m_isWallSliding, m_isOnGround);
+
     int inputDirection = 0;
     if (isButtonLeftPressed())
     {
@@ -99,74 +98,77 @@ void Player::update(float dt)
     {
         m_direction = DIRECTION_LEFT;
     }
+    checkWallSliding();
+    m_timer += dt;
     switch (m_state)
     {
     case STATE_IDLE_1:
     {
-        m_timer += dt;
+
         if (!m_isOnGround)
         {
             changeState(STATE_FALL);
-            break;
         }
-        if (isButtonBPressed() && m_isOnGround)
+        else if (isButtonBPressed() && m_isOnGround)
         {
             jump();
-            break;
         }
-        if (isButtonAJustPressed())
+        else if (isButtonAJustPressed())
         {
             changeState(STATE_ATTACK_1);
-            break;
         }
-        if (inputDirection != 0)
+        else if (inputDirection != 0)
         {
-            move(inputDirection * 1.f);
+            move(inputDirection * RUN_ACC);
             changeState(STATE_RUN);
-            break;
         }
-
         break;
     }
     case STATE_IDLE_2:
     {
-        m_timer += dt;
-        if (isButtonBPressed() && m_isOnGround)
+
+        if (!m_isOnGround)
+        {
+            changeState(STATE_FALL);
+        }
+        else if (isButtonBPressed() && m_isOnGround)
         {
             jump();
-            break;
         }
-
-        if (isButtonAJustPressed())
+        else if (isButtonAJustPressed())
         {
             changeState(STATE_ATTACK_1);
-            break;
         }
-
-        if (inputDirection != 0)
+        else if (inputDirection != 0)
         {
-            move(inputDirection * 1.f);
+            move(inputDirection * RUN_ACC);
             changeState(STATE_RUN);
-            break;
         }
-        if (m_timer >= 3.f)
+        else if (m_timer >= 3.f)
         {
             changeState(STATE_IDLE_1);
-            break;
         }
         break;
     }
     case STATE_RUN:
+
     {
-        m_timer += dt;
-        if (isButtonBPressed() && m_isOnGround)
+        if (!m_isOnGround)
+        {
+            changeState(STATE_FALL);
+        }
+        else if (isButtonBPressed() && m_isOnGround)
         {
             jump();
-            break;
+        }
+        else if (isButtonAJustPressed())
+        {
+            changeState(STATE_ATTACK_1);
+            setZeroVelX();
         }
         if (inputDirection != 0)
         {
-            move(inputDirection * 1.f);
+            move(inputDirection * RUN_ACC * 0.75f);
         }
         else
         {
@@ -177,95 +179,86 @@ void Player::update(float dt)
     }
     case STATE_JUMP:
     {
-        m_timer += dt;
 
         if (m_isWallSliding &&
             ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
              (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
         {
             changeState(STATE_WALL_SLIDE);
-            break;
         }
+        else if (isCurrentAnimationComplete())
+        {
+            changeState(STATE_SMRSLT);
+        }
+
         if (inputDirection != 0)
         {
-            move(inputDirection * 1.f);
+            move(inputDirection * RUN_ACC * 0.75f);
         }
         else
         {
             setZeroVelX();
-        }
-        if (isCurrentAnimationComplete())
-        {
-            changeState(STATE_SMRSLT);
-            break;
         }
         break;
     }
     case STATE_SMRSLT:
     {
-        m_timer += dt;
 
         if (isButtonAJustPressed())
         {
             changeState(STATE_AIR_ATTACK_1);
-            break;
         }
-        if (m_isWallSliding &&
-            ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
-             (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
+
+        else if (m_isWallSliding &&
+                 ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
+                  (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
         {
             changeState(STATE_WALL_SLIDE);
-            break;
+        }
+        else if (isCurrentAnimationComplete())
+        {
+            changeState(STATE_FALL);
         }
         if (inputDirection != 0)
         {
-            move(inputDirection * 1.f);
+            move(inputDirection * RUN_ACC * 0.75f);
         }
         else
         {
             setZeroVelX();
         }
-        if (isCurrentAnimationComplete())
-        {
-            changeState(STATE_FALL);
-            break;
-        }
-
         break;
     }
     case STATE_FALL:
     {
-        m_timer += dt;
 
         if (m_isWallSliding &&
             ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
              (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
         {
             changeState(STATE_WALL_SLIDE);
-            break;
+        }
+        else if (m_isOnGround)
+        {
+            changeState(STATE_IDLE_2);
+        }
+        else if (isButtonAJustPressed())
+        {
+            changeState(STATE_AIR_ATTACK_1);
         }
         if (inputDirection != 0)
         {
-            move(inputDirection * 1.f);
+            move(inputDirection * RUN_ACC * 0.75f);
         }
         else
         {
             setZeroVelX();
-        }
-        if (m_isOnGround)
-        {
-            changeState(STATE_IDLE_2);
-        }
-        if (isButtonAJustPressed())
-        {
-            changeState(STATE_AIR_ATTACK_1);
-            break;
         }
         break;
     }
     case STATE_ATTACK_1:
     {
-        m_timer += dt;
+
         if (isButtonAJustPressed())
         {
             m_continueAttack = true;
@@ -285,7 +278,7 @@ void Player::update(float dt)
     }
     case STATE_ATTACK_2:
     {
-        m_timer += dt;
+
         if (isButtonAJustPressed())
         {
             m_continueAttack = true;
@@ -305,18 +298,16 @@ void Player::update(float dt)
     }
     case STATE_ATTACK_3:
     {
-        m_timer += dt;
 
         if (isCurrentAnimationComplete())
         {
             changeState(STATE_IDLE_2);
-            break;
         }
         break;
     }
     case STATE_AIR_ATTACK_1:
     {
-        m_timer += dt;
+
         if (isButtonAJustPressed())
         {
             m_continueAttack = true;
@@ -344,7 +335,6 @@ void Player::update(float dt)
     }
     case STATE_AIR_ATTACK_2:
     {
-        m_timer += dt;
 
         if (isButtonDownPressed() && isButtonAPressed())
         {
@@ -375,7 +365,7 @@ void Player::update(float dt)
     }
     case STATE_AIR_ATTACK_3_RDY:
     {
-        m_timer += dt;
+
         if (isCurrentAnimationComplete())
         {
             changeState(STATE_AIR_ATTACK_3_END);
@@ -384,7 +374,7 @@ void Player::update(float dt)
     }
     case STATE_AIR_ATTACK_3_LOOP:
     {
-        m_timer += dt;
+
         if (m_isOnGround)
         {
             changeState(STATE_AIR_ATTACK_3_RDY);
@@ -393,7 +383,7 @@ void Player::update(float dt)
     }
     case STATE_AIR_ATTACK_3_END:
     {
-        m_timer += dt;
+
         if (isCurrentAnimationComplete())
         {
             changeState(STATE_IDLE_2);
@@ -401,7 +391,7 @@ void Player::update(float dt)
     }
     case STATE_WALL_SLIDE:
     {
-        m_timer += dt;
+
         if (isButtonBJustPressed())
         {
             float sign = m_direction == DIRECTION_RIGHT ? 1.f : -1.f;
@@ -409,12 +399,15 @@ void Player::update(float dt)
             m_body->ApplyLinearImpulseToCenter(b2Vec2(sign * -10.f, -15.f),
                                                true);
             changeState(STATE_JUMP);
-			m_isWallSliding = false;
-            break;
+            m_isWallSliding = false;
         }
-        if (!m_isWallSliding ||
-            (m_direction == DIRECTION_LEFT && !isButtonLeftPressed()) ||
-            (m_direction == DIRECTION_RIGHT && !isButtonRightPressed()))
+        else if (m_isOnGround)
+        {
+            changeState(STATE_IDLE_2);
+        }
+        else if (!m_isWallSliding ||
+                 (m_direction == DIRECTION_LEFT && !isButtonLeftPressed()) ||
+                 (m_direction == DIRECTION_RIGHT && !isButtonRightPressed()))
         {
             m_isWallSliding = false;
             changeState(STATE_FALL);
@@ -507,13 +500,13 @@ void Player::createAnimations()
         1.f / 10.f, ANIMATION_TYPE_LOOP);
     m_animations[STATE_ATTACK_1] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 0, 222, 1, 5, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
+        1.f / 12.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_ATTACK_2] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 47, 7, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
+        1.f / 12.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_ATTACK_3] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 53, 7, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
+        1.f / 12.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_AIR_ATTACK_1] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 96, 7, 3, SPRITE_WIDTH, SPRITE_HEIGHT),
         1.f / 8.f, ANIMATION_TYPE_NORMAL);
@@ -536,42 +529,42 @@ void Player::createAnimations()
 
 void Player::checkOnGround()
 {
-    b2AABB aabb;
+    if (m_body->GetLinearVelocity().y < 0.f)
+        return;
+    b2AABB sensor;
     b2Vec2 halfSize(WIDTH / 2.f / Constances::PPM,
                     HEIGHT / 2.f / Constances::PPM);
-    b2Vec2 footPos = m_body->GetPosition();
-    footPos.y += halfSize.y;
+    const b2Vec2& pos = m_body->GetPosition();
 
-    aabb.upperBound.x = footPos.x - halfSize.x + 1.f / Constances::PPM;
-    aabb.upperBound.y = footPos.y;
+    sensor.upperBound.x = pos.x - halfSize.x;
+    sensor.upperBound.y = pos.y + halfSize.y;
 
-    aabb.lowerBound.x = footPos.x + halfSize.x - 1.f / Constances::PPM;
-    aabb.lowerBound.y = footPos.y + 2.f / Constances::PPM;
+    sensor.lowerBound.x = pos.x + halfSize.x;
+    sensor.lowerBound.y = pos.y + halfSize.y + 1.f / Constances::PPM;
     m_checkingStatus = CHECK_GROUND;
-    m_level->getWorld()->QueryAABB(this, aabb);
+    m_level->getWorld()->QueryAABB(this, sensor);
 }
 
 void Player::checkWallSliding()
 {
     b2AABB sensor;
-    b2Vec2 halfSize(WIDTH / 2.f / Constances::PPM,
-                    HEIGHT / 2.f / Constances::PPM);
-    b2Vec2 position = m_body->GetPosition();
+    const b2Vec2& pos = m_body->GetPosition();
+    b2Vec2 halfSize;
+    halfSize.x = WIDTH / 2.f / Constances::PPM;
+    halfSize.y = HEIGHT / 2.f / Constances::PPM;
+
+    sensor.upperBound.y = pos.y - halfSize.y + 1.f / Constances::PPM;
+    sensor.lowerBound.y = pos.y - halfSize.y / 2.f;
+
     if (m_direction == DIRECTION_LEFT)
     {
-        sensor.upperBound.x = position.x - halfSize.x - 2.f / Constances::PPM;
-        sensor.upperBound.y = position.y - halfSize.y + 1.f / Constances::PPM;
-
-        sensor.lowerBound.x = position.x - halfSize.x;
-        sensor.lowerBound.y = position.y;
+        sensor.upperBound.x = pos.x - halfSize.x - 1.f / Constances::PPM;
+        sensor.lowerBound.x = pos.x - halfSize.x;
     }
     else
     {
-        sensor.upperBound.x = position.x + halfSize.x;
-        sensor.upperBound.y = position.y - halfSize.y + 1.f / Constances::PPM;
-
-        sensor.lowerBound.x = position.x + halfSize.x + 2.f / Constances::PPM;
-        sensor.lowerBound.y = position.y;
+        sensor.upperBound.x = pos.x + halfSize.x;
+        sensor.lowerBound.x = pos.x + halfSize.x + 1.f / Constances::PPM;
     }
     m_checkingStatus = CHECK_SLIDE;
     m_level->getWorld()->QueryAABB(this, sensor);
@@ -585,14 +578,15 @@ bool Player::ReportFixture(b2Fixture* f)
             m_isOnGround = true;
         else if (m_checkingStatus == CHECK_SLIDE)
             m_isWallSliding = true;
-        return true;
+        return false;
     }
-    return false;
+    else
+        return true;
 }
 
 void Player::jump()
 {
-    m_body->ApplyLinearImpulseToCenter(b2Vec2(0.f, -12.f), true);
+    m_body->ApplyLinearImpulseToCenter(b2Vec2(0.f, -JUMP_VEL), true);
     changeState(STATE_JUMP);
     m_isOnGround = false;
 }
