@@ -1,49 +1,70 @@
 #ifndef LEVEL_H
 #define LEVEL_H
+#include "GameObject.h"
 #include "NTRect.h"
+#include "Slime.h"
 #include "WorldRenderer.h"
-#include "box2d/b2_world_callbacks.h"
 #include "box2d/box2d.h"
 #include <string>
 class Player;
-class Level : public b2ContactListener 
+class ObjectLayer;
+class Monster;
+class Level : public b2ContactListener
 {
   public:
     static Level* create(const std::string& filename);
 
     ~Level();
 
-	//stuffs methods
-	void update(float dt);
+    // stuffs methods
+    void update(float dt);
 
-	void draw(SDL_Renderer* renderer);
+    void draw(SDL_Renderer* renderer);
 
-	//setters && getters
+    // setters && getters
     b2World* getWorld() const { return m_world; }
 
-	const NTRect& getViewPort() const { return m_viewPort; }
+    const NTRect& getViewPort() const { return m_viewPort; }
 
-	void BeginContact(b2Contact* c) override;
+    Player* getPlayer() const { return m_player; }
 
-	void EndContact(b2Contact* c) override;
+	void addMonster(Monster* monster);
+
+	void removeMonster(Monster* monster);
 
   private:
-	Level();
+    Level();
 
-	bool initialize(const std::string& filename);
+    bool initialize(const std::string& filename);
 
-	void createGround();
+    // Box2D callback function
+    void BeginContact(b2Contact* c) override;
+    void EndContact(b2Contact* c) override;
 
-	void createWall();
+	void handleCollision(Player* player, GameObject* gameObject);
 
-	void createBox(float x, float y,float width, float  height);
+    void createGround();
+
+    void createWall();
+
+    void createBox(float x, float y, float width, float height);
 
     b2World* m_world;
 
-	NTRect m_viewPort;
+    NTRect m_viewPort;
 
-	Player* m_player;
+    Player* m_player;
 
-	WorldRenderer m_worldRenderer;
+    WorldRenderer m_worldRenderer;
+
+    // ObjectPool
+    Slime::Pool* m_slimePool;
+
+    ObjectLayer* m_monsters;
+
+	Monster* m_monstersToBeAdd[10];
+	Monster* m_monstersToBeRemove[10];	
+	int m_numMonstersToBeAdd;
+	int m_numMonstersToBeRemove;
 };
 #endif // LEVEL_H

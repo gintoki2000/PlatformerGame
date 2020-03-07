@@ -1,9 +1,9 @@
 #include "Game.h"
+#include "Constances.h"
 #include "GameState.h"
 #include "MainState.h"
 #include "SDL.h"
 #include "SDL_image.h"
-#include "SDL_render.h"
 Game* Game::instance = nullptr;
 
 Game::Game() :
@@ -37,7 +37,9 @@ bool Game::initialize()
 
     if ((m_window = SDL_CreateWindow(
              "My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-             WIDTH * SCALE_X, HEIGHT * SCALE_Y, SDL_WINDOW_SHOWN)) == nullptr)
+             Constances::GAME_WIDTH * Constances::SCALE_X,
+             Constances::GAME_HEIGHT * Constances::SCALE_Y,
+             SDL_WINDOW_SHOWN)) == nullptr)
     {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         return false;
@@ -49,7 +51,7 @@ bool Game::initialize()
         return false;
     }
 
-    SDL_RenderSetScale(m_renderer, SCALE_X, SCALE_Y);
+    SDL_RenderSetScale(m_renderer, Constances::SCALE_X, Constances::SCALE_Y);
 
     if ((m_state = MainState::create()) == nullptr)
     {

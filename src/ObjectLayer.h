@@ -1,21 +1,27 @@
 #ifndef OBJECT_LAYER_H
 #define OBJECT_LAYER_H
-#include "SDL.h"
 #include "NTRect.h"
+#include "SDL.h"
 class GameObject;
 class ObjectLayer
 {
-	public:
-		ObjectLayer();
+  public:
+    ObjectLayer();
 
-		void addObject(GameObject* gameObject);
+    virtual ~ObjectLayer();
 
-		void removeObject(GameObject* gameObject);
+    void addObject(GameObject* gameObject);
 
-		virtual void update(float dt);
+    void removeObject(GameObject* gameObject);
 
-		virtual void paint(SDL_Renderer* renderer, const NTRect& viewPort);
-	private:
-		GameObject* m_list;
+    virtual void update(float dt);
+
+    virtual void draw(SDL_Renderer* renderer, const NTRect& viewPort);
+
+    int getNumObjects() const { return m_numObjects; }
+
+  private:
+    GameObject* m_list;
+    int m_numObjects;
 };
-#endif //OBJECT_LAYER_H
+#endif // OBJECT_LAYER_H

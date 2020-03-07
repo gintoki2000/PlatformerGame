@@ -31,12 +31,6 @@ private:
 	GameState* m_state;
 
     static Game* instance;
-
-public:
-    static const int WIDTH = 480;
-    static const int HEIGHT = 320;
-	static const int SCALE_X = 3;
-	static const int SCALE_Y = 3;
 };
 
 #endif // GAME_H

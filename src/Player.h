@@ -1,11 +1,14 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 #include "Animation.h"
+#include "Constances.h"
+#include "Enums.h"
+#include "GameObject.h"
 #include "NTLayer.h"
 #include "NTTextureRegion.h"
 #include "box2d/box2d.h"
 class Level;
-class Player : public b2QueryCallback
+class Player : public GameObject
 {
   private:
     enum State
@@ -33,21 +36,47 @@ class Player : public b2QueryCallback
         NUM_STATES
     };
 
-    enum Direction
+    struct AttackInfo
     {
-        DIRECTION_NONE,
-        DIRECTION_LEFT,
-        DIRECTION_RIGHT
+        float dx;
+        float dy;
+        float width;
+        float height;
+        int damage;
+    };
+    struct AttackingAction : public b2QueryCallback
+    {
+
+        Player* player;
+        Level* level;
+        AttackInfo attackInfo;
+
+		AttackingAction();
+
+        AttackingAction(Player* _player, Level* _level,
+                        const AttackInfo& _attackInfo);
+        void perform();
+
+      private:
+        bool ReportFixture(b2Fixture* fixture);
     };
 
   public:
-    static constexpr float WIDTH = 17.f;
-    static constexpr float HEIGHT = 37.f;
+    static constexpr float WIDTH = 16.f;
+    static constexpr float HEIGHT = 30.f;
     static constexpr int SPRITE_WIDTH = 50;
     static constexpr int SPRITE_HEIGHT = 37;
     static constexpr float JUMP_VEL = 13.f;
     static constexpr float MAX_HVEL = 10.f;
-    static constexpr float RUN_ACC = 0.3f;
+    static constexpr float RUN_ACC = 0.8f;
+    static constexpr float WIDTH_IN_METER = WIDTH / Constances::PPM;
+    static constexpr float HEIGHT_IN_METER = HEIGHT / Constances::PPM;
+    enum FixtureType
+    {
+        FIXTURE_TYPE_MAIN_BODY,
+        FIXTURE_TYPE_FOOT_SENSOR,
+        FIXTURE_TYPE_WALL_SENSOR
+    };
 
   public:
     static Player* create(Level* level);
@@ -57,6 +86,20 @@ class Player : public b2QueryCallback
     void update(float dt);
 
     void draw(SDL_Renderer* renderer, const NTRect& viewPort);
+
+    void touchGround();
+
+    void untouchGround();
+
+    void touchWall();
+
+    void untouchWall();
+
+    bool isOnGround() const;
+
+    bool isTouchingWall() const;
+
+    const b2Vec2& getPosition() const { return m_body->GetPosition(); }
 
   private:
     Player();
@@ -71,55 +114,17 @@ class Player : public b2QueryCallback
 
     void createAnimations();
 
-    void checkOnGround();
-
-    void checkWallSliding();
-
-    bool ReportFixture(b2Fixture* f);
-
     void jump();
 
     bool isCurrentAnimationComplete();
 
     void move(float vx);
 
-    void setZeroVelX();
+    void stopHorizontalMovement();
 
-    void updateKeyState(float dt);
+    void stopVerticalMovement();
 
-    bool isButtonAPressed() { return m_currentKeyState.buttonA; }
-    bool isButtonBPressed() { return m_currentKeyState.buttonB; }
-    bool isButtonUpPressed() { return m_currentKeyState.buttonUp; }
-    bool isButtonDownPressed() { return m_currentKeyState.buttonDown; }
-    bool isButtonLeftPressed() { return m_currentKeyState.buttonLeft; }
-    bool isButtonRightPressed() { return m_currentKeyState.buttonRight; }
-    bool isButtonAJustPressed()
-    {
-        return m_currentKeyState.buttonA && !m_prevKeyState.buttonA;
-    }
-    bool isButtonBJustPressed()
-    {
-        return m_currentKeyState.buttonB && !m_prevKeyState.buttonB;
-    }
-    bool isButtonUpJustPressed()
-    {
-        return m_currentKeyState.buttonUp && !m_prevKeyState.buttonUp;
-    }
-
-    bool isButtonDownJustPressed()
-    {
-        return m_currentKeyState.buttonDown && !m_prevKeyState.buttonDown;
-    }
-
-    bool isButtonLeftJustPressed()
-    {
-        return m_currentKeyState.buttonLeft && !m_prevKeyState.buttonLeft;
-    }
-
-    bool isButtonRightJustPressed()
-    {
-        return m_currentKeyState.buttonRight && !m_prevKeyState.buttonRight;
-    }
+    void attackArea(float x, float y, float width, float height);
 
     bool m_isOnGround;
 
@@ -141,22 +146,15 @@ class Player : public b2QueryCallback
 
     bool m_continueAttack;
 
-    struct KeyState
-    {
-        bool buttonA = false;
-        bool buttonB = false;
-        bool buttonUp = false;
-        bool buttonDown = false;
-        bool buttonLeft = false;
-        bool buttonRight = false;
-    } m_prevKeyState, m_currentKeyState;
-
-    enum
-    {
-        CHECK_GROUND,
-        CHECK_SLIDE
-    } m_checkingStatus;
-
     bool m_isWallSliding;
+
+    int m_touchingGroundCount;
+
+    int m_touchingWallCount;
+
+	AttackingAction m_attackAction1;
+	AttackingAction m_attackAction2;
+	AttackingAction m_attackAction3;
+
 };
 #endif // PLAYER_H

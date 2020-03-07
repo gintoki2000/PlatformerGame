@@ -2,16 +2,61 @@
 #include "Animation.h"
 #include "Box2D/Box2D.h"
 #include "Constances.h"
+#include "Enums.h"
 #include "Game.h"
+#include "GameObject.h"
+#include "Input.h"
 #include "Level.h"
+#include "Monster.h"
 #include "NTTextureRegion.h"
 #include "SDL_error.h"
 #include "SDL_image.h"
 #include "SDL_keyboard.h"
+#include "SDL_log.h"
 #include "SDL_render.h"
 #include "SDL_scancode.h"
+Player::AttackingAction::AttackingAction()
+{
+    player = nullptr;
+    level = nullptr;
+}
+Player::AttackingAction::AttackingAction(Player* _player, Level* _level,
+                                         const AttackInfo& _attackInfo)
+{
+    player = _player;
+    level = _level;
+    attackInfo = _attackInfo;
+}
 
-Player::Player() : m_body(nullptr), m_level(nullptr) {}
+void Player::AttackingAction::perform()
+{
+
+    b2AABB area;
+    int sign = player->m_direction == DIRECTION_LEFT ? -1 : 1;
+    area.lowerBound.x = player->getPosition().x + attackInfo.dx * (-sign);
+    area.lowerBound.y = player->getPosition().y + attackInfo.dy;
+    area.upperBound.x = area.lowerBound.x + attackInfo.width;
+    area.upperBound.y = area.lowerBound.y + attackInfo.height;
+    level->getWorld()->QueryAABB(this, area);
+}
+
+bool Player::AttackingAction::ReportFixture(b2Fixture* fixture)
+{
+    if (fixture->GetBody()->GetUserData() != nullptr)
+    {
+        GameObject* gameObject = (GameObject*)fixture->GetBody()->GetUserData();
+        if (gameObject->getObjectType() == GameObject::Type::MONSTER)
+        {
+            ((Monster*)gameObject)->getDamage(attackInfo.damage);
+        }
+    }
+    return true;
+}
+
+Player::Player() :
+    GameObject(GameObject::Type::PLAYER), m_body(nullptr), m_level(nullptr)
+{
+}
 
 Player::~Player()
 {
@@ -51,7 +96,8 @@ Player* Player::create(Level* level)
 
 bool Player::initialize(Level* level)
 {
-    return initialize(level, b2Vec2(Game::WIDTH / 2.f, Game::HEIGHT / 2.f));
+    return initialize(level, b2Vec2(Constances::GAME_WIDTH / 2.f,
+                                    Constances::GAME_HEIGHT / 2.f));
 }
 
 bool Player::initialize(Level* level, const b2Vec2& position)
@@ -68,7 +114,24 @@ bool Player::initialize(Level* level, const b2Vec2& position)
     m_direction = DIRECTION_LEFT;
     m_isOnGround = false;
     m_continueAttack = false;
+    m_touchingGroundCount = 0;
+    m_touchingWallCount = 0;
 
+    AttackInfo attackInfo;
+    attackInfo.dx = -WIDTH_IN_METER;
+    attackInfo.dy = -HEIGHT_IN_METER / 2.f;
+    attackInfo.width = 1.f;
+    attackInfo.height = 2.f;
+    attackInfo.damage = 1;
+    m_attackAction1 = AttackingAction(this, m_level, attackInfo);
+
+    m_attackAction2 = AttackingAction(this, m_level, attackInfo);
+
+	attackInfo.dx = -1.5f;
+	attackInfo.dy = 0.f;
+	attackInfo.width = 3.f;
+	attackInfo.height = 1.f;
+    m_attackAction3 = AttackingAction(this, m_level, attackInfo);
     createAnimations();
     createBody(position);
     return true;
@@ -76,29 +139,19 @@ bool Player::initialize(Level* level, const b2Vec2& position)
 
 void Player::update(float dt)
 {
-    m_isOnGround = false;
-    m_isWallSliding = false;
-    updateKeyState(dt);
-    checkOnGround();
+    m_isOnGround = isOnGround();
+    int inputDirection = Input::getInputDirectionX();
 
-    int inputDirection = 0;
-    if (isButtonLeftPressed())
+    if (inputDirection < 0)
     {
-        inputDirection -= 1;
-    }
-    if (isButtonRightPressed())
-    {
-        inputDirection += 1;
+        m_direction = DIRECTION_LEFT;
     }
     if (inputDirection > 0)
     {
         m_direction = DIRECTION_RIGHT;
     }
-    if (inputDirection < 0)
-    {
-        m_direction = DIRECTION_LEFT;
-    }
-    checkWallSliding();
+
+    m_isWallSliding = inputDirection != 0 && isTouchingWall();
     m_timer += dt;
     switch (m_state)
     {
@@ -109,11 +162,11 @@ void Player::update(float dt)
         {
             changeState(STATE_FALL);
         }
-        else if (isButtonBPressed() && m_isOnGround)
+        else if (Input::isButtonBPressed() && m_isOnGround)
         {
             jump();
         }
-        else if (isButtonAJustPressed())
+        else if (Input::isButtonAJustPressed())
         {
             changeState(STATE_ATTACK_1);
         }
@@ -131,11 +184,11 @@ void Player::update(float dt)
         {
             changeState(STATE_FALL);
         }
-        else if (isButtonBPressed() && m_isOnGround)
+        else if (Input::isButtonBPressed() && m_isOnGround)
         {
             jump();
         }
-        else if (isButtonAJustPressed())
+        else if (Input::isButtonAJustPressed())
         {
             changeState(STATE_ATTACK_1);
         }
@@ -157,14 +210,14 @@ void Player::update(float dt)
         {
             changeState(STATE_FALL);
         }
-        else if (isButtonBPressed() && m_isOnGround)
+        else if (Input::isButtonBPressed() && m_isOnGround)
         {
             jump();
         }
-        else if (isButtonAJustPressed())
+        else if (Input::isButtonAJustPressed())
         {
             changeState(STATE_ATTACK_1);
-            setZeroVelX();
+            stopHorizontalMovement();
         }
         if (inputDirection != 0)
         {
@@ -172,7 +225,7 @@ void Player::update(float dt)
         }
         else
         {
-            setZeroVelX();
+            stopHorizontalMovement();
             changeState(STATE_IDLE_2);
         }
         break;
@@ -181,8 +234,8 @@ void Player::update(float dt)
     {
 
         if (m_isWallSliding &&
-            ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
-             (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
+            ((m_direction == DIRECTION_LEFT && Input::isButtonLeftPressed()) ||
+             (m_direction == DIRECTION_RIGHT && Input::isButtonRightPressed())))
         {
             changeState(STATE_WALL_SLIDE);
         }
@@ -197,21 +250,22 @@ void Player::update(float dt)
         }
         else
         {
-            setZeroVelX();
+            stopHorizontalMovement();
         }
         break;
     }
     case STATE_SMRSLT:
     {
 
-        if (isButtonAJustPressed())
+        if (Input::isButtonAJustPressed())
         {
             changeState(STATE_AIR_ATTACK_1);
         }
 
-        else if (m_isWallSliding &&
-                 ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
-                  (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
+        else if (m_isWallSliding && ((m_direction == DIRECTION_LEFT &&
+                                      Input::isButtonLeftPressed()) ||
+                                     (m_direction == DIRECTION_RIGHT &&
+                                      Input::isButtonRightPressed())))
         {
             changeState(STATE_WALL_SLIDE);
         }
@@ -225,7 +279,7 @@ void Player::update(float dt)
         }
         else
         {
-            setZeroVelX();
+            stopHorizontalMovement();
         }
         break;
     }
@@ -233,8 +287,8 @@ void Player::update(float dt)
     {
 
         if (m_isWallSliding &&
-            ((m_direction == DIRECTION_LEFT && isButtonLeftPressed()) ||
-             (m_direction == DIRECTION_RIGHT && isButtonRightPressed())))
+            ((m_direction == DIRECTION_LEFT && Input::isButtonLeftPressed()) ||
+             (m_direction == DIRECTION_RIGHT && Input::isButtonRightPressed())))
         {
             changeState(STATE_WALL_SLIDE);
         }
@@ -242,7 +296,7 @@ void Player::update(float dt)
         {
             changeState(STATE_IDLE_2);
         }
-        else if (isButtonAJustPressed())
+        else if (Input::isButtonAJustPressed())
         {
             changeState(STATE_AIR_ATTACK_1);
         }
@@ -252,16 +306,21 @@ void Player::update(float dt)
         }
         else
         {
-            setZeroVelX();
+            stopHorizontalMovement();
         }
         break;
     }
     case STATE_ATTACK_1:
     {
 
-        if (isButtonAJustPressed())
+        if (Input::isButtonAJustPressed())
         {
             m_continueAttack = true;
+        }
+
+        if (m_animations[m_state].getCurrentIndex(m_timer) == 2)
+        {
+            m_attackAction1.perform();
         }
         if (isCurrentAnimationComplete())
         {
@@ -271,17 +330,22 @@ void Player::update(float dt)
                 m_continueAttack = false;
             }
             else
+            {
                 changeState(STATE_IDLE_2);
-            break;
+            }
         }
         break;
     }
     case STATE_ATTACK_2:
     {
 
-        if (isButtonAJustPressed())
+        if (Input::isButtonAJustPressed())
         {
             m_continueAttack = true;
+        }
+        if (m_animations[m_state].getCurrentIndex(m_timer) == 2)
+        {
+            m_attackAction2.perform();
         }
         if (isCurrentAnimationComplete())
         {
@@ -299,6 +363,10 @@ void Player::update(float dt)
     case STATE_ATTACK_3:
     {
 
+        if (m_animations[m_state].getCurrentIndex(m_timer) == 2)
+        {
+            m_attackAction3.perform();
+        }
         if (isCurrentAnimationComplete())
         {
             changeState(STATE_IDLE_2);
@@ -308,7 +376,7 @@ void Player::update(float dt)
     case STATE_AIR_ATTACK_1:
     {
 
-        if (isButtonAJustPressed())
+        if (Input::isButtonAJustPressed())
         {
             m_continueAttack = true;
         }
@@ -336,9 +404,12 @@ void Player::update(float dt)
     case STATE_AIR_ATTACK_2:
     {
 
-        if (isButtonDownPressed() && isButtonAPressed())
+        if (Input::isButtonDownPressed() && Input::isButtonAPressed())
         {
             m_continueAttack = true;
+        }
+        if (m_animations[m_state].getCurrentIndex(m_timer) == 2)
+        {
         }
         if (isCurrentAnimationComplete())
         {
@@ -392,12 +463,10 @@ void Player::update(float dt)
     case STATE_WALL_SLIDE:
     {
 
-        if (isButtonBJustPressed())
+        if (Input::isButtonBJustPressed())
         {
             float sign = m_direction == DIRECTION_RIGHT ? 1.f : -1.f;
-            setZeroVelX();
-            m_body->ApplyLinearImpulseToCenter(b2Vec2(sign * -10.f, -15.f),
-                                               true);
+            m_body->SetLinearVelocity(b2Vec2(sign * -10.f, -15.f));
             changeState(STATE_JUMP);
             m_isWallSliding = false;
         }
@@ -406,8 +475,10 @@ void Player::update(float dt)
             changeState(STATE_IDLE_2);
         }
         else if (!m_isWallSliding ||
-                 (m_direction == DIRECTION_LEFT && !isButtonLeftPressed()) ||
-                 (m_direction == DIRECTION_RIGHT && !isButtonRightPressed()))
+                 (m_direction == DIRECTION_LEFT &&
+                  !Input::isButtonLeftPressed()) ||
+                 (m_direction == DIRECTION_RIGHT &&
+                  !Input::isButtonRightPressed()))
         {
             m_isWallSliding = false;
             changeState(STATE_FALL);
@@ -423,8 +494,8 @@ void Player::draw(SDL_Renderer* renderer, const NTRect& viewPort)
     const NTTextureRegion& currentFrame = animation.getCurrentFrame(m_timer);
     int drawX = m_body->GetPosition().x * Constances::PPM - SPRITE_WIDTH / 2 -
                 viewPort.x;
-    int drawY = m_body->GetPosition().y * Constances::PPM - SPRITE_HEIGHT / 2 -
-                viewPort.y;
+    int footY = m_body->GetPosition().y * Constances::PPM + HEIGHT / 2.f;
+    int drawY = footY - SPRITE_HEIGHT;
     currentFrame.draw(renderer, drawX, drawY,
                       m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL
                                                     : SDL_FLIP_NONE);
@@ -440,20 +511,63 @@ void Player::changeState(State newState)
 
 void Player::createBody(const b2Vec2& position)
 {
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.fixedRotation = true;
-    bodyDef.userData = this;
-    bodyDef.position.x = position.x / Constances::PPM;
-    bodyDef.position.y = position.y / Constances::PPM;
-    m_body = m_level->getWorld()->CreateBody(&bodyDef);
+    b2BodyDef bDef;
+    bDef.type = b2_dynamicBody;
+    bDef.fixedRotation = true;
+    bDef.position.x = position.x / Constances::PPM;
+    bDef.position.y = position.y / Constances::PPM;
+    bDef.userData = this;
+    m_body = m_level->getWorld()->CreateBody(&bDef);
     b2PolygonShape shape;
     shape.SetAsBox(WIDTH / 2.f / Constances::PPM,
                    HEIGHT / 2.f / Constances::PPM);
-    b2FixtureDef fixtureDef;
-    fixtureDef.userData = this;
-    fixtureDef.shape = &shape;
-    m_fixture = m_body->CreateFixture(&fixtureDef);
+
+    // main body
+    b2FixtureDef fDef;
+    fDef.userData = (void*)FIXTURE_TYPE_MAIN_BODY;
+    fDef.shape = &shape;
+    fDef.filter.categoryBits = CATEGORY_BIT_PLAYER;
+    fDef.filter.maskBits = CATEGORY_BIT_MONSTER | CATEGORY_BIT_BLOCK;
+    m_fixture = m_body->CreateFixture(&fDef);
+
+    // foot sensor
+    fDef = b2FixtureDef();
+    shape.SetAsBox((WIDTH / 2.f - 1.f) / Constances::PPM, 2.f / Constances::PPM,
+                   b2Vec2(0.f, HEIGHT / 2.f / Constances::PPM), 0.f);
+    fDef.isSensor = true;
+    fDef.shape = &shape;
+    fDef.userData = (void*)FIXTURE_TYPE_FOOT_SENSOR;
+    fDef.filter.categoryBits = CATEGORY_BIT_PLAYER;
+    fDef.filter.maskBits = CATEGORY_BIT_BLOCK;
+    m_body->CreateFixture(&fDef);
+
+    // wall sensor
+    shape.SetAsBox(
+        1.f / Constances::PPM, HEIGHT / 4.f / Constances::PPM,
+        b2Vec2(WIDTH / 2.f / Constances::PPM, -HEIGHT / 4.f / Constances::PPM),
+        0.f);
+    fDef = b2FixtureDef();
+    fDef.shape = &shape;
+    fDef.isSensor = true;
+    fDef.friction = 0.5f;
+    fDef.userData = (void*)FIXTURE_TYPE_WALL_SENSOR;
+    fDef.filter.categoryBits = CATEGORY_BIT_PLAYER;
+    fDef.filter.maskBits = CATEGORY_BIT_BLOCK;
+    m_body->CreateFixture(&fDef);
+
+    // wall sensor
+    shape.SetAsBox(
+        1.f / Constances::PPM, HEIGHT / 4.f / Constances::PPM,
+        b2Vec2(-WIDTH / 2.f / Constances::PPM, -HEIGHT / 4.f / Constances::PPM),
+        0.f);
+    fDef = b2FixtureDef();
+    fDef.shape = &shape;
+    fDef.isSensor = true;
+    fDef.friction = 0.5f;
+    fDef.userData = (void*)FIXTURE_TYPE_WALL_SENSOR;
+    fDef.filter.categoryBits = CATEGORY_BIT_PLAYER;
+    fDef.filter.maskBits = CATEGORY_BIT_BLOCK;
+    m_body->CreateFixture(&fDef);
 }
 
 static std::vector<NTTextureRegion>
@@ -500,19 +614,19 @@ void Player::createAnimations()
         1.f / 10.f, ANIMATION_TYPE_LOOP);
     m_animations[STATE_ATTACK_1] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 0, 222, 1, 5, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 12.f, ANIMATION_TYPE_NORMAL);
+        1.f / 8.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_ATTACK_2] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 47, 7, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 12.f, ANIMATION_TYPE_NORMAL);
+        1.f / 8.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_ATTACK_3] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 53, 7, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 12.f, ANIMATION_TYPE_NORMAL);
+        1.f / 10.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_AIR_ATTACK_1] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 96, 7, 3, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_NORMAL);
+        1.f / 10.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_AIR_ATTACK_2] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 99, 7, 3, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_NORMAL);
+        1.f / 10.f, ANIMATION_TYPE_NORMAL);
     m_animations[STATE_AIR_ATTACK_3_LOOP] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 103, 7, 2, SPRITE_WIDTH, SPRITE_HEIGHT),
         1.f / 8.f, ANIMATION_TYPE_LOOP);
@@ -525,63 +639,6 @@ void Player::createAnimations()
     m_animations[STATE_WALL_SLIDE] = Animation<NTTextureRegion>(
         createSpriteSheet(m_texture, 79, 7, 2, SPRITE_WIDTH, SPRITE_HEIGHT),
         1.f / 10.f, ANIMATION_TYPE_LOOP);
-}
-
-void Player::checkOnGround()
-{
-    if (m_body->GetLinearVelocity().y < 0.f)
-        return;
-    b2AABB sensor;
-    b2Vec2 halfSize(WIDTH / 2.f / Constances::PPM,
-                    HEIGHT / 2.f / Constances::PPM);
-    const b2Vec2& pos = m_body->GetPosition();
-
-    sensor.upperBound.x = pos.x - halfSize.x;
-    sensor.upperBound.y = pos.y + halfSize.y;
-
-    sensor.lowerBound.x = pos.x + halfSize.x;
-    sensor.lowerBound.y = pos.y + halfSize.y + 1.f / Constances::PPM;
-    m_checkingStatus = CHECK_GROUND;
-    m_level->getWorld()->QueryAABB(this, sensor);
-}
-
-void Player::checkWallSliding()
-{
-    b2AABB sensor;
-    const b2Vec2& pos = m_body->GetPosition();
-    b2Vec2 halfSize;
-    halfSize.x = WIDTH / 2.f / Constances::PPM;
-    halfSize.y = HEIGHT / 2.f / Constances::PPM;
-
-    sensor.upperBound.y = pos.y - halfSize.y + 1.f / Constances::PPM;
-    sensor.lowerBound.y = pos.y - halfSize.y / 2.f;
-
-    if (m_direction == DIRECTION_LEFT)
-    {
-        sensor.upperBound.x = pos.x - halfSize.x - 1.f / Constances::PPM;
-        sensor.lowerBound.x = pos.x - halfSize.x;
-    }
-    else
-    {
-        sensor.upperBound.x = pos.x + halfSize.x;
-        sensor.lowerBound.x = pos.x + halfSize.x + 1.f / Constances::PPM;
-    }
-    m_checkingStatus = CHECK_SLIDE;
-    m_level->getWorld()->QueryAABB(this, sensor);
-}
-
-bool Player::ReportFixture(b2Fixture* f)
-{
-    if (f != m_fixture)
-    {
-        if (m_checkingStatus == CHECK_GROUND)
-            m_isOnGround = true;
-        else if (m_checkingStatus == CHECK_SLIDE)
-            m_isWallSliding = true;
-        return false;
-    }
-    else
-        return true;
 }
 
 void Player::jump()
@@ -599,26 +656,64 @@ bool Player::isCurrentAnimationComplete()
 void Player::move(float vx)
 {
     m_body->ApplyLinearImpulseToCenter(b2Vec2(vx, 0.f), true);
-    b2Vec2 v = m_body->GetLinearVelocity();
-    v.x = std::max(-10.f, std::min(10.f, v.x));
-    m_body->SetLinearVelocity(v);
+    b2Vec2 vel = m_body->GetLinearVelocity();
+    vel.x = std::max(-10.f, std::min(10.f, vel.x));
+    m_body->SetLinearVelocity(vel);
 }
 
-void Player::setZeroVelX()
+void Player::stopHorizontalMovement()
 {
-    b2Vec2 v = m_body->GetLinearVelocity();
-    v.x = 0;
-    m_body->SetLinearVelocity(v);
+    b2Vec2 vel = m_body->GetLinearVelocity();
+    vel.x = 0.f;
+    m_body->SetLinearVelocity(vel);
 }
 
-void Player::updateKeyState(float)
+void Player::stopVerticalMovement()
 {
-    const Uint8* keyState = SDL_GetKeyboardState(nullptr);
-    m_prevKeyState = m_currentKeyState;
-    m_currentKeyState.buttonA = keyState[SDL_SCANCODE_X];
-    m_currentKeyState.buttonB = keyState[SDL_SCANCODE_Z];
-    m_currentKeyState.buttonUp = keyState[SDL_SCANCODE_UP];
-    m_currentKeyState.buttonDown = keyState[SDL_SCANCODE_DOWN];
-    m_currentKeyState.buttonLeft = keyState[SDL_SCANCODE_LEFT];
-    m_currentKeyState.buttonRight = keyState[SDL_SCANCODE_RIGHT];
+
+    b2Vec2 vel = m_body->GetLinearVelocity();
+    vel.y = 0.f;
+    m_body->SetLinearVelocity(vel);
+}
+void Player::touchGround() { ++m_touchingGroundCount; }
+
+void Player::untouchGround() { --m_touchingGroundCount; }
+
+bool Player::isOnGround() const { return m_touchingGroundCount > 0; }
+
+void Player::touchWall() { ++m_touchingWallCount; }
+
+void Player::untouchWall() { --m_touchingWallCount; }
+
+bool Player::isTouchingWall() const { return m_touchingWallCount > 0; }
+
+class PlayerAttackCallBack : public b2QueryCallback
+{
+  public:
+    PlayerAttackCallBack(Player* player, int damage) :
+        m_player(player), m_damage(damage)
+    {
+    }
+
+    bool ReportFixture(b2Fixture* fixture)
+    {
+        GameObject* gameObject = (GameObject*)fixture->GetBody()->GetUserData();
+        if (gameObject != nullptr && gameObject != m_player &&
+            gameObject->getObjectType() == GameObject::Type::MONSTER)
+        {
+            ((Monster*)gameObject)->getDamage(m_damage);
+        }
+        return true;
+    }
+
+  private:
+    Player* m_player;
+    int m_damage;
+};
+
+void Player::attackArea(float x, float y, float width, float height)
+{
+    b2AABB area;
+    PlayerAttackCallBack callback(this, 1);
+    m_level->getWorld()->QueryAABB(&callback, m_fixture->GetAABB(0));
 }
