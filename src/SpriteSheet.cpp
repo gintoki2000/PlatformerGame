@@ -22,7 +22,7 @@ SpriteSheet::SpriteSheet(SDL_Texture* texture, int spriteWidth,
             m_sprites[index] = Sprite(texture, rect);
         }
     }
-	m_size = rows * cols;
+    m_size = rows * cols;
 }
 
 SpriteSheet::~SpriteSheet() { delete[] m_sprites; }
@@ -31,4 +31,28 @@ const Sprite& SpriteSheet::getSprite(int index) const
 {
     SDL_assert(index >= 0 || index < m_size);
     return m_sprites[index];
+}
+
+void SpriteSheet::draw(SDL_Renderer* renderer, int index,
+                       const SDL_Rect* dstrect) const
+{
+    getSprite(index).draw(renderer, dstrect);
+}
+
+void SpriteSheet::draw(SDL_Renderer* renderer, int index,
+                       const SDL_Rect* dstrect, double angle,
+                       const SDL_Point* center, SDL_RendererFlip flip) const
+{
+    getSprite(index).draw(renderer, dstrect, angle, center, flip);
+}
+
+void SpriteSheet::draw(SDL_Renderer* renderer, int index, int x, int y) const
+{
+    getSprite(index).draw(renderer, x, y);
+}
+
+void SpriteSheet::draw(SDL_Renderer* renderer, int index, int x, int y,
+                       SDL_RendererFlip flip) const
+{
+    getSprite(index).draw(renderer, x, y, flip);
 }

@@ -3,18 +3,32 @@
 #include "NTTextureRegion.h"
 #include "SDL_render.h"
 typedef NTTextureRegion Sprite;
-class SpriteSheet 
+class SpriteSheet
 {
-	public:
-			SpriteSheet(SDL_Texture* texture, int spriteWidth, int spriteHeight);
+  public:
+    SpriteSheet(SDL_Texture* texture, int spriteWidth, int spriteHeight);
 
-			~SpriteSheet();
+    SpriteSheet(const SpriteSheet&) = delete;
 
-			int getSize() const { return m_size; }
+    SpriteSheet& operator=(const SpriteSheet&) = delete;
 
-			const Sprite&  getSprite(int index) const;
-	private:
-			Sprite* m_sprites;
-			int m_size;
+    ~SpriteSheet();
+
+    int getSize() const { return m_size; }
+
+    const Sprite& getSprite(int index) const;
+
+    void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect) const;
+
+	void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect, double angle, const SDL_Point* center, SDL_RendererFlip flip) const;
+
+    void draw(SDL_Renderer* renderer, int index, int x, int y) const;
+
+    void draw(SDL_Renderer* renderer, int index, int x, int y,
+              SDL_RendererFlip flip) const;
+
+  private:
+    Sprite* m_sprites;
+    int m_size;
 };
-#endif //SPRITE_SHEET_H
+#endif // SPRITE_SHEET_H

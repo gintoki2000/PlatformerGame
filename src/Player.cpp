@@ -64,27 +64,6 @@ Player::~Player()
     SDL_DestroyTexture(m_texture);
 }
 
-static std::vector<NTTextureRegion>
-createSpriteSheet(SDL_Texture* texture, int startX, int startY, int rows,
-                  int cols, int spriteWidth, int spriteHeight)
-{
-    std::vector<NTTextureRegion> spriteSheet;
-    spriteSheet.reserve((unsigned long)(rows * cols));
-    SDL_Rect rect{startX, startY, spriteWidth, spriteHeight};
-    for (int y = 0; y < rows; ++y)
-    {
-        for (int x = 0; x < cols; ++x)
-        {
-            rect.x = x * spriteWidth + startX;
-            rect.y = y * spriteHeight + startY;
-            rect.w = spriteWidth;
-            rect.h = spriteHeight;
-            spriteSheet.emplace_back(texture, rect);
-        }
-    }
-    return spriteSheet;
-}
-
 Player* Player::create(Level* level)
 {
     Player* ret = new Player;
@@ -108,6 +87,9 @@ bool Player::initialize(Level* level, const b2Vec2& position)
         SDL_Log("Could not load texture: %s", IMG_GetError());
         return false;
     }
+
+    m_spriteSheet = new SpriteSheet(m_texture, 50, 37);
+
     m_level = level;
     m_timer = 0.f;
     m_state = STATE_IDLE_1;
@@ -127,10 +109,10 @@ bool Player::initialize(Level* level, const b2Vec2& position)
 
     m_attackAction2 = AttackingAction(this, m_level, attackInfo);
 
-	attackInfo.dx = -1.5f;
-	attackInfo.dy = 0.f;
-	attackInfo.width = 3.f;
-	attackInfo.height = 1.f;
+    attackInfo.dx = -1.5f;
+    attackInfo.dy = 0.f;
+    attackInfo.width = 3.f;
+    attackInfo.height = 1.f;
     m_attackAction3 = AttackingAction(this, m_level, attackInfo);
     createAnimations();
     createBody(position);
@@ -241,7 +223,7 @@ void Player::update(float dt)
         }
         else if (isCurrentAnimationComplete())
         {
-            changeState(STATE_SMRSLT);
+            changeState(STATE_SOMMERSAULT);
         }
 
         if (inputDirection != 0)
@@ -254,7 +236,7 @@ void Player::update(float dt)
         }
         break;
     }
-    case STATE_SMRSLT:
+    case STATE_SOMMERSAULT:
     {
 
         if (Input::isButtonAJustPressed())
@@ -490,18 +472,28 @@ void Player::update(float dt)
 
 void Player::draw(SDL_Renderer* renderer, const NTRect& viewPort)
 {
-    Animation<NTTextureRegion>& animation = m_animations[m_state];
-    const NTTextureRegion& currentFrame = animation.getCurrentFrame(m_timer);
+    /* Animation<NTTextureRegion>& animation = m_animations[m_state];
+     const NTTextureRegion& currentFrame = animation.getCurrentFrame(m_timer);
+     int drawX = m_body->GetPosition().x * Constances::PPM - SPRITE_WIDTH / 2 -
+                 viewPort.x;
+     int footY = m_body->GetPosition().y * Constances::PPM + HEIGHT / 2.f;
+     int drawY = footY - SPRITE_HEIGHT;
+     currentFrame.draw(renderer, drawX, drawY,
+                       m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL
+                                                     : SDL_FLIP_NONE);
+         */
+
     int drawX = m_body->GetPosition().x * Constances::PPM - SPRITE_WIDTH / 2 -
                 viewPort.x;
     int footY = m_body->GetPosition().y * Constances::PPM + HEIGHT / 2.f;
     int drawY = footY - SPRITE_HEIGHT;
-    currentFrame.draw(renderer, drawX, drawY,
-                      m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL
-                                                    : SDL_FLIP_NONE);
+    int currentFrame = m_animations[m_state].getCurrentFrame(m_timer);
+    m_spriteSheet->draw(renderer, currentFrame, drawX, drawY,
+                        m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL
+                                                      : SDL_FLIP_NONE);
 }
 
-void Player::changeState(State newState)
+void Player::changeState(int newState)
 {
     if (m_state == newState)
         return;
@@ -550,7 +542,7 @@ void Player::createBody(const b2Vec2& position)
     fDef.shape = &shape;
     fDef.isSensor = true;
     fDef.friction = 0.5f;
-    fDef.userData = (void*)FIXTURE_TYPE_WALL_SENSOR;
+    fDef.userData = (void*)FIXTURE_TYPE_RIGHT_WALL_SENSOR;
     fDef.filter.categoryBits = CATEGORY_BIT_PLAYER;
     fDef.filter.maskBits = CATEGORY_BIT_BLOCK;
     m_body->CreateFixture(&fDef);
@@ -564,81 +556,56 @@ void Player::createBody(const b2Vec2& position)
     fDef.shape = &shape;
     fDef.isSensor = true;
     fDef.friction = 0.5f;
-    fDef.userData = (void*)FIXTURE_TYPE_WALL_SENSOR;
+    fDef.userData = (void*)FIXTURE_TYPE_RIGHT_WALL_SENSOR;
     fDef.filter.categoryBits = CATEGORY_BIT_PLAYER;
     fDef.filter.maskBits = CATEGORY_BIT_BLOCK;
     m_body->CreateFixture(&fDef);
 }
-
-static std::vector<NTTextureRegion>
-createSpriteSheet(SDL_Texture* texture, int startIndex, int cols, int count,
-                  int spriteWidth, int spriteHeight)
-{
-    SDL_Rect r;
-    r.w = spriteWidth;
-    r.h = spriteHeight;
-    std::vector<NTTextureRegion> spriteSheet;
-    spriteSheet.reserve(count);
-    for (int i = startIndex; i < startIndex + count; ++i)
-    {
-        int col = i % cols;
-        int row = i / cols;
-        r.x = col * spriteWidth;
-        r.y = row * spriteHeight;
-        spriteSheet.emplace_back(texture, r);
-    }
-    return spriteSheet;
-}
-
 void Player::createAnimations()
 {
-    m_animations[STATE_IDLE_1] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 0, 0, 1, 4, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 6.f, ANIMATION_TYPE_LOOP);
-    m_animations[STATE_IDLE_2] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 150, 185, 1, 4, SPRITE_WIDTH,
-                          SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_LOOP);
-    m_animations[STATE_JUMP] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 0, 74, 1, 4, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_SMRSLT] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 18, 7, 4, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 12.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_FALL] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 50, 111, 1, 2, SPRITE_WIDTH,
-                          SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_LOOP);
-    m_animations[STATE_RUN] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 50, 37, 1, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_LOOP);
-    m_animations[STATE_ATTACK_1] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 0, 222, 1, 5, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_ATTACK_2] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 47, 7, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_ATTACK_3] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 53, 7, 6, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_AIR_ATTACK_1] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 96, 7, 3, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_AIR_ATTACK_2] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 99, 7, 3, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_AIR_ATTACK_3_LOOP] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 103, 7, 2, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_LOOP);
-    m_animations[STATE_AIR_ATTACK_3_RDY] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 105, 7, 1, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_AIR_ATTACK_3_END] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 106, 7, 3, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 8.f, ANIMATION_TYPE_NORMAL);
-    m_animations[STATE_WALL_SLIDE] = Animation<NTTextureRegion>(
-        createSpriteSheet(m_texture, 79, 7, 2, SPRITE_WIDTH, SPRITE_HEIGHT),
-        1.f / 10.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_IDLE_1] =
+        Animation<int>({0, 1, 2, 3}, 1.f / 6.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_CROUCH] =
+        Animation<int>({4, 5, 6, 7}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_RUN] =
+        Animation<int>({8, 9, 10, 11, 12, 13}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_JUMP] =
+        Animation<int>({14, 15, 16, 17}, 1.f / 8.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_SOMMERSAULT] =
+        Animation<int>({18, 19, 20, 21}, 1.f / 8.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_FALL] =
+        Animation<int>({22, 23}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_SLIDE] =
+        Animation<int>({24, 25}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_STAND] =
+        Animation<int>({26, 27, 28}, 1.f / 8.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_CORNER_GRAB] =
+        Animation<int>({29, 30, 31, 32}, 1.f / 8.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_CORNER_CLIMB] =
+        Animation<int>({33, 34, 35, 36, 37}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_IDLE_2] =
+        Animation<int>({38, 39, 40, 41}, 1.f / 10.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_ATTACK_1] =
+        Animation<int>({42, 43, 44, 45, 46}, 1.f / 10.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_ATTACK_2] = Animation<int>(
+        {47, 48, 49, 50, 51, 52}, 1.f / 10.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_ATTACK_3] = Animation<int>(
+        {53, 54, 55, 56, 57, 58}, 1.f / 10.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_DIE] = Animation<int>({59, 60, 61, 62, 63, 64, 65},
+                                             1.f / 5.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_SWORD_DRAW] =
+        Animation<int>({66, 67, 69, 69}, 1.f / 8.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_SWORD_SHEATHE] =
+        Animation<int>({70, 71, 72, 73}, 1.f / 8.f, ANIMATION_TYPE_NORMAL);
+    m_animations[STATE_CORNER_JUMP] =
+        Animation<int>({74, 75}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_WALL_SLIDE] =
+        Animation<int>({79, 80}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+    m_animations[STATE_LADDER_CLIMB] =
+        Animation<int>({78, 79, 80, 81}, 1.f / 8.f, ANIMATION_TYPE_LOOP);
+
+	m_animator = Animator<int>(m_animations, NUM_STATES);
+	
 }
 
 void Player::jump()
@@ -646,11 +613,6 @@ void Player::jump()
     m_body->ApplyLinearImpulseToCenter(b2Vec2(0.f, -JUMP_VEL), true);
     changeState(STATE_JUMP);
     m_isOnGround = false;
-}
-
-bool Player::isCurrentAnimationComplete()
-{
-    return m_animations[m_state].isComplete(m_timer);
 }
 
 void Player::move(float vx)
@@ -686,34 +648,3 @@ void Player::touchWall() { ++m_touchingWallCount; }
 void Player::untouchWall() { --m_touchingWallCount; }
 
 bool Player::isTouchingWall() const { return m_touchingWallCount > 0; }
-
-class PlayerAttackCallBack : public b2QueryCallback
-{
-  public:
-    PlayerAttackCallBack(Player* player, int damage) :
-        m_player(player), m_damage(damage)
-    {
-    }
-
-    bool ReportFixture(b2Fixture* fixture)
-    {
-        GameObject* gameObject = (GameObject*)fixture->GetBody()->GetUserData();
-        if (gameObject != nullptr && gameObject != m_player &&
-            gameObject->getObjectType() == GameObject::Type::MONSTER)
-        {
-            ((Monster*)gameObject)->getDamage(m_damage);
-        }
-        return true;
-    }
-
-  private:
-    Player* m_player;
-    int m_damage;
-};
-
-void Player::attackArea(float x, float y, float width, float height)
-{
-    b2AABB area;
-    PlayerAttackCallBack callback(this, 1);
-    m_level->getWorld()->QueryAABB(&callback, m_fixture->GetAABB(0));
-}

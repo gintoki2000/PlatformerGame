@@ -21,6 +21,10 @@ class Level : public b2ContactListener
 
     void draw(SDL_Renderer* renderer);
 
+    void addMonster(Monster* monster);
+
+    void removeMonster(Monster* monster);
+
     // setters && getters
     b2World* getWorld() const { return m_world; }
 
@@ -28,9 +32,8 @@ class Level : public b2ContactListener
 
     Player* getPlayer() const { return m_player; }
 
-	void addMonster(Monster* monster);
+    ObjectLayer* getMonsters() const { return m_monsters; }
 
-	void removeMonster(Monster* monster);
 
   private:
     Level();
@@ -41,7 +44,7 @@ class Level : public b2ContactListener
     void BeginContact(b2Contact* c) override;
     void EndContact(b2Contact* c) override;
 
-	void handleCollision(Player* player, GameObject* gameObject);
+    void handleCollision(Player* player, GameObject* gameObject);
 
     void createGround();
 
@@ -62,9 +65,9 @@ class Level : public b2ContactListener
 
     ObjectLayer* m_monsters;
 
-	Monster* m_monstersToBeAdd[10];
-	Monster* m_monstersToBeRemove[10];	
-	int m_numMonstersToBeAdd;
-	int m_numMonstersToBeRemove;
+    Monster* m_monstersToBeAdd[10];
+    Monster* m_monstersToBeRemove[10];
+    int m_numMonstersToBeAdd;
+    int m_numMonstersToBeRemove;
 };
 #endif // LEVEL_H

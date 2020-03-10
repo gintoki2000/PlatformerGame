@@ -4,23 +4,29 @@
 #include "Constances.h"
 #include "Enums.h"
 #include "GameObject.h"
-#include "NTLayer.h"
 #include "NTTextureRegion.h"
+#include "SpriteSheet.h"
 #include "box2d/box2d.h"
+#include "Animator.h"
 class Level;
+
 class Player : public GameObject
 {
   private:
-    enum State
+    enum
     {
         STATE_IDLE_1,
         STATE_IDLE_2,
         STATE_RUN,
         STATE_JUMP,
-        STATE_SMRSLT,
-        STATE_GRAB,
-        STATE_CLIMB,
+        STATE_SOMMERSAULT,
+        STATE_CORNER_GRAB,
+        STATE_LADDER_CLIMB,
+        STATE_CROUCH,
+        STATE_SLIDE,
+        STATE_STAND,
         STATE_HURT,
+        STATE_DIE,
         STATE_FALL,
         STATE_ATTACK_1,
         STATE_ATTACK_2,
@@ -31,8 +37,10 @@ class Player : public GameObject
         STATE_AIR_ATTACK_3_RDY,
         STATE_AIR_ATTACK_3_END,
         STATE_WALL_SLIDE,
-        STATE_SWD_DRAW,
-        STATE_SWD_WITH,
+        STATE_SWORD_DRAW,
+        STATE_SWORD_SHEATHE,
+        STATE_CORNER_JUMP,
+        STATE_CORNER_CLIMB,
         NUM_STATES
     };
 
@@ -51,7 +59,7 @@ class Player : public GameObject
         Level* level;
         AttackInfo attackInfo;
 
-		AttackingAction();
+        AttackingAction();
 
         AttackingAction(Player* _player, Level* _level,
                         const AttackInfo& _attackInfo);
@@ -71,11 +79,12 @@ class Player : public GameObject
     static constexpr float RUN_ACC = 0.8f;
     static constexpr float WIDTH_IN_METER = WIDTH / Constances::PPM;
     static constexpr float HEIGHT_IN_METER = HEIGHT / Constances::PPM;
-    enum FixtureType
+    enum
     {
         FIXTURE_TYPE_MAIN_BODY,
         FIXTURE_TYPE_FOOT_SENSOR,
-        FIXTURE_TYPE_WALL_SENSOR
+        FIXTURE_TYPE_RIGHT_WALL_SENSOR,
+        FIXTURE_TYPE_LEFT_WALL_SENSOR
     };
 
   public:
@@ -103,28 +112,15 @@ class Player : public GameObject
 
   private:
     Player();
-
     bool initialize(Level* level);
-
     bool initialize(Level* level, const b2Vec2& position);
-
-    void changeState(State newState);
-
+    void changeState(int newState);
     void createBody(const b2Vec2& position);
-
     void createAnimations();
-
     void jump();
-
-    bool isCurrentAnimationComplete();
-
     void move(float vx);
-
     void stopHorizontalMovement();
-
     void stopVerticalMovement();
-
-    void attackArea(float x, float y, float width, float height);
 
     bool m_isOnGround;
 
@@ -132,7 +128,7 @@ class Player : public GameObject
 
     int m_direction;
 
-    State m_state;
+    int m_state;
 
     b2Body* m_body;
 
@@ -140,7 +136,7 @@ class Player : public GameObject
 
     Level* m_level;
 
-    Animation<NTTextureRegion> m_animations[NUM_STATES];
+    Animation<int> m_animations[NUM_STATES];
 
     SDL_Texture* m_texture;
 
@@ -152,9 +148,13 @@ class Player : public GameObject
 
     int m_touchingWallCount;
 
-	AttackingAction m_attackAction1;
-	AttackingAction m_attackAction2;
-	AttackingAction m_attackAction3;
+    AttackingAction m_attackAction1;
+    AttackingAction m_attackAction2;
+    AttackingAction m_attackAction3;
+
+    SpriteSheet* m_spriteSheet;
+
+	Animator<int> m_animator;
 
 };
 #endif // PLAYER_H

@@ -75,7 +75,7 @@ template <class T> class Animation
 
     void setType(AnimationType type) { m_type = type; }
 
-    const std::vector<T> getFrames() const { return m_frames; }
+    const std::vector<T>getFrames() const { return m_frames; }
 
     void setFrames(const std::vector<T>& frames) { m_frames = frames; }
 
