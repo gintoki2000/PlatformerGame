@@ -39,9 +39,9 @@ void ObjectLayer::removeObject(GameObject* gameObject)
         gameObject->getNext()->setPrev(gameObject->getPrev());
     if (gameObject->getPrev() != nullptr)
         gameObject->getPrev()->setNext(gameObject->getNext());
-	gameObject->cleanup();
     gameObject->setNext(nullptr);
     gameObject->setPrev(nullptr);
+	gameObject->cleanup();
 	--m_numObjects;
 }
 
