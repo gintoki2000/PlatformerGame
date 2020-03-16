@@ -19,11 +19,11 @@ class SpriteSheet
 
     const Sprite& getSprite(int index) const;
 
-	void getSprites(std::vector<Sprite>& sprites, int sIndex, int count);
-
     void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect) const;
 
-	void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect, double angle, const SDL_Point* center, SDL_RendererFlip flip) const;
+    void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect,
+              double angle, const SDL_Point* center,
+              SDL_RendererFlip flip) const;
 
     void draw(SDL_Renderer* renderer, int index, int x, int y) const;
 
