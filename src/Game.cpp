@@ -5,9 +5,10 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_video.h"
+#include "StateManager.h"
 Game* Game::instance = nullptr;
 
-Game::Game() : m_isRunning(false), m_state(nullptr) { instance = this; }
+Game::Game() : m_isRunning(false), m_stateManager(nullptr) { instance = this; }
 
 Game::~Game()
 {
@@ -57,7 +58,7 @@ bool Game::initialize()
     return true;
 }
 
-void Game::render(float)
+void Game::render(float deltaTime)
 {
     static SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -68,14 +69,25 @@ void Game::render(float)
         case SDL_WINDOWEVENT:
             switch (event.window.type)
             {
-            case SDL_WINDOWEVENT_HIDDEN: m_state->hidden(); break;
-            case SDL_WINDOWEVENT_SHOWN: m_state->show(); break;
-            case SDL_WINDOWEVENT_FOCUS_GAINED: m_state->resume(); break;
-            case SDL_WINDOWEVENT_FOCUS_LOST: m_state->pause(); break;
-            case SDL_WINDOWEVENT_TAKE_FOCUS: m_state->resume(); break;
+            case SDL_WINDOWEVENT_HIDDEN:
+                m_stateManager->getState()->hidden();
+                break;
+            case SDL_WINDOWEVENT_SHOWN:
+                m_stateManager->getState()->show();
+                break;
+            case SDL_WINDOWEVENT_FOCUS_GAINED:
+                m_stateManager->getState()->resume();
+                break;
+            case SDL_WINDOWEVENT_FOCUS_LOST:
+                m_stateManager->getState()->pause();
+                break;
+            case SDL_WINDOWEVENT_TAKE_FOCUS:
+                m_stateManager->getState()->resume();
+                break;
             }
         }
     }
+	m_stateManager->getState()->render(deltaTime);
     SDL_RenderPresent(Locator::getRenderer());
 }
 

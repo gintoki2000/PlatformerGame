@@ -3,7 +3,10 @@
 enum Direction
 {
     DIRECTION_LEFT,
-    DIRECTION_RIGHT
+    DIRECTION_RIGHT,
+    DIRECTION_UP,
+    DIRECTION_DOWN,
+    DIRECTION_NONE
 };
 
 enum CateroryBit
@@ -13,4 +16,15 @@ enum CateroryBit
     CATEGORY_BIT_BLOCK = 1 << 2
 };
 
+enum
+{
+    GAME_OBJECT_TYPE_PLAYER,
+    GAME_OBJECT_TYPE_MONSTER,
+    GAME_OBJECT_TYPE_ITEM
+};
+
+enum
+{
+    MONSTER_TYPE_SLIME
+};
 #endif // ENUMS_H

@@ -2,41 +2,43 @@
 #define GAME_OBJECT_H
 #include "NTRect.h"
 #include "SDL.h"
+class Level;
 class GameObject
 {
-  public:
-    enum Type
-    {
-        PLAYER,
-        MONSTER
-    };
-
-  protected:
-    GameObject(Type type) : m_next(nullptr), m_prev(nullptr), m_type(type) {}
-
-  public:
-    virtual ~GameObject() {}
-
-    GameObject* getNext() const { return m_next; }
-
-    void setNext(GameObject* gameObject) { m_next = gameObject; }
-
-    GameObject* getPrev() const { return m_prev; }
-
-    void setPrev(GameObject* gameObject) { m_prev = gameObject; }
-
-    virtual void update(float dt) = 0;
-
-    virtual void draw(SDL_Renderer* renderer, const NTRect& viewPort) = 0;
-
-    Type getObjectType() const { return m_type; }
-
-    virtual void cleanup() {}
-
   private:
+    friend class ObjectLayer;
+    int m_type;
     GameObject* m_next;
     GameObject* m_prev;
 
-    Type m_type;
+  protected:
+    Level* m_level;
+    float m_positionX;
+    float m_positionY;
+    float m_rotation;
+
+  public:
+    /// constructor && destructor
+    GameObject(int type);
+    virtual ~GameObject();
+
+    virtual void render(float deltaTime) = 0;
+
+    /// setter && getter
+    float getPositionX() const;
+    virtual void setPositionX(float x);
+
+    float getPositionY() const;
+    virtual void setPositionY(float y);
+
+    virtual void setPosition(float x, float y);
+
+    Level* getLevel() const { return m_level; }
+    void setLevel(Level* level) { m_level = level; }
+
+    int getGameObjectType() const { return m_type; }
+
+  protected:
+    virtual void onPositionChanged();
 };
 #endif // GAME_OBJECT_H

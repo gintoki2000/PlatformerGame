@@ -2,6 +2,7 @@
 #define GAME_H
 #include "SDL.h"
 class GameState;
+class StateManager;
 class Game
 {
   public:
@@ -21,7 +22,8 @@ class Game
 
   private:
     bool m_isRunning;
-    GameState* m_state;
+   	StateManager* m_stateManager;
+
 
     static Game* instance;
 };
