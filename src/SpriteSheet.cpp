@@ -57,11 +57,5 @@ void SpriteSheet::draw(SDL_Renderer* renderer, int index, int x, int y,
     getSprite(index).draw(renderer, x, y, flip);
 }
 
-void SpriteSheet::getSprites(std::vector<Sprite> &sprites, int sIndex, int count)
-{
-	sprites.reserve((std::size_t) count);
-	for (int i = sIndex, j = 0; i < sIndex + count; ++i, ++j)
-	{
-		sprites[(std::size_t) j] = m_sprites[i];	
-	}
-}
+
+
