@@ -2,6 +2,7 @@
 #define SPRITE_SHEET_H
 #include "NTTextureRegion.h"
 #include "SDL_render.h"
+#include <vector>
 typedef NTTextureRegion Sprite;
 class SpriteSheet
 {
@@ -14,9 +15,11 @@ class SpriteSheet
 
     ~SpriteSheet();
 
-    int getSize() const { return m_size; }
+    int getNumSprites() const { return m_numSprites; }
 
     const Sprite& getSprite(int index) const;
+
+	void getSprites(std::vector<Sprite>& sprites, int sIndex, int count);
 
     void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect) const;
 
@@ -29,6 +32,6 @@ class SpriteSheet
 
   private:
     Sprite* m_sprites;
-    int m_size;
+    int m_numSprites;
 };
 #endif // SPRITE_SHEET_H

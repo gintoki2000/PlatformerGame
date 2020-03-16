@@ -4,31 +4,24 @@
 class GameState;
 class Game
 {
-public:
+  public:
     Game();
 
     ~Game();
 
     bool initialize();
 
-    void tick(float dt);
+    void render(float dt);
 
-    void paint();
-
-    SDL_Renderer* getRenderer() const { return m_renderer; }
-
-    SDL_Window* getWindow() const { return m_window; }
+	void stop();
 
     bool isRunning() const { return m_isRunning; }
 
-	static Game* getInstance() {return instance; }
+    static Game* getInstance() { return instance; }
 
-private:
+  private:
     bool m_isRunning;
-    SDL_Renderer* m_renderer;
-    SDL_Window* m_window;
-
-	GameState* m_state;
+    GameState* m_state;
 
     static Game* instance;
 };
