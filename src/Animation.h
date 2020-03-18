@@ -26,6 +26,8 @@ class Animation
 
     const Sprite* getCurrentSprite(float elapsedTime) const;
 
+	bool isFinished(float elapsedTime) const;
+
     /// setter & getter
 
     const Sprite** getSprites() const { return m_sprites; }

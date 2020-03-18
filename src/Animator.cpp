@@ -8,7 +8,7 @@ Animator::Animator(Animation* animations[], int numAnimations)
     {
         m_animations[i] = animations[i];
     }
-	play(0, 0.f);
+    play(0, 0.f);
 }
 
 void Animator::play(int index, float initialTime)
@@ -16,9 +16,11 @@ void Animator::play(int index, float initialTime)
     m_isPaused = false;
     m_animationIndex = index;
     m_elapsedTime = initialTime;
+    m_currentSprite =
+        m_animations[m_animationIndex]->getCurrentSprite(m_elapsedTime);
 }
 
-void Animator::update(float deltaTime)
+void Animator::tick(float deltaTime)
 {
     if (!m_isPaused)
     {
@@ -28,7 +30,15 @@ void Animator::update(float deltaTime)
     }
 }
 
-void Animator::render(SDL_Renderer* renderer, int x, int y)
+void Animator::render(SDL_Renderer* renderer)
 {
-    m_currentSprite->draw(renderer, x, y);
+    m_dstrect.x = m_position.x - m_origin.x;
+    m_dstrect.y = m_position.y - m_origin.y;
+    m_dstrect.w = m_currentSprite->getWidth();
+    m_dstrect.h = m_currentSprite->getHeight();
+    m_currentSprite->draw(renderer, &m_dstrect, m_rotation, &m_origin, m_flip);
+}
+bool Animator::isCurrentAnimFinshed()
+{
+    return m_animations[m_animationIndex]->isFinished(m_elapsedTime);
 }

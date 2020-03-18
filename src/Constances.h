@@ -9,5 +9,6 @@ struct Constances
     static constexpr int GAME_HEIGHT = 320;
     static constexpr int SCALE_X = 2;
     static constexpr int SCALE_Y = 2;
+	static constexpr int TILE_SIZE = 16;
 };
 #endif // CONTANCES_H

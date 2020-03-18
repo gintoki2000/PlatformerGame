@@ -5,40 +5,46 @@
 class Level;
 class GameObject
 {
-  private:
-    friend class ObjectLayer;
-    int m_type;
-    GameObject* m_next;
-    GameObject* m_prev;
-
-  protected:
-    Level* m_level;
-    float m_positionX;
-    float m_positionY;
-    float m_rotation;
 
   public:
     /// constructor && destructor
-    GameObject(int type);
+    GameObject(int gameObjectType);
     virtual ~GameObject();
 
     virtual void render(float deltaTime) = 0;
 
     /// setter && getter
-    float getPositionX() const;
-    virtual void setPositionX(float x);
+    int  getPositionX() const;
+    void setPositionX(int x);
 
-    float getPositionY() const;
-    virtual void setPositionY(float y);
+    int  getPositionY() const;
+    void setPositionY(int y);
 
-    virtual void setPosition(float x, float y);
+    void setPosition(int x, int y);
 
-    Level* getLevel() const { return m_level; }
-    void setLevel(Level* level) { m_level = level; }
+    Level* getLevel() const;
+    void   setLevel(Level* level);
 
-    int getGameObjectType() const { return m_type; }
+    bool         isVisible() const;
+    virtual void setVisible(bool visible);
+
+    int getGameObjectType() const { return m_gameObjectType; }
 
   protected:
     virtual void onPositionChanged();
+
+    virtual void onSizeChanged();
+
+    Level* m_level;
+    int    m_positionX;
+    int    m_positionY;
+    double m_rotation;
+    bool   m_isVisible;
+
+  private:
+    friend class ObjectLayer;
+    int         m_gameObjectType;
+    GameObject* m_next;
+    GameObject* m_prev;
 };
 #endif // GAME_OBJECT_H

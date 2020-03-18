@@ -10,26 +10,24 @@ Monster::Monster(int monsterType, int hitPoints) :
 {
 }
 
-b2Body* Monster::createBody(b2World* world, int left, int top, int width,
-                            int height)
+void Monster::getHit(int damage)
 {
-    b2BodyDef bdef;
-    bdef.position.x = (left + width / 2.f) / Constances::PPM;
-    bdef.position.y = (top + height / 2.f) / Constances::PPM;
-    bdef.fixedRotation = true;
-    bdef.type = b2_dynamicBody;
+	if (!isDead())
+	{
+		m_hitPoints -= damage;
+		if (m_hitPoints < 0)
+		{
+			m_hitPoints = 0;
+		}
+	}
+}
 
-    b2Body* body = world->CreateBody(&bdef);
+float Monster::getDistanceToPlayer()
+{
+	return 999.f;
+}
 
-    b2PolygonShape box;
-    box.SetAsBox(width / 2.f / Constances::PPM, height / 2.f / Constances::PPM);
-
-    b2FixtureDef fdef;
-    fdef.shape = &box;
-    fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
-    fdef.filter.maskBits = CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER;
-
-    body->CreateFixture(&fdef);
-
-    return body;
+int Monster::getFacingPlayerDirection()
+{
+	return DIRECTION_LEFT;
 }
