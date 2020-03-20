@@ -1,21 +1,22 @@
 #ifndef MAIN_STATE_H
 #define MAIN_STATE_H
 #include "GameState.h"
-#include "Level.h"
+class Level;
 class MainState : public GameState
 {
 public:
 		static MainState* create();
 
 		~MainState() override;
-
-		void update(float dt) override;
-
-		void draw(SDL_Renderer* renderer) override;
+		void render(float deltaTime) override;
+		void show() override;
+		void hidden() override;
+		void pause() override;
+		void resume() override;
 private:
 		MainState();
 
-		bool initialize();
+		bool init();
 
 		Level* m_level;
 };

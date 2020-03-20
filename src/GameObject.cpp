@@ -2,19 +2,21 @@
 #include "Level.h"
 #include "NTRect.h"
 
-GameObject::GameObject(int gameObjectType) :
-    m_level(nullptr),
+GameObject::GameObject(int gameObjectType, Level* level) :
+    m_level(level),
     m_positionX(0),
     m_positionY(0),
     m_rotation(0.0),
     m_isVisible(true),
-    m_type(gameObjectType),
+    m_gameObjectType(gameObjectType),
     m_next(nullptr),
     m_prev(nullptr)
 {
 }
-int GameObject::getPositionX() const { return m_positionX; }
-void GameObject::setPositionX(int x)
+
+float GameObject::getPositionX() const { return m_positionX; }
+
+void  GameObject::setPositionX(float x)
 {
     if (m_positionX != x)
     {
@@ -23,8 +25,9 @@ void GameObject::setPositionX(int x)
     }
 }
 
-int GameObject::getPositionY() const { return m_positionY; }
-void GameObject::setPositionY(int y)
+float GameObject::getPositionY() const { return m_positionY; }
+
+void GameObject::setPositionY(float y)
 {
     if (m_positionY != y)
     {
@@ -33,7 +36,7 @@ void GameObject::setPositionY(int y)
     }
 }
 
-void GameObject::setPosition(int x, int y)
+void GameObject::setPosition(float x, float y)
 {
     if (m_positionX != x || m_positionY != y)
     {
@@ -48,4 +51,5 @@ Level* GameObject::getLevel() const { return m_level; }
 void GameObject::setLevel(Level* level) { m_level = level; }
 
 bool GameObject::isVisible() const { return m_isVisible; }
+
 void GameObject::setVisible(bool visible) { m_isVisible = visible; }

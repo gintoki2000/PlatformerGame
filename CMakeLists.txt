@@ -21,19 +21,24 @@ set(SOURCE_FILES
 	src/Constances.cpp
 	src/Main.cpp
 	src/Game.cpp
+	src/MainState.cpp
+	src/GameState.cpp
+	src/Locator.cpp
+	src/StateManager.cpp
 	src/TileSet.cpp
 	src/Tile.cpp
-    src/TileLayer.cpp
+	src/TiledMap.cpp
 	src/WorldRenderer.cpp
-
-	#game states
-	src/MainState.cpp
-
-	#level
+	src/AssertManager.cpp
+	src/Animator.cpp
+	src/Animation.cpp
+	src/ObjectList.cpp
 	src/Level.cpp
+	src/SpriteSheet.cpp
 
-	#game objects
-	src/Player.cpp
+	#monster
+	#src/Monster.cpp
+	#src/Slime.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)

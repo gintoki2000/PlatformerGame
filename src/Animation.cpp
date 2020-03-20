@@ -1,36 +1,83 @@
 #include "Animation.h"
 #include "SpriteSheet.h"
+#include <algorithm>
 
-Animation::Animation(const Sprite* sprites[], int numSprites, float duration, int playMode)
+Animation::Animation(const Sprite* sprites[], int numSprites, float duration,
+                     int playMode) :
+    m_sprites(nullptr)
 {
-	m_numSprites = numSprites;
-	m_sprites = new const Sprite*[(unsigned long)m_numSprites];		
-	for (int i = 0; i < m_numSprites; ++i)
-	{
-		m_sprites[i] = sprites[i];
-	}
-	m_duration = duration;
-	m_playMode = playMode;
+    setSprites(sprites, numSprites);
+    m_duration = duration;
+    m_playMode = playMode;
 }
 
-Animation::Animation(const SpriteSheet* spriteSheet, float duration, int playMode):
-		Animation(spriteSheet, 0, spriteSheet->getNumSprites(), duration, playMode)
+Animation::Animation(const SpriteSheet* spriteSheet, float duration,
+                     int playMode) :
+    Animation(spriteSheet, 0, spriteSheet->getNumSprites(), duration, playMode)
 {
 }
 
-Animation::Animation(const SpriteSheet* spriteSheet, int sIndex, int numSprites, float duration, int playMode)
+Animation::Animation(const SpriteSheet* spriteSheet, int sIndex, int numSprites,
+                     float duration, int playMode)
 {
-	m_numSprites = numSprites;
-	m_sprites = new const Sprite*[(unsigned long)m_numSprites];
-	for (int i = sIndex, j = 0; i < sIndex + numSprites; ++i, ++j)
-	{
-		m_sprites[j] = &spriteSheet->getSprite(i);
-	}
-	m_duration = duration;
-	m_playMode = playMode;
+    m_numSprites = numSprites;
+    m_sprites = new const Sprite*[(unsigned long)m_numSprites];
+    for (int i = sIndex, j = 0; i < sIndex + numSprites; ++i, ++j)
+    {
+        m_sprites[j] = &spriteSheet->getSprite(i);
+    }
+    m_duration = duration;
+    m_playMode = playMode;
 }
 
-Animation::~Animation()
+Animation::~Animation() { delete[] m_sprites; }
+
+int Animation::getCurrentIndex(float elapsedTime) const
 {
-	delete[] m_sprites;
+    if (m_numSprites == 1)
+    {
+        return 0;
+    }
+    int index = elapsedTime / m_duration;
+    switch (m_playMode)
+    {
+    case PLAY_MODE_NORMAL: index = std::min(index, m_numSprites); break;
+    case PLAY_MODE_LOOP: index = index % m_numSprites; break;
+    case PLAY_MODE_LOOP_PINGPONG:
+        index = index % ((m_numSprites * 2) - 2);
+        if (index > m_numSprites)
+        {
+            index = m_numSprites - 2 - (index - m_numSprites);
+        }
+    }
+    m_lastIndex = index;
+    m_lastTime = elapsedTime;
+    return index;
+}
+
+const Sprite* Animation::getCurrentSprite(float elapsedTime) const
+{
+    return m_sprites[getCurrentIndex(elapsedTime)];
+}
+
+void Animation::setSprites(const Sprite* sprites[], int numSprites)
+{
+    if (m_sprites != nullptr)
+    {
+        delete[] m_sprites;
+        m_sprites = nullptr;
+        m_numSprites = 0;
+    }
+    m_numSprites = numSprites;
+    m_sprites = new const Sprite*[(unsigned long)m_numSprites];
+    for (int i = 0; i < m_numSprites; ++i)
+    {
+        m_sprites[i] = sprites[i];
+    }
+}
+
+bool Animation::isFinished(float elapsedTime) const
+{
+	int index = elapsedTime / m_duration;
+	return index >= m_numSprites - 1;
 }

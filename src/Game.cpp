@@ -2,13 +2,17 @@
 #include "Constances.h"
 #include "GameState.h"
 #include "Locator.h"
+#include "MainState.h"
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_video.h"
 #include "StateManager.h"
 Game* Game::instance = nullptr;
 
-Game::Game() : m_isRunning(false), m_stateManager(nullptr) { instance = this; }
+Game::Game() : m_isRunning(false), m_stateManager(new StateManager())
+{
+    instance = this;
+}
 
 Game::~Game()
 {
@@ -19,7 +23,7 @@ Game::~Game()
 
 bool Game::initialize()
 {
-    SDL_Window* window = nullptr;
+    SDL_Window*   window = nullptr;
     SDL_Renderer* renderer = nullptr;
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
     {
@@ -55,6 +59,7 @@ bool Game::initialize()
 
     Locator::setRenderer(renderer);
     Locator::setWindow(window);
+    m_stateManager->setState(MainState::create());
     return true;
 }
 
@@ -87,7 +92,7 @@ void Game::render(float deltaTime)
             }
         }
     }
-	m_stateManager->getState()->render(deltaTime);
+    m_stateManager->getState()->render(deltaTime);
     SDL_RenderPresent(Locator::getRenderer());
 }
 

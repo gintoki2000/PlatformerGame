@@ -1,5 +1,7 @@
 #include "Slime.h"
+#include "Animation.h"
 #include "Animator.h"
+#include "AssertManager.h"
 #include "Constances.h"
 #include "Enums.h"
 #include "Level.h"
@@ -9,18 +11,66 @@
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SpriteSheet.h"
+#include <memory>
+std::shared_ptr<SpriteSheet> Slime::sharedSpriteSheet = nullptr;
+class Player;
 Slime::Slime(Level* level) :
     Monster(MONSTER_TYPE_SLIME, 10),
     m_body(nullptr),
     m_spriteSheet(nullptr),
     m_animator(nullptr)
 {
-    int textureWidth, textureHeight;
-    SDL_Texture* texture =
-        level->getAssertManager()->getAssert<SDL_Texture>("asserts/slime.png");
-    SDL_QueryTexture(texture, nullptr, nullptr, &textureWidth, &textureHeight);
-    m_spriteSheet = new SpriteSheet(texture, textureWidth / SPRITE_WIDTH,
-                                    textureHeight / SPRITE_HEIGHT);
+    Animation* animations[NUM_ANIMS];
+
+    if (sharedSpriteSheet == nullptr)
+    {
+        AssertManager* asserts = level->getAssertManager();
+        SDL_Texture*   texture =
+            asserts->getAssert<SDL_Texture>("asserts/slime.png");
+        sharedSpriteSheet =
+            std::make_shared<SpriteSheet>(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
+    }
+
+    m_spriteSheet = sharedSpriteSheet;
+    animations[ANIM_IDLE] = new Animation(m_spriteSheet.get(), 0, 4, 1.f / 8.f,
+                                          Animation::PLAY_MODE_LOOP);
+    animations[ANIM_MOVE] = new Animation(m_spriteSheet.get(), 5, 4, 1.f / 8.f,
+                                          Animation::PLAY_MODE_LOOP);
+    animations[ANIM_ATTACK] = new Animation(
+        m_spriteSheet.get(), 9, 5, 1.f / 8.f, Animation::PLAY_MODE_NORMAL);
+    animations[ANIM_HURT] = new Animation(m_spriteSheet.get(), 14, 4, 1.f / 8.f,
+                                          Animation::PLAY_MODE_NORMAL);
+    animations[ANIM_DIE] = new Animation(m_spriteSheet.get(), 19, 4, 1.f / 8.f,
+                                         Animation::PLAY_MODE_NORMAL);
+    m_animator = new Animator(animations, NUM_ANIMS);
+
+	b2BodyDef bdef;
+	bdef.fixedRotation = true;
+	bdef.type = b2_dynamicBody;
+	bdef.userData = this;
+	
+	m_body = level->getWorld()->CreateBody(&bdef);
+
+	b2PolygonShape box;
+	float widthInMeter = WIDTH / Constances::PPM;
+	float heightInMeter = HEIGHT / Constances::PPM;
+	box.SetAsBox(widthInMeter / 2.f, heightInMeter / 2.f);
+
+	b2FixtureDef fdef;
+	fdef.shape = &box;
+	fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
+	fdef.filter.maskBits = CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER;
+
+	m_body->CreateFixture(&fdef);
+}
+
+Slime::~Slime()
+{
+    delete m_animator;
+    m_animator = nullptr;
+    m_spriteSheet = nullptr;
+    m_body->GetWorld()->DestroyBody(m_body);
+    m_body = nullptr;
 }
 
 void Slime::resetMembers()
@@ -34,7 +84,7 @@ void Slime::resetMembers()
 void Slime::updateGraphics(float deltaTime)
 {
     const NTRect& viewport = m_level->getViewport();
-    NTRect boundingBox;
+    NTRect        boundingBox;
     boundingBox.x = m_positionX - WIDTH / 2.f;
     boundingBox.y = m_positionY - HEIGHT / 2.f;
     boundingBox.w = WIDTH;
@@ -43,11 +93,12 @@ void Slime::updateGraphics(float deltaTime)
     {
         setVisible(true);
         m_animator->tick(deltaTime);
-        m_animator->setPositionX(getPositionX() - viewport.x);
-        m_animator->setPositionY(getPositionY() - viewport.y);
+        m_animator->setPositionX(m_positionX - viewport.x);
+        m_animator->setPositionY(m_positionY - viewport.y);
         m_animator->setFlip(m_direction == DIRECTION_LEFT
                                 ? SDL_FLIP_NONE
                                 : SDL_FLIP_HORIZONTAL);
+        m_animator->setRotation(m_rotation);
     }
     else
     {
@@ -104,7 +155,13 @@ void Slime::updateLogic(float deltaTime)
     break;
     case STATE_ATTACK:
     {
-		attackPlayer();
+        if (m_animator->isCurrentAnimFinshed())
+		{
+			attackPlayer();
+			m_state = STATE_WAIT;
+			m_timer = 0.f;
+			m_animator->play(ANIM_IDLE, 0.f);
+		}
     }
     break;
     case STATE_HURT:
@@ -128,30 +185,46 @@ void Slime::updateLogic(float deltaTime)
     }
 }
 
-void Slime::onPositionChanged() { synchronizeBodyPosition(); }
+void Slime::onPositionChanged()
+{
+    // m_physics->synchronizeTransformWithOwner()
+    synchronizeBodyTransform();
+}
 
-void Slime::synchronizeBodyPosition()
+void Slime::synchronizeBodyTransform()
 {
     b2Vec2 pos(m_positionX / Constances::PPM, m_positionY / Constances::PPM);
     m_body->SetTransform(pos, (float)m_rotation);
 }
 
-void Slime::render(float deltaTime)
+void Slime::setHorizontalSpeed(float speed)
 {
-    updatePhysics();
-    updateGraphics(deltaTime);
-    updateLogic(deltaTime);
-    if (isVisible())
-    {
-        m_animator->render(Locator::getRenderer());
-    }
+    b2Vec2 vel = m_body->GetLinearVelocity();
+    vel.x = speed;
+    m_body->SetLinearVelocity(vel);
+}
+
+
+void Slime::tick(float deltaTime)
+{
+	updatePhysics();
+	updateGraphics(deltaTime);
+	updateLogic(deltaTime);
+}
+
+void Slime::paint()
+{
+	if (isVisible())
+	{
+		m_animator->render(Locator::getRenderer());
+	}
 }
 
 void Slime::getHit(int damage)
 {
     if (m_state != STATE_HURT && m_state != STATE_DIE)
     {
-        Slime::getHit(damage);
+        Monster::getHit(damage);
         if (m_hitPoints == 0)
         {
             m_state = STATE_DIE;
@@ -163,4 +236,35 @@ void Slime::getHit(int damage)
             m_animator->play(ANIM_HURT, 0.f);
         }
     }
+}
+class SlimeAttackingCallBack : public b2QueryCallback
+{
+  public:
+    SlimeAttackingCallBack(Player* player) : m_player(player) {}
+
+    bool ReportFixture(b2Fixture* fixture) override
+    {
+        void* obj = fixture->GetBody()->GetUserData();
+        if (obj == m_player)
+        {
+            // TODO call player's getHit method
+			// m_player->getHit(2);
+            return false;
+        }
+        return true;
+    }
+
+  private:
+    Player* m_player;
+};
+void Slime::attackPlayer()
+{
+    b2AABB area;
+    area.lowerBound.x = (m_positionX - WIDTH / 2.f) / Constances::PPM;
+    area.lowerBound.y = (m_positionY - HEIGHT / 2.f) / Constances::PPM;
+    area.upperBound.x = (m_positionX + WIDTH / 2.f) / Constances::PPM;
+    area.upperBound.y = (m_positionY + HEIGHT / 2.f) / Constances::PPM;
+
+    SlimeAttackingCallBack callback(m_level->getPlayer());
+    m_body->GetWorld()->QueryAABB(&callback, area);
 }

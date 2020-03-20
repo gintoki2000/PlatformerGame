@@ -33,8 +33,10 @@ bool NTTileLayer::init(int width, int height, int tileWidth, int tileHeight)
     m_height = height;
     m_tileWidth = tileWidth;
     m_tileHeight = tileHeight;
+    m_positionX = 0;
+    m_positionY = 0;
     int count = m_width * m_height;
-    m_cells = new NTTileLayerCell*[count];
+    m_cells = new NTTileLayerCell*[(unsigned)count];
     for (int i = 0; i < count; ++i)
     {
         m_cells[i] = nullptr;
@@ -43,9 +45,9 @@ bool NTTileLayer::init(int width, int height, int tileWidth, int tileHeight)
     return true;
 }
 
-void NTTileLayer::draw(SDL_Renderer* renderer, const NTRect& viewport)
+void NTTileLayer::render(SDL_Renderer* renderer, const NTRect& viewport)
 {
-    if(!isVisible())
+    if (!isVisible())
         return;
     int startX = viewport.left() / m_tileWidth - 1;
     int startY = viewport.top() / m_tileHeight - 1;
@@ -58,8 +60,8 @@ void NTTileLayer::draw(SDL_Renderer* renderer, const NTRect& viewport)
     endY = std::min(m_height - 1, endY);
 
     NTRect dstrect;
-    dstrect.x = startX * m_tileWidth + (int)getPosition().x;
-    dstrect.y = startY * m_tileHeight + (int)getPosition().y;
+    dstrect.x = startX * m_tileWidth + (int)getPositionX();
+    dstrect.y = startY * m_tileHeight + (int)getPositionY();
     dstrect.w = m_tileWidth;
     dstrect.h = m_tileHeight;
     for (int y = startY; y <= endY; ++y)
@@ -76,17 +78,12 @@ void NTTileLayer::draw(SDL_Renderer* renderer, const NTRect& viewport)
             {
                 continue;
             }
-            dstrect.x = x * m_tileWidth + (int)getPosition().x - viewport.x;
-            dstrect.y = y * m_tileHeight + (int)getPosition().y - viewport.y;
+            dstrect.x = x * m_tileWidth + getPositionX() - viewport.x;
+            dstrect.y = y * m_tileHeight + getPositionY() - viewport.y;
             const NTTextureRegion& textureRegion = tile->getTextureRegion();
             textureRegion.draw(renderer, &dstrect);
         }
     }
-}
-
-void NTTileLayer::update(float)
-{
-
 }
 
 NTTileLayerCell* NTTileLayer::getCellAt(int x, int y)

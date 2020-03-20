@@ -10,7 +10,7 @@ class Animation
     {
         PLAY_MODE_NORMAL,
         PLAY_MODE_LOOP,
-        PLAY_MODE_LOOP_PING_PONG
+        PLAY_MODE_LOOP_PINGPONG
     };
     Animation(const Sprite* sprites[], int numSprites, float duration,
               int playMode = PLAY_MODE_NORMAL);

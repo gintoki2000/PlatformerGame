@@ -2,6 +2,7 @@
 #define ASSERT_MANAGER_H
 #include "SDL.h"
 #include "SDL_assert.h"
+#include "SDL_render.h"
 #include <map>
 #include <string>
 #include <typeindex>
@@ -12,14 +13,16 @@ class IResourceHandler
   public:
     virtual ~IResourceHandler(){};
     virtual void* load(const std::string&) = 0;
-	virtual void free(void* resource) = 0;
+    virtual void  free(void* resource) = 0;
 };
 class TextureHandler : public IResourceHandler
 {
   public:
+	TextureHandler(SDL_Renderer* renderer);
     void* load(const std::string& filename) override;
-
-	void free(void* resource) override;
+    void free(void* resource) override;
+  private:
+	SDL_Renderer* m_renderer;
 };
 class AssertFactory
 {
@@ -27,29 +30,21 @@ class AssertFactory
     AssertFactory(IResourceHandler* handler);
     ~AssertFactory();
 
-    bool isLoaded(const std::string& filename)
-    {
-        return m_asserts.find(filename) != std::end(m_asserts);
-    }
+    bool isLoaded(const std::string& filename);
+    bool loadAssert(const std::string& filename);
 
     template <typename T> T* getAssert(const std::string& filename)
     {
-        auto assertPos = m_asserts.find(filename);
-        if (assertPos == std::end(m_asserts))
+        auto findResult = m_asserts.find(filename);
+        if (findResult != std::end(m_asserts))
         {
-            T* res = (T*)m_handler->load(filename);
-			SDL_assert(res != nullptr);
-            m_asserts.insert(std::make_pair(filename, res));
-            return res;
+            return dynamic_cast<T*>(findResult->second);
         }
-        else
-        {
-            return (T*)assertPos->second;
-        }
+        return nullptr;
     }
 
   private:
-    IResourceHandler* m_handler;
+    IResourceHandler*            m_handler;
     std::map<std::string, void*> m_asserts;
 };
 class AssertManager
@@ -61,29 +56,35 @@ class AssertManager
     template <typename T> bool isLoaded(const std::string& filename)
     {
         auto typeIndex = std::type_index(typeid(T));
-        auto factoryPos = m_factories.find(typeIndex);
-        SDL_assert(factoryPos != std::end(m_factories));
-        auto factory = factoryPos->second;
+        auto findResult = m_factories.find(typeIndex);
+        SDL_assert(findResult != std::end(m_factories));
+        auto factory = findResult->second;
         return factory->isLoaded(filename);
     }
 
     template <typename T> void registerFactory(AssertFactory* factory)
     {
         auto typeIndex = std::type_index(typeid(T));
-        auto factoryPos = m_factories.find(typeIndex);
-        if (factoryPos == std::end(m_factories))
+        auto findResult = m_factories.find(typeIndex);
+        if (findResult == std::end(m_factories))
         {
             m_factories.insert(std::make_pair(typeIndex, factory));
         }
+    }
+    template <typename T> bool loasAssert(const std::string& filename)
+    {
+        auto typeIndex = std::type_index(typeid(T));
+        auto findResult = m_factories.find(typeIndex);
+        SDL_assert(findResult != std::end(m_factories));
+        return findResult->second->loadAssert(filename);
     }
     template <typename T> T* getAssert(const std::string& filename)
     {
 
         auto typeIndex = std::type_index(typeid(T));
-        auto factoryPos = m_factories.find(typeIndex);
-        SDL_assert(factoryPos != std::end(m_factories));
-        auto factory = factoryPos->second;
-        return factory->getAssert<T>(filename);
+        auto findResult = m_factories.find(typeIndex);
+        SDL_assert(findResult != std::end(m_factories));
+        return findResult->second->getAssert<T>(filename);
     }
 
   private:

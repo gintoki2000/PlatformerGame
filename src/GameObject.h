@@ -8,19 +8,23 @@ class GameObject
 
   public:
     /// constructor && destructor
-    GameObject(int gameObjectType);
+    GameObject(int gameObjectType, Level* level);
     virtual ~GameObject();
 
     virtual void render(float deltaTime) = 0;
 
+    /// stuffs
+    virtual void tick(float deltaTime) = 0;
+    virtual void paint() = 0;
+
     /// setter && getter
-    int  getPositionX() const;
-    void setPositionX(int x);
+    float getPositionX() const;
+    void  setPositionX(float x);
 
-    int  getPositionY() const;
-    void setPositionY(int y);
+    float getPositionY() const;
+    void  setPositionY(float y);
 
-    void setPosition(int x, int y);
+    void setPosition(float x, float y);
 
     Level* getLevel() const;
     void   setLevel(Level* level);
@@ -36,13 +40,13 @@ class GameObject
     virtual void onSizeChanged();
 
     Level* m_level;
-    int    m_positionX;
-    int    m_positionY;
+    float  m_positionX;
+    float  m_positionY;
     double m_rotation;
     bool   m_isVisible;
 
   private:
-    friend class ObjectLayer;
+    friend class ObjectList;
     int         m_gameObjectType;
     GameObject* m_next;
     GameObject* m_prev;

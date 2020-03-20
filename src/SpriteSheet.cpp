@@ -58,4 +58,3 @@ void SpriteSheet::draw(SDL_Renderer* renderer, int index, int x, int y,
 }
 
 
-

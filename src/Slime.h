@@ -3,6 +3,7 @@
 #include "Constances.h"
 #include "Monster.h"
 #include "SpriteSheet.h"
+#include <memory>
 class Animator;
 class Slime : public Monster
 {
@@ -13,6 +14,9 @@ class Slime : public Monster
     void render(float deltaTime) override;
     void getHit(int damage) override;
 
+	void tick(float deltaTime) override;
+	void paint() override;
+
   private:
     void resetMembers();
     void updateGraphics(float deltaTime);
@@ -22,7 +26,7 @@ class Slime : public Monster
 	void setHorizontalSpeed(float speed);
 	void stopHorizontalMovement();
 	void attackPlayer();
-	void synchronizeBodyPosition();
+	void synchronizeBodyTransform();
     enum
     {
         STATE_IDLE,
@@ -47,7 +51,7 @@ class Slime : public Monster
     int m_direction;
 
     b2Body* m_body;
-    SpriteSheet* m_spriteSheet;
+	std::shared_ptr<SpriteSheet> m_spriteSheet;
     Animator* m_animator;
 
     static constexpr float WIDTH = 32.f;
@@ -58,5 +62,7 @@ class Slime : public Monster
 	static constexpr float ATTACK_DISTANCE = Constances::TILE_SIZE * 4;
 	static constexpr float MOVE_SPEED = 10.f;
 	static constexpr float MOVE_SPPED_2 = 15.f;
+
+	static std::shared_ptr<SpriteSheet> sharedSpriteSheet;
 };
 #endif // SLIME_H

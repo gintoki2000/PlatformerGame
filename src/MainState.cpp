@@ -1,28 +1,53 @@
 #include "MainState.h"
 #include "Level.h"
 
+MainState::MainState()
+{
+}
+
+MainState::~MainState()
+{
+	delete m_level;
+}
+
 MainState* MainState::create()
 {
-    MainState* ret = new MainState;
-    if (ret->initialize())
-        return ret;
-    delete ret;
-    return nullptr;
+	MainState* ret = new MainState;
+	if (ret->init())
+	{
+		return ret;
+	}	
+	delete ret;
+	return nullptr;
 }
 
-MainState::~MainState() { delete m_level; }
-
-MainState::MainState() : m_level(nullptr) {}
-
-bool MainState::initialize()
+bool MainState::init()
 {
-    if ((m_level = Level::create("")) == nullptr)
-    {
-        return false;
-    }
-    return true;
+	m_level = new Level();
+	return m_level->init("asserts/magic-cliffs.tmx");	
 }
 
-void MainState::update(float dt) { m_level->update(dt); }
+void MainState::render(float deltaTime)
+{
+	m_level->render( deltaTime);
+}
 
-void MainState::draw(SDL_Renderer* renderer) { m_level->draw(renderer); }
+void MainState::show()
+{
+	m_level->setPaused(false);
+}
+
+void MainState::hidden()
+{
+	m_level->setPaused(true);	
+}
+
+void MainState::pause()
+{
+	m_level->setPaused(true);
+}
+
+void MainState::resume()
+{
+	m_level->setPaused(false);
+}
