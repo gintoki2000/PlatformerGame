@@ -3,19 +3,29 @@
 Animator::Animator(Animation* animations[], int numAnimations)
 {
     m_numAnimations = numAnimations;
-    m_animations = new Animation*[(unsigned long)m_numAnimations];
+    m_animations    = new Animation*[(unsigned long)m_numAnimations];
     for (int i = 0; i < m_numAnimations; ++i)
     {
         m_animations[i] = animations[i];
     }
     play(0, 0.f);
+	m_origin.x = 0;
+	m_origin.y = 0;
+}
+Animator::~Animator()
+{
+    for (int i = 0; i < m_numAnimations; ++i)
+    {
+        delete m_animations[i];
+    }
+    delete[] m_animations;
 }
 
 void Animator::play(int index, float initialTime)
 {
-    m_isPaused = false;
+    m_isPaused       = false;
     m_animationIndex = index;
-    m_elapsedTime = initialTime;
+    m_elapsedTime    = initialTime;
     m_currentSprite =
         m_animations[m_animationIndex]->getCurrentSprite(m_elapsedTime);
 }

@@ -2,10 +2,10 @@
 #define MONSTER_H
 #include "GameObject.h"
 #include "box2d/box2d.h"
+class Level;
 class Monster : public GameObject
 {
   public:
-    Monster(int monsterType, int hitPoints);
     virtual void getHit(int damage);
     bool         isDead() const { return m_hitPoints == 0; }
 
@@ -17,6 +17,8 @@ class Monster : public GameObject
     int m_monsterType;
 
   protected:
+	Monster();
+	virtual bool init(int monsterType, Level* level, int hitPoints);
     float getDistanceToPlayer();
     int   getFacingPlayerDirection();
     int   m_hitPoints;

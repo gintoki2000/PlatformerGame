@@ -1,5 +1,6 @@
 #ifndef WORLD_RENDERER_H
 #define WORLD_RENDERER_H
+#include "NTRect.h"
 #include "SDL_render.h"
 #include "box2d/box2d.h"
 class WorldRenderer : public b2Draw
@@ -23,10 +24,13 @@ class WorldRenderer : public b2Draw
 
     void DrawTransform(const b2Transform& xf) override;
 
-    void DrawPoint(const b2Vec2& p, float size, const b2Color& color);
+    void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override;
+
+    void setViewport(const NTRect& viewport);
 
   private:
     SDL_Renderer* m_renderer;
-    float m_ppm;
+    float         m_ppm;
+    NTRect        m_viewport;
 };
 #endif // WORLD_RENDERER_H

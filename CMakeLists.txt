@@ -35,10 +35,13 @@ set(SOURCE_FILES
 	src/ObjectList.cpp
 	src/Level.cpp
 	src/SpriteSheet.cpp
+	src/Input.cpp
+	src/Builder.cpp
+	src/GameObject.cpp
 
 	#monster
-	#src/Monster.cpp
-	#src/Slime.cpp
+	src/Monster.cpp
+	src/Slime.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)

@@ -12,11 +12,6 @@ NTTileLayer::NTTileLayer(int width, int height, int tileWidth, int tileHeight)
     init(width, height, tileWidth, tileHeight);
 }
 
-NTTileLayer::NTTileLayer() :
-    m_width(0), m_height(0), m_tileWidth(0), m_tileHeight(0), m_cells(nullptr)
-{
-}
-
 NTTileLayer::~NTTileLayer()
 {
     int count = m_width * m_height;

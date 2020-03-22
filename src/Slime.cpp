@@ -8,69 +8,128 @@
 #include "Locator.h"
 #include "Monster.h"
 #include "NTRect.h"
+#include "SDL_image.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SpriteSheet.h"
 #include <memory>
-std::shared_ptr<SpriteSheet> Slime::sharedSpriteSheet = nullptr;
 class Player;
-Slime::Slime(Level* level) :
-    Monster(MONSTER_TYPE_SLIME, 10),
-    m_body(nullptr),
-    m_spriteSheet(nullptr),
-    m_animator(nullptr)
+Slime::Asserts Slime::sharedAsserts = Slime::Asserts();
+
+Slime::Asserts::Asserts()
 {
-    Animation* animations[NUM_ANIMS];
-
-    if (sharedSpriteSheet == nullptr)
-    {
-        AssertManager* asserts = level->getAssertManager();
-        SDL_Texture*   texture =
-            asserts->getAssert<SDL_Texture>("asserts/slime.png");
-        sharedSpriteSheet =
-            std::make_shared<SpriteSheet>(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
-    }
-
-    m_spriteSheet = sharedSpriteSheet;
-    animations[ANIM_IDLE] = new Animation(m_spriteSheet.get(), 0, 4, 1.f / 8.f,
-                                          Animation::PLAY_MODE_LOOP);
-    animations[ANIM_MOVE] = new Animation(m_spriteSheet.get(), 5, 4, 1.f / 8.f,
-                                          Animation::PLAY_MODE_LOOP);
-    animations[ANIM_ATTACK] = new Animation(
-        m_spriteSheet.get(), 9, 5, 1.f / 8.f, Animation::PLAY_MODE_NORMAL);
-    animations[ANIM_HURT] = new Animation(m_spriteSheet.get(), 14, 4, 1.f / 8.f,
-                                          Animation::PLAY_MODE_NORMAL);
-    animations[ANIM_DIE] = new Animation(m_spriteSheet.get(), 19, 4, 1.f / 8.f,
-                                         Animation::PLAY_MODE_NORMAL);
-    m_animator = new Animator(animations, NUM_ANIMS);
-
-	b2BodyDef bdef;
-	bdef.fixedRotation = true;
-	bdef.type = b2_dynamicBody;
-	bdef.userData = this;
-	
-	m_body = level->getWorld()->CreateBody(&bdef);
-
-	b2PolygonShape box;
-	float widthInMeter = WIDTH / Constances::PPM;
-	float heightInMeter = HEIGHT / Constances::PPM;
-	box.SetAsBox(widthInMeter / 2.f, heightInMeter / 2.f);
-
-	b2FixtureDef fdef;
-	fdef.shape = &box;
-	fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
-	fdef.filter.maskBits = CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER;
-
-	m_body->CreateFixture(&fdef);
+    texture     = nullptr;
+    spriteSheet = nullptr;
+    count       = 0;
 }
 
+Slime::Asserts::~Asserts()
+{
+    delete spriteSheet;
+    SDL_DestroyTexture(texture);
+    spriteSheet = nullptr;
+    texture     = nullptr;
+}
+
+bool Slime::Asserts::load()
+{
+    if (count == 0)
+    {
+        if ((texture = IMG_LoadTexture(Locator::getRenderer(),
+                                       "asserts/slime.png")) != nullptr)
+        {
+            spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
+            return true;
+        }
+        return false;
+    }
+    return true;
+}
+void Slime::Asserts::incCount() { ++count; }
+
+void Slime::Asserts::decCount()
+{
+    --count;
+    if (count == 0)
+    {
+        this->~Asserts();
+    }
+}
+
+Slime* Slime::create(Level* level)
+{
+    Slime* ret = new Slime;
+    if (ret->init(level))
+    {
+        return ret;
+    }
+    delete ret;
+    return nullptr;
+}
+Slime* Slime::create(Level* level, float cx, float cy)
+{
+    Slime* ret;
+    if ((ret = create(level)) != nullptr)
+    {
+        ret->setPosition(cx, cy);
+    }
+    return ret;
+}
 Slime::~Slime()
 {
     delete m_animator;
-    m_animator = nullptr;
-    m_spriteSheet = nullptr;
     m_body->GetWorld()->DestroyBody(m_body);
-    m_body = nullptr;
+    m_animator = nullptr;
+    m_body     = nullptr;
+    sharedAsserts.decCount();
+}
+
+bool Slime::init(Level* level)
+{
+
+    Monster::init(MONSTER_TYPE_SLIME, level, 10);
+    Animation* animations[NUM_ANIMS];
+
+    if (!sharedAsserts.load())
+    {
+        SDL_Log("Failed to load asserts!");
+        return false;
+    }
+    sharedAsserts.incCount();
+    auto spriteSheet = sharedAsserts.spriteSheet;
+    animations[ANIM_IDLE] =
+        new Animation(spriteSheet, 0, 4, 1.f / 8.f, Animation::PLAY_MODE_LOOP);
+    animations[ANIM_MOVE] =
+        new Animation(spriteSheet, 5, 4, 1.f / 8.f, Animation::PLAY_MODE_LOOP);
+    animations[ANIM_ATTACK] = new Animation(spriteSheet, 9, 5, 1.f / 8.f,
+                                            Animation::PLAY_MODE_NORMAL);
+    animations[ANIM_HURT]   = new Animation(spriteSheet, 14, 4, 1.f / 8.f,
+                                          Animation::PLAY_MODE_NORMAL);
+    animations[ANIM_DIE]    = new Animation(spriteSheet, 19, 4, 1.f / 8.f,
+                                         Animation::PLAY_MODE_NORMAL);
+    m_animator              = new Animator(animations, NUM_ANIMS);
+    m_animator->setOriginX(SPRITE_WIDTH / 2);
+    m_animator->setOriginY(SPRITE_HEIGHT / 2);
+
+    b2BodyDef bdef;
+    bdef.fixedRotation = true;
+    bdef.type          = b2_dynamicBody;
+    bdef.userData      = this;
+
+    m_body = level->getWorld()->CreateBody(&bdef);
+
+    b2PolygonShape box;
+    float          widthInMeter  = WIDTH / Constances::PPM;
+    float          heightInMeter = HEIGHT / Constances::PPM;
+    box.SetAsBox(widthInMeter / 2.f, heightInMeter / 2.f);
+
+    b2FixtureDef fdef;
+    fdef.shape               = &box;
+    fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
+    fdef.filter.maskBits     = CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER;
+
+    m_body->CreateFixture(&fdef);
+    return true;
 }
 
 void Slime::resetMembers()
@@ -78,8 +137,8 @@ void Slime::resetMembers()
     m_animator->play(ANIM_IDLE, 0.f);
     setPosition(0, 0);
     m_direction = DIRECTION_LEFT;
-    m_state = STATE_IDLE;
-    m_timer = 0.f;
+    m_state     = STATE_IDLE;
+    m_timer     = 0.f;
 }
 void Slime::updateGraphics(float deltaTime)
 {
@@ -109,9 +168,9 @@ void Slime::updateGraphics(float deltaTime)
 void Slime::updatePhysics()
 {
     const auto& position = m_body->GetPosition();
-    m_positionX = position.x * Constances::PPM;
-    m_positionY = position.y * Constances::PPM;
-    m_rotation = (double)m_body->GetAngle();
+    m_positionX          = position.x * Constances::PPM;
+    m_positionY          = position.y * Constances::PPM;
+    m_rotation           = (double)m_body->GetAngle();
 }
 
 void Slime::updateLogic(float deltaTime)
@@ -140,7 +199,12 @@ void Slime::updateLogic(float deltaTime)
     break;
     case STATE_MOVE:
     {
-        if (getDistanceToPlayer() <= ATTACK_DISTANCE)
+		if (getDistanceToPlayer() >= ACTIVATE_DISTANCE)
+		{
+			m_state = STATE_IDLE;
+			m_timer = 0.f;
+		}
+        else if (getDistanceToPlayer() <= ATTACK_DISTANCE)
         {
             m_state = STATE_ATTACK;
             m_timer = 0.f;
@@ -156,12 +220,12 @@ void Slime::updateLogic(float deltaTime)
     case STATE_ATTACK:
     {
         if (m_animator->isCurrentAnimFinshed())
-		{
-			attackPlayer();
-			m_state = STATE_WAIT;
-			m_timer = 0.f;
-			m_animator->play(ANIM_IDLE, 0.f);
-		}
+        {
+            attackPlayer();
+            m_state = STATE_WAIT;
+            m_timer = 0.f;
+            m_animator->play(ANIM_IDLE, 0.f);
+        }
     }
     break;
     case STATE_HURT:
@@ -185,11 +249,7 @@ void Slime::updateLogic(float deltaTime)
     }
 }
 
-void Slime::onPositionChanged()
-{
-    // m_physics->synchronizeTransformWithOwner()
-    synchronizeBodyTransform();
-}
+void Slime::onPositionChanged() { synchronizeBodyTransform(); }
 
 void Slime::synchronizeBodyTransform()
 {
@@ -200,24 +260,23 @@ void Slime::synchronizeBodyTransform()
 void Slime::setHorizontalSpeed(float speed)
 {
     b2Vec2 vel = m_body->GetLinearVelocity();
-    vel.x = speed;
+    vel.x      = speed;
     m_body->SetLinearVelocity(vel);
 }
 
-
 void Slime::tick(float deltaTime)
 {
-	updatePhysics();
-	updateGraphics(deltaTime);
-	updateLogic(deltaTime);
+    updatePhysics();
+    updateGraphics(deltaTime);
+    updateLogic(deltaTime);
 }
 
 void Slime::paint()
 {
-	if (isVisible())
-	{
-		m_animator->render(Locator::getRenderer());
-	}
+    if (isVisible())
+    {
+        m_animator->render(Locator::getRenderer());
+    }
 }
 
 void Slime::getHit(int damage)
@@ -248,7 +307,7 @@ class SlimeAttackingCallBack : public b2QueryCallback
         if (obj == m_player)
         {
             // TODO call player's getHit method
-			// m_player->getHit(2);
+            // m_player->getHit(2);
             return false;
         }
         return true;

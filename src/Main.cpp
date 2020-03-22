@@ -4,7 +4,7 @@
 int main()
 {
     Game        game;
-    const int   TICKS_PER_FRAME = 16;
+    const int   TICKS_PER_FRAME = 15;
     const float TIME_STEP = 1.f / 60.f;
     Uint32      usedTicks;
     Uint32      startTicks;
