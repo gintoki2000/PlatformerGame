@@ -29,7 +29,6 @@ set(SOURCE_FILES
 	src/Tile.cpp
 	src/TiledMap.cpp
 	src/WorldRenderer.cpp
-	src/AssertManager.cpp
 	src/Animator.cpp
 	src/Animation.cpp
 	src/ObjectList.cpp
@@ -38,6 +37,7 @@ set(SOURCE_FILES
 	src/Input.cpp
 	src/Builder.cpp
 	src/GameObject.cpp
+	src/Player.cpp
 
 	#monster
 	src/Monster.cpp
