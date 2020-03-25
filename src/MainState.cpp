@@ -3,6 +3,7 @@
 
 MainState::MainState()
 {
+	m_level = nullptr;
 }
 
 MainState::~MainState()
@@ -23,8 +24,12 @@ MainState* MainState::create()
 
 bool MainState::init()
 {
-	m_level = new Level();
-	return m_level->init("asserts/magic-cliffs.tmx");	
+	m_level = Level::create("asserts/magic-cliffs.tmx");
+	if (m_level == nullptr)
+	{
+		return false;
+	}
+	return true;
 }
 
 void MainState::render(float deltaTime)

@@ -1,6 +1,5 @@
 #ifndef LEVEL_H
 #define LEVEL_H
-#include "AssertManager.h"
 #include "NTRect.h"
 #include "TileSet.h"
 #include "WorldRenderer.h"
@@ -10,10 +9,10 @@ class Monster;
 class Player;
 class ObjectList;
 class TiledMap;
-class Level
+class Level : public b2ContactListener
 {
   public:
-    Level();
+	static Level* create(const std::string& filename);
     ~Level();
 
     /// getters
@@ -23,14 +22,20 @@ class Level
     const std::vector<TileSet*>& getTilesets() const;
 
     // stuff
-    bool init(const std::string& filename);
     void render(float deltaTime);
     void addMonster(Monster* monster);
     void removeMonster(Monster* monster);
     void setPaused(bool paused);
 
   private:
+    Level();
+    bool init(const std::string& filename);
 	void tick(float deltaTime);
+	void updateViewport(float deltaTime);
+
+	void BeginContact(b2Contact *contact) override;
+	void EndContact(b2Contact *contact) override;
+
     /// data fields
     bool                  m_isPaused;
     Player*               m_player;

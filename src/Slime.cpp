@@ -1,7 +1,6 @@
 #include "Slime.h"
 #include "Animation.h"
 #include "Animator.h"
-#include "AssertManager.h"
 #include "Constances.h"
 #include "Enums.h"
 #include "Level.h"
@@ -129,6 +128,7 @@ bool Slime::init(Level* level)
     fdef.filter.maskBits     = CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER;
 
     m_body->CreateFixture(&fdef);
+	resetMembers();
     return true;
 }
 
@@ -186,6 +186,7 @@ void Slime::updateLogic(float deltaTime)
             m_timer = 0.f;
             m_animator->play(ANIM_MOVE, 0.f);
         }
+		/// m_physics->setHorizontalSpeed(...)
     }
     break;
     case STATE_WAIT:
@@ -199,11 +200,11 @@ void Slime::updateLogic(float deltaTime)
     break;
     case STATE_MOVE:
     {
-		if (getDistanceToPlayer() >= ACTIVATE_DISTANCE)
-		{
-			m_state = STATE_IDLE;
-			m_timer = 0.f;
-		}
+        if (getDistanceToPlayer() >= ACTIVATE_DISTANCE)
+        {
+            m_state = STATE_IDLE;
+            m_timer = 0.f;
+        }
         else if (getDistanceToPlayer() <= ATTACK_DISTANCE)
         {
             m_state = STATE_ATTACK;

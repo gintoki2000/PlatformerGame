@@ -1,6 +1,5 @@
 
 #include "Level.h"
-#include "AssertManager.h"
 #include "Builder.h"
 #include "Cell.h"
 #include "Constances.h"
@@ -10,11 +9,11 @@
 #include "Monster.h"
 #include "NTRect.h"
 #include "ObjectList.h"
+#include "Player.h"
 #include "SDL_render.h"
 #include "Slime.h"
 #include "TiledMap.h"
 #include "WorldRenderer.h"
-#include "box2d/b2_polygon_shape.h"
 #include "tmxlite/Map.hpp"
 #include "tmxlite/ObjectGroup.hpp"
 #include "tmxlite/TileLayer.hpp"
@@ -37,19 +36,15 @@ Level::Level()
     m_worldRenderer =
         new WorldRenderer(Locator::getRenderer(), Constances::PPM);
     m_world->SetDebugDraw(m_worldRenderer);
+    m_world->SetContactListener(this);
 
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
-
-    // TextureHandler* textureHandler = new
-    // TextureHandler(Locator::getRenderer()); AssertFactory*  textureFactory =
-    // new AssertFactory(textureHandler);
-    // m_assertManager->registerFactory<SDL_Texture>(textureFactory);
 }
 
 Level::~Level()
 {
-    delete m_world;
     delete m_monsters;
+    delete m_world;
     delete m_tiledMap;
     delete m_worldRenderer;
     for (auto t : m_tileSets)
@@ -57,6 +52,17 @@ Level::~Level()
         delete t;
     }
     m_tileSets.clear();
+}
+
+Level* Level::create(const std::string& filename)
+{
+    Level* ret = new Level;
+    if (ret->init(filename))
+    {
+        return ret;
+    }
+    delete ret;
+    return nullptr;
 }
 
 static std::vector<tmx::Layer::Ptr>::const_iterator
@@ -71,9 +77,6 @@ findLayer(const std::vector<tmx::Layer::Ptr>& layers,
 
 bool Level::init(const std::string& filename)
 {
-    /// load asserts
-    // m_assertManager->loasAssert<SDL_Texture>("asserts/player-2.png");
-    // m_assertManager->loasAssert<SDL_Texture>("asserts/slime.png");
     /// load level  data
     tmx::Map levelData;
     if (!levelData.load(filename))
@@ -126,8 +129,14 @@ bool Level::init(const std::string& filename)
         m_world->CreateBody(&blockbdef)->CreateFixture(&blockfdef);
         delete blockfdef.shape;
     }
-    auto slime = Slime::create(this, 100.f, 0.f);
+    auto slime = Slime::create(this, 100.f, 100.f);
     m_monsters->addObject(slime);
+    if ((m_player = Player::create(this)) == nullptr)
+    {
+        SDL_Log("Failed to create player!");
+        return false;
+    }
+    m_player->setPosition(100.f, 10.f);
     return true;
 }
 
@@ -141,35 +150,12 @@ void Level::tick(float deltaTime)
         {
             m_monsters->tick(deltaTime);
             m_tiledMap->tick(deltaTime);
+            m_player->tick(deltaTime);
         }
         for (int i = 0; i < m_monstersToBeRemovedCount; ++i)
         {
             m_monsters->removeObject(m_monstersToBeRemoved[i]);
         }
-    }
-
-    if (Input::isButtonLeftPressed())
-    {
-        m_viewport.x -= 1;
-    }
-    if (Input::isButtonRightPressed())
-    {
-        m_viewport.x += 1;
-    }
-    if (Input::isButtonUpPressed())
-    {
-        m_viewport.y -= 1;
-    }
-    if (Input::isButtonDownPressed())
-    {
-        m_viewport.y += 1;
-    }
-
-    if (Input::isButtonAJustPressed())
-    {
-
-        int x = rand() % Constances::GAME_WIDTH;
-        addMonster(Slime::create(this, x, 0));
     }
     m_worldRenderer->setViewport(m_viewport);
 }
@@ -183,6 +169,7 @@ void Level::render(float deltaTime)
     m_monstersToBeRemovedCount = 0;
     m_tiledMap->paint();
     m_monsters->paint();
+    m_player->paint();
     m_world->DrawDebugData();
 }
 
@@ -203,3 +190,48 @@ Player* Level::getPlayer() const { return m_player; }
 const std::vector<TileSet*>& Level::getTilesets() const { return m_tileSets; }
 
 void Level::setPaused(bool paused) { m_isPaused = paused; }
+
+void Level::BeginContact(b2Contact* contact)
+{
+    b2Fixture* fixtureA  = contact->GetFixtureA();
+    b2Fixture* fixtureB  = contact->GetFixtureB();
+    void*      userDataA = fixtureA->GetBody()->GetUserData();
+    void*      userDataB = fixtureB->GetBody()->GetUserData();
+    if (userDataA == m_player)
+    {
+        if ((long)fixtureA->GetUserData() == Player::FIXTURE_TYPE_FOOT_SENSOR)
+        {
+            m_player->touchGround();
+        }
+    }
+    if (userDataB == m_player)
+    {
+        if ((long)fixtureB->GetUserData() == Player::FIXTURE_TYPE_FOOT_SENSOR)
+        {
+            m_player->touchGround();
+        }
+    }
+}
+
+void Level::EndContact(b2Contact* contact)
+{
+
+    b2Fixture* fixtureA  = contact->GetFixtureA();
+    b2Fixture* fixtureB  = contact->GetFixtureB();
+    void*      userDataA = fixtureA->GetBody()->GetUserData();
+    void*      userDataB = fixtureB->GetBody()->GetUserData();
+    if (userDataA == m_player)
+    {
+        if ((long)fixtureA->GetUserData() == Player::FIXTURE_TYPE_FOOT_SENSOR)
+        {
+            m_player->untouchGround();
+        }
+    }
+    if (userDataB == m_player)
+    {
+        if ((long)fixtureB->GetUserData() == Player::FIXTURE_TYPE_FOOT_SENSOR)
+        {
+            m_player->untouchGround();
+        }
+    }
+}
