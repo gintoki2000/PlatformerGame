@@ -9,6 +9,7 @@
 #include "Locator.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
+#include "Sword.h"
 #include "Weapon.h"
 Player::Player()
 {
@@ -16,6 +17,8 @@ Player::Player()
     m_texture     = nullptr;
     m_spriteSheet = nullptr;
     m_animator    = nullptr;
+    m_weapon      = nullptr;
+    m_spell       = nullptr;
 }
 
 Player::~Player()
@@ -50,6 +53,7 @@ bool Player::init(Level* level)
         return false;
     }
     initPhysicsComponent();
+    setWeapon(new Sword());
     resetMembers();
     return true;
 }
@@ -72,12 +76,12 @@ bool Player::initGraphicsComponent()
     anims[ANIM_SLIDE]         = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
     anims[ANIM_STAND]         = new Animation(m_spriteSheet, 27, 3, 1.f / 8.f);
     anims[ANIM_CORNER_GRAB]   = new Animation(m_spriteSheet, 30, 4, 1.f / 8.f);
-    anims[ANIM_IDLE_2]        = new Animation(m_spriteSheet, 34, 4, 1.f / 8.f);
-    anims[ANIM_ATK_1]         = new Animation(m_spriteSheet, 38, 5, 1.f / 8.f);
-    anims[ANIM_ATK_2]         = new Animation(m_spriteSheet, 43, 6, 1.f / 8.f);
-    anims[ANIM_ATK_3]         = new Animation(m_spriteSheet, 49, 6, 1.f / 8.f);
-    anims[ANIM_HURT]          = new Animation(m_spriteSheet, 55, 3, 1.f / 8.f);
-    anims[ANIM_DIE]           = new Animation(m_spriteSheet, 58, 7, 1.f / 8.f);
+    anims[ANIM_IDLE_2]        = new Animation(m_spriteSheet, 34, 4, 1.f / 10.f);
+    anims[ANIM_ATK_1]         = new Animation(m_spriteSheet, 42, 5, 1.f / 12.f);
+    anims[ANIM_ATK_2]         = new Animation(m_spriteSheet, 47, 6, 1.f / 12.f);
+    anims[ANIM_ATK_3]         = new Animation(m_spriteSheet, 53, 6, 1.f / 12.f);
+    anims[ANIM_HURT]          = new Animation(m_spriteSheet, 59, 3, 1.f / 8.f);
+    anims[ANIM_DIE]           = new Animation(m_spriteSheet, 61, 7, 1.f / 8.f);
     anims[ANIM_SWORD_DRAW]    = new Animation(m_spriteSheet, 65, 4, 1.f / 8.f);
     anims[ANIM_SWORD_SHEATHE] = new Animation(m_spriteSheet, 69, 4, 1.f / 8.f);
     anims[ANIM_CORNER_JUMP]   = new Animation(m_spriteSheet, 73, 2, 1.f / 8.f);
@@ -101,6 +105,16 @@ bool Player::initGraphicsComponent()
     m_animator->setOriginX(SPRITE_WIDTH / 2);
     m_animator->setOriginY(SPRITE_HEIGHT / 2);
     return true;
+}
+
+void Player::setWeapon(Weapon* weapon)
+{
+    if (m_weapon != nullptr)
+    {
+        delete weapon;
+    }
+    m_weapon           = weapon;
+    m_weapon->m_player = this;
 }
 
 void Player::initPhysicsComponent()
@@ -141,7 +155,7 @@ void Player::resetMembers()
     m_direction           = DIRECTION_RIGHT;
     m_touchingGroundCount = 0;
     m_touchingWallCount   = 0;
-    m_maxHitPoints        = 100;
+    m_maxHitPoints        = 5;
     m_hitPoints           = m_maxHitPoints;
     m_maxManaPoints       = 50;
     m_manaPoints          = m_maxManaPoints;
@@ -193,7 +207,7 @@ void Player::tick(float deltaTime)
     updateGraphics(deltaTime);
 }
 
-void Player::paint() { m_animator->render(Locator::getRenderer()); }
+void Player::paint() { m_animator->paint(Locator::getRenderer()); }
 
 void Player::setHorizontalSpeed(float vx)
 {
@@ -216,6 +230,10 @@ void Player::updateLogic(float deltaTime)
 {
     m_timer += deltaTime;
 
+    if (!isDead() && m_weapon->tick(deltaTime))
+    {
+        return;
+    }
     int inputDirection = Input::getInputDirectionX();
     if (inputDirection < 0)
     {
@@ -272,7 +290,7 @@ void Player::updateLogic(float deltaTime)
     break;
     case STATE_JUMP:
     {
-        if (m_animator->isCurrentAnimFinshed())
+        if (m_animator->isCurrentAnimationFinshed())
         {
             somersault();
         }
@@ -294,7 +312,7 @@ void Player::updateLogic(float deltaTime)
     break;
     case STATE_SOMERSULT:
     {
-        if (m_animator->isCurrentAnimFinshed())
+        if (m_animator->isCurrentAnimationFinshed())
         {
             fall();
         }
@@ -362,6 +380,10 @@ void Player::updateLogic(float deltaTime)
     break;
     case STATE_HURT:
     {
+        if (m_animator->isCurrentAnimationFinshed())
+        {
+            wait();
+        }
     }
     break;
     case STATE_DIE:
@@ -410,10 +432,11 @@ void Player::slide()
     m_animator->play(ANIM_SLIDE, 0.f);
 }
 
-void Player::attack() { SDL_Log("Player attack"); }
+void Player::attack() { m_weapon->start(); }
 
 void Player::die()
 {
+    SDL_Log("Player die");
     setState(STATE_DIE, 0.f);
     m_animator->play(ANIM_DIE, 0.f);
     stopHorizontalMovement();
@@ -423,8 +446,10 @@ void Player::hurt()
 {
     setState(STATE_HURT, 0.f);
     m_animator->play(ANIM_HURT, 0.f);
-    m_weapon->cancel();
     stopVerticalMovement();
+    m_weapon->cancel();
+    int sign = m_direction == DIRECTION_LEFT ? -1 : 1;
+    m_body->ApplyLinearImpulseToCenter(b2Vec2(-sign * 1.f, -5.f), true);
 }
 
 void Player::somersault()
@@ -449,7 +474,8 @@ void Player::stand()
 
 void Player::getHit(int damage)
 {
-    if (!isDead() > 0 && m_state != STATE_HURT)
+    SDL_Log("Player get hit");
+    if (!isDead() && m_state != STATE_HURT)
     {
         m_hitPoints -= damage;
         if (m_hitPoints < 0)
@@ -467,7 +493,7 @@ void Player::getHit(int damage)
     }
 }
 
-bool Player::isDead() const { return m_hitPoints > 0; }
+bool Player::isDead() const { return m_hitPoints == 0; }
 
 bool Player::isOnGround() const { return m_touchingGroundCount > 0; }
 

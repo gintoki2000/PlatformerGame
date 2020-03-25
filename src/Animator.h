@@ -14,13 +14,13 @@ class Animator
 
     void tick(float deltaTime);
 
-    void render(SDL_Renderer* renderer);
+    void paint(SDL_Renderer* renderer);
 
     void pause() { m_isPaused = true; }
 
     void resume() { m_isPaused = false; }
 
-    bool isCurrentAnimFinshed();
+    bool isCurrentAnimationFinshed();
 
     /// setter & getter
     int getAnimationIndex() const { return m_animationIndex; }

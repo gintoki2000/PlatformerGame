@@ -10,10 +10,13 @@ class Weapon
 	virtual void start() = 0;
 	virtual void cancel() = 0;
 
+	bool isActive() const { return m_isActive; }
+
   protected:
     Weapon();
 
     Player* m_player;
+	bool m_isActive;
 
 	friend class Player;
 };

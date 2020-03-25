@@ -40,7 +40,7 @@ void Animator::tick(float deltaTime)
     }
 }
 
-void Animator::render(SDL_Renderer* renderer)
+void Animator::paint(SDL_Renderer* renderer)
 {
     m_dstrect.x = m_position.x - m_origin.x;
     m_dstrect.y = m_position.y - m_origin.y;
@@ -48,7 +48,7 @@ void Animator::render(SDL_Renderer* renderer)
     m_dstrect.h = m_currentSprite->getHeight();
     m_currentSprite->draw(renderer, &m_dstrect, m_rotation, &m_origin, m_flip);
 }
-bool Animator::isCurrentAnimFinshed()
+bool Animator::isCurrentAnimationFinshed()
 {
     return m_animations[m_animationIndex]->isFinished(m_elapsedTime);
 }

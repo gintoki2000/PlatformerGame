@@ -9,6 +9,12 @@ class Sword : public Weapon
 
     bool tick(float deltaTime) override;
     void start() override;
+	void cancel() override;
+
+  private:
+	bool m_chainAttack;
+    int  m_phrase;
+	int  m_lastAnim;
 
     friend class Weapon;
 };

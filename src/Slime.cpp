@@ -7,6 +7,7 @@
 #include "Locator.h"
 #include "Monster.h"
 #include "NTRect.h"
+#include "Player.h"
 #include "SDL_image.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
@@ -87,7 +88,7 @@ bool Slime::init(Level* level)
 {
 
     Monster::init(MONSTER_TYPE_SLIME, level, 10);
-    Animation* animations[NUM_ANIMS];
+    Animation* anims[NUM_ANIMS];
 
     if (!sharedAsserts.load())
     {
@@ -95,18 +96,17 @@ bool Slime::init(Level* level)
         return false;
     }
     sharedAsserts.incCount();
-    auto spriteSheet = sharedAsserts.spriteSheet;
-    animations[ANIM_IDLE] =
-        new Animation(spriteSheet, 0, 4, 1.f / 8.f, Animation::PLAY_MODE_LOOP);
-    animations[ANIM_MOVE] =
-        new Animation(spriteSheet, 5, 4, 1.f / 8.f, Animation::PLAY_MODE_LOOP);
-    animations[ANIM_ATTACK] = new Animation(spriteSheet, 9, 5, 1.f / 8.f,
-                                            Animation::PLAY_MODE_NORMAL);
-    animations[ANIM_HURT]   = new Animation(spriteSheet, 14, 4, 1.f / 8.f,
-                                          Animation::PLAY_MODE_NORMAL);
-    animations[ANIM_DIE]    = new Animation(spriteSheet, 19, 4, 1.f / 8.f,
-                                         Animation::PLAY_MODE_NORMAL);
-    m_animator              = new Animator(animations, NUM_ANIMS);
+    auto spriteSheet   = sharedAsserts.spriteSheet;
+    anims[ANIM_IDLE]   = new Animation(spriteSheet, 0, 4, 1.f / 4.f);
+    anims[ANIM_MOVE]   = new Animation(spriteSheet, 4, 4, 1.f / 8.f);
+    anims[ANIM_ATTACK] = new Animation(spriteSheet, 8, 5, 1.f / 8.f);
+    anims[ANIM_HURT]   = new Animation(spriteSheet, 13, 4, 1.f / 8.f);
+    anims[ANIM_DIE]    = new Animation(spriteSheet, 17, 4, 1.f / 8.f);
+
+    anims[ANIM_IDLE]->setPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_MOVE]->setPlayMode(Animation::PLAY_MODE_LOOP);
+
+    m_animator = new Animator(anims, NUM_ANIMS);
     m_animator->setOriginX(SPRITE_WIDTH / 2);
     m_animator->setOriginY(SPRITE_HEIGHT / 2);
 
@@ -128,7 +128,7 @@ bool Slime::init(Level* level)
     fdef.filter.maskBits     = CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER;
 
     m_body->CreateFixture(&fdef);
-	resetMembers();
+    resetMembers();
     return true;
 }
 
@@ -137,8 +137,7 @@ void Slime::resetMembers()
     m_animator->play(ANIM_IDLE, 0.f);
     setPosition(0, 0);
     m_direction = DIRECTION_LEFT;
-    m_state     = STATE_IDLE;
-    m_timer     = 0.f;
+    idle();
 }
 void Slime::updateGraphics(float deltaTime)
 {
@@ -176,75 +175,68 @@ void Slime::updatePhysics()
 void Slime::updateLogic(float deltaTime)
 {
     m_timer += deltaTime;
+	m_changingDirTimer += deltaTime;
+    checkDirection();
     switch (m_state)
     {
     case STATE_IDLE:
     {
-        if (getDistanceToPlayer() <= ACTIVATE_DISTANCE)
+		auto distanceToPlayer = getDistanceToPlayer();
+        if (distanceToPlayer < ACTIVATE_DISTANCE)
         {
-            m_state = STATE_MOVE;
-            m_timer = 0.f;
-            m_animator->play(ANIM_MOVE, 0.f);
+            move();
         }
-		/// m_physics->setHorizontalSpeed(...)
+		else if (distanceToPlayer <= ATTACK_DISTANCE)
+		{
+			attack();
+		}
     }
     break;
     case STATE_WAIT:
     {
         if (m_timer > 1.f)
         {
-            m_state = STATE_IDLE;
-            m_timer = 0.f;
+            idle();
         }
     }
     break;
     case STATE_MOVE:
     {
-        if (getDistanceToPlayer() >= ACTIVATE_DISTANCE)
+		auto distanceToPlayer = getDistanceToPlayer();
+        if (distanceToPlayer > ACTIVATE_DISTANCE)
         {
-            m_state = STATE_IDLE;
-            m_timer = 0.f;
+            idle();
         }
-        else if (getDistanceToPlayer() <= ATTACK_DISTANCE)
-        {
-            m_state = STATE_ATTACK;
-            m_timer = 0.f;
-            m_animator->play(ANIM_ATTACK, 0.f);
-        }
+		else if (distanceToPlayer <= ATTACK_DISTANCE)
+		{
+			attack();
+		}
         else
         {
             int sign = m_direction == DIRECTION_LEFT ? -1 : 1;
-            setHorizontalSpeed(MOVE_SPEED * sign);
+            setHorizontalSpeed(Slime::MOVE_SPEED * sign);
         }
     }
     break;
     case STATE_ATTACK:
     {
-        if (m_animator->isCurrentAnimFinshed())
-        {
-            attackPlayer();
-            m_state = STATE_WAIT;
-            m_timer = 0.f;
-            m_animator->play(ANIM_IDLE, 0.f);
-        }
+		if (m_animator->isCurrentAnimationFinshed())
+		{
+			attackPlayer();
+			wait();
+		}
+		else 
+		{
+
+		}
     }
     break;
     case STATE_HURT:
     {
-        if (m_animator->isCurrentAnimFinshed())
-        {
-            m_state = STATE_IDLE;
-            m_timer = 0.f;
-            m_animator->play(ANIM_IDLE, 0.f);
-        }
     }
     break;
     case STATE_DIE:
     {
-        if (m_animator->isCurrentAnimFinshed())
-        {
-            m_level->removeMonster(this);
-        }
     }
     break;
     }
@@ -265,6 +257,15 @@ void Slime::setHorizontalSpeed(float speed)
     m_body->SetLinearVelocity(vel);
 }
 
+void Slime::checkDirection()
+{
+    if (m_changingDirTimer > 3.f)
+    {
+        m_changingDirTimer = 0.f;
+        m_direction        = getFacingPlayerDirection();
+    }
+}
+
 void Slime::tick(float deltaTime)
 {
     updatePhysics();
@@ -276,7 +277,7 @@ void Slime::paint()
 {
     if (isVisible())
     {
-        m_animator->render(Locator::getRenderer());
+        m_animator->paint(Locator::getRenderer());
     }
 }
 
@@ -307,8 +308,7 @@ class SlimeAttackingCallBack : public b2QueryCallback
         void* obj = fixture->GetBody()->GetUserData();
         if (obj == m_player)
         {
-            // TODO call player's getHit method
-            // m_player->getHit(2);
+            m_player->getHit(1);
             return false;
         }
         return true;
@@ -328,3 +328,48 @@ void Slime::attackPlayer()
     SlimeAttackingCallBack callback(m_level->getPlayer());
     m_body->GetWorld()->QueryAABB(&callback, area);
 }
+void Slime::setState(State newState, float initialTime)
+{
+    m_state = newState;
+    m_timer = initialTime;
+}
+void Slime::idle()
+{
+    setState(STATE_IDLE, 0.f);
+    m_animator->play(ANIM_IDLE, 0.f);
+    stopHorizontalMovement();
+}
+
+void Slime::wait()
+{
+    setState(STATE_WAIT, 0.f);
+    m_animator->play(ANIM_IDLE, 0.f);
+    stopHorizontalMovement();
+}
+
+void Slime::move()
+{
+    setState(STATE_MOVE, 0.f);
+    m_animator->play(ANIM_MOVE, 0.f);
+}
+
+void Slime::attack()
+{
+    SDL_Log("Slime attack");
+    setState(STATE_ATTACK, 0.f);
+    m_animator->play(ANIM_ATTACK, 0.f);
+}
+
+void Slime::hurt()
+{
+    setState(STATE_HURT, 0.f);
+    m_animator->play(ANIM_HURT, 0.f);
+}
+
+void Slime::die()
+{
+    setState(STATE_DIE, 0.f);
+    m_animator->play(ANIM_DIE, 0.f);
+}
+
+void Slime::stopHorizontalMovement() { setHorizontalSpeed(0.f); }

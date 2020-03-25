@@ -96,6 +96,7 @@ class Player : public GameObject
     bool isTouchingWall() const;
     void getHit(int damage);
     bool isDead() const;
+	void setWeapon(Weapon* weapon);
 
   private:
     Player();
@@ -150,5 +151,6 @@ class Player : public GameObject
     int          m_maxManaPoints;
 
     friend class Weapon;
+	friend class Sword;
 };
 #endif // PLAYER_H

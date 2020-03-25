@@ -41,7 +41,7 @@ int Animation::getCurrentIndex(float elapsedTime) const
     int index = elapsedTime / m_duration;
     switch (m_playMode)
     {
-    case PLAY_MODE_NORMAL: index = std::min(index, m_numSprites); break;
+    case PLAY_MODE_NORMAL: index = std::min(index, m_numSprites - 1); break;
     case PLAY_MODE_LOOP: index = index % m_numSprites; break;
     case PLAY_MODE_LOOP_PINGPONG:
         index = index % ((m_numSprites * 2) - 2);

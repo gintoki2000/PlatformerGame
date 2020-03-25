@@ -8,8 +8,8 @@ class Animator;
 class Slime : public Monster
 {
   public:
-	static Slime* create(Level* level);	
-	static Slime* create(Level* level, float cx, float cy);
+    static Slime* create(Level* level);
+    static Slime* create(Level* level, float cx, float cy);
     ~Slime();
 
     void getHit(int damage) override;
@@ -18,7 +18,7 @@ class Slime : public Monster
     void paint() override;
 
   private:
-	bool init(Level*);
+    bool init(Level*);
     void resetMembers();
     void updateGraphics(float deltaTime);
     void updatePhysics();
@@ -28,15 +28,14 @@ class Slime : public Monster
     void stopHorizontalMovement();
     void attackPlayer();
     void synchronizeBodyTransform();
-    enum
-    {
-        STATE_IDLE,
-        STATE_WAIT,
-        STATE_MOVE,
-        STATE_ATTACK,
-        STATE_HURT,
-        STATE_DIE
-    };
+	void checkDirection();
+
+    void idle();
+    void wait();
+    void move();
+    void attack();
+    void hurt();
+    void die();
     enum
     {
         ANIM_IDLE,
@@ -47,8 +46,20 @@ class Slime : public Monster
         NUM_ANIMS
     };
 
-    int       m_state;
+    enum State
+    {
+        STATE_IDLE,
+        STATE_WAIT,
+        STATE_MOVE,
+        STATE_ATTACK,
+        STATE_HURT,
+        STATE_DIE
+    };
+
+    void      setState(State newState, float initialTime);
+    State     m_state;
     float     m_timer;
+    float     m_changingDirTimer;
     int       m_direction;
     b2Body*   m_body;
     Animator* m_animator;
@@ -57,9 +68,9 @@ class Slime : public Monster
     static constexpr float HEIGHT            = 25.f;
     static constexpr int   SPRITE_WIDTH      = 32;
     static constexpr int   SPRITE_HEIGHT     = 25;
-    static constexpr float ACTIVATE_DISTANCE = Constances::TILE_SIZE * 8;
-    static constexpr float ATTACK_DISTANCE   = Constances::TILE_SIZE * 4;
-    static constexpr float MOVE_SPEED        = 10.f;
+    static constexpr float ACTIVATE_DISTANCE = Constances::TILE_SIZE * 5;
+    static constexpr float ATTACK_DISTANCE   = Constances::TILE_SIZE * 1;
+    static constexpr float MOVE_SPEED        = 1.f;
     static constexpr float MOVE_SPPED_2      = 15.f;
 
     struct Asserts
