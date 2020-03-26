@@ -9,10 +9,61 @@ class Level;
 class Animator;
 class Weapon;
 class Spell;
+class Player;
+class PlayerState
+{
+  public:
+    virtual ~PlayerState();
+    virtual void         enter()               = 0;
+    virtual PlayerState* tick(float deltaTime) = 0;
+
+  protected:
+    friend class Player;
+    Player* m_player;
+};
+
+class PlayerOnGroundState : public PlayerState
+{
+  public:
+    PlayerState* tick(float deltaTime) override;
+};
+
+class PlayerIdle1 : public PlayerOnGroundState
+{
+  public:
+    void enter() override;
+};
+
+class PlayerRun : public PlayerOnGroundState
+{
+  public:
+    void         enter() override;
+    PlayerState* tick(float deltaTime) override;
+};
+
+class PlayerJump : public PlayerState
+{
+  public:
+    void         enter() override;
+    PlayerState* tick(float deltaTime) override;
+};
+
+class PlayerSomersult : public PlayerState
+{
+  public:
+    void         enter() override;
+    PlayerState* tick(float deltaTime) override;
+};
+
+class PlayerFall : public PlayerState
+{
+    void         enter() override;
+    PlayerState* tick(float deltaTime) override;
+};
 class Player : public GameObject
 {
   private:
-    enum
+    enum State
     {
         STATE_IDLE_1,
         STATE_IDLE_2,
@@ -71,9 +122,10 @@ class Player : public GameObject
     static constexpr int   SPRITE_HEIGHT   = 37;
     static constexpr float JUMP_VEL        = 13.f;
     static constexpr float RUN_ACC         = 0.8f;
-    static constexpr float MAX_HVEL        = 10.f;
     static constexpr float WIDTH_IN_METER  = WIDTH / Constances::PPM;
     static constexpr float HEIGHT_IN_METER = HEIGHT / Constances::PPM;
+    static constexpr float SLIDE_SPEED     = 8.f;
+    static const float     MAX_RUN_SPEED;
     enum
     {
         FIXTURE_TYPE_MAIN_BODY,
@@ -96,7 +148,7 @@ class Player : public GameObject
     bool isTouchingWall() const;
     void getHit(int damage);
     bool isDead() const;
-	void setWeapon(Weapon* weapon);
+    void setWeapon(Weapon* weapon);
 
   private:
     Player();
@@ -108,7 +160,6 @@ class Player : public GameObject
     void updatePhysics();
     void updateGraphics(float deltaTime);
     void updateLogic(float deltaTime);
-    void setState(int newState, float initialTime);
     void setHorizontalSpeed(float vx);
     void stopHorizontalMovement();
     void stopVerticalMovement();
@@ -116,25 +167,9 @@ class Player : public GameObject
     void synchronizeBodyTransform();
     void synchronizeAnimatorTransform();
 
-    // actions
-    void jump();
-    void wait();
-    void getReadyToAttack();
-    void run();
-    void slide();
-    void stand();
-    void fall();
-    void somersault();
-    void attack();
-    void castSpell();
-    void die();
-    void hurt();
-    void drawSword();
-    void sheatheSword();
-
     float        m_timer;
     int          m_direction;
-    int          m_state;
+    State        m_prevState;
     bool         m_continueAttack;
     bool         m_isWallSliding;
     int          m_touchingGroundCount;
@@ -145,12 +180,20 @@ class Player : public GameObject
     Animator*    m_animator;
     Weapon*      m_weapon;
     Spell*       m_spell;
+    PlayerState* m_state;
     int          m_hitPoints;
     int          m_manaPoints;
     int          m_maxHitPoints;
     int          m_maxManaPoints;
 
     friend class Weapon;
-	friend class Sword;
+    friend class Sword;
+    friend class PlayerState;
+    friend class PlayerRun;
+    friend class PlayerOnGroundState;
+    friend class PlayerIdle1;
+    friend class PlayerJump;
+	friend class PlayerSomersult;
+	friend class PlayerFall;
 };
 #endif // PLAYER_H

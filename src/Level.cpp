@@ -179,7 +179,7 @@ void Level::render(float deltaTime)
     m_tiledMap->paint();
     m_monsters->paint();
     m_player->paint();
-    m_world->DrawDebugData();
+    //m_world->DrawDebugData();
 }
 
 void Level::addMonster(Monster* monster) { m_monsters->addObject(monster); }

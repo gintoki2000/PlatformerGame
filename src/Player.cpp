@@ -11,6 +11,7 @@
 #include "SDL_render.h"
 #include "Sword.h"
 #include "Weapon.h"
+const float Player::MAX_RUN_SPEED = 7.f;
 Player::Player()
 {
     m_body        = nullptr;
@@ -19,6 +20,7 @@ Player::Player()
     m_animator    = nullptr;
     m_weapon      = nullptr;
     m_spell       = nullptr;
+    m_state       = nullptr;
 }
 
 Player::~Player()
@@ -27,6 +29,8 @@ Player::~Player()
     SDL_DestroyTexture(m_texture);
     delete m_animator;
     delete m_spriteSheet;
+    delete m_weapon;
+    delete m_state;
 
     m_body        = nullptr;
     m_animator    = nullptr;
@@ -74,16 +78,16 @@ bool Player::initGraphicsComponent()
     anims[ANIM_SOMERSULT]     = new Animation(m_spriteSheet, 18, 4, 1.f / 10.f);
     anims[ANIM_FALL]          = new Animation(m_spriteSheet, 22, 2, 1.f / 10.f);
     anims[ANIM_SLIDE]         = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
-    anims[ANIM_STAND]         = new Animation(m_spriteSheet, 27, 3, 1.f / 8.f);
+    anims[ANIM_STAND]         = new Animation(m_spriteSheet, 26, 3, 1.f / 8.f);
     anims[ANIM_CORNER_GRAB]   = new Animation(m_spriteSheet, 30, 4, 1.f / 8.f);
-    anims[ANIM_IDLE_2]        = new Animation(m_spriteSheet, 34, 4, 1.f / 10.f);
+    anims[ANIM_IDLE_2]        = new Animation(m_spriteSheet, 38, 4, 1.f / 10.f);
     anims[ANIM_ATK_1]         = new Animation(m_spriteSheet, 42, 5, 1.f / 12.f);
     anims[ANIM_ATK_2]         = new Animation(m_spriteSheet, 47, 6, 1.f / 12.f);
     anims[ANIM_ATK_3]         = new Animation(m_spriteSheet, 53, 6, 1.f / 12.f);
     anims[ANIM_HURT]          = new Animation(m_spriteSheet, 59, 3, 1.f / 8.f);
     anims[ANIM_DIE]           = new Animation(m_spriteSheet, 61, 7, 1.f / 8.f);
-    anims[ANIM_SWORD_DRAW]    = new Animation(m_spriteSheet, 65, 4, 1.f / 8.f);
-    anims[ANIM_SWORD_SHEATHE] = new Animation(m_spriteSheet, 69, 4, 1.f / 8.f);
+    anims[ANIM_SWORD_DRAW]    = new Animation(m_spriteSheet, 69, 4, 1.f / 8.f);
+    anims[ANIM_SWORD_SHEATHE] = new Animation(m_spriteSheet, 73, 4, 1.f / 8.f);
     anims[ANIM_CORNER_JUMP]   = new Animation(m_spriteSheet, 73, 2, 1.f / 8.f);
     anims[ANIM_WALL_SLIDE]    = new Animation(m_spriteSheet, 75, 2, 1.f / 8.f);
     anims[ANIM_WALL_CLIMB]    = new Animation(m_spriteSheet, 77, 4, 1.f / 8.f);
@@ -100,6 +104,7 @@ bool Player::initGraphicsComponent()
     anims[ANIM_IDLE_2]->setPlayMode(Animation::PLAY_MODE_LOOP);
     anims[ANIM_RUN]->setPlayMode(Animation::PLAY_MODE_LOOP);
     anims[ANIM_FALL]->setPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_SLIDE]->setPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_OF_ANIMS);
     m_animator->setOriginX(SPRITE_WIDTH / 2);
@@ -133,6 +138,7 @@ void Player::initPhysicsComponent()
     fdef.shape               = &box;
     fdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
     fdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
+    fdef.friction            = 0.1f;
 
     m_body->CreateFixture(&fdef);
 
@@ -159,9 +165,14 @@ void Player::resetMembers()
     m_hitPoints           = m_maxHitPoints;
     m_maxManaPoints       = 50;
     m_manaPoints          = m_maxManaPoints;
-    wait();
+    if (m_state != nullptr)
+    {
+        delete m_state;
+    }
+    m_state           = new PlayerIdle1();
+    m_state->m_player = this;
     setPosition(100.f, 0.f);
-	m_body->SetAwake(true);
+    m_body->SetAwake(true);
 }
 
 void Player::updateGraphics(float deltaTime)
@@ -229,284 +240,24 @@ void Player::stopVerticalMovement()
 
 void Player::updateLogic(float deltaTime)
 {
-    m_timer += deltaTime;
+	if (!isDead() && m_weapon->tick(deltaTime))
+	{
+			return;
+	}
 
-    if (!isDead() && m_weapon->tick(deltaTime))
+    PlayerState* newState = m_state->tick(deltaTime);
+    if (newState != nullptr)
     {
-        return;
-    }
-    int inputDirection = Input::getInputDirectionX();
-    if (inputDirection < 0)
-    {
-        m_direction = DIRECTION_LEFT;
-    }
-    if (inputDirection > 0)
-    {
-        m_direction = DIRECTION_RIGHT;
-    }
-    switch (m_state)
-    {
-    case STATE_IDLE_1:
-    {
-        if (Input::isButtonAJustPressed() && Input::isButtonUpPressed())
-        {
-            castSpell();
-        }
-        else if (Input::isButtonAJustPressed())
-        {
-            attack();
-        }
-        else if (Input::isButtonBPressed() && isOnGround())
-        {
-            jump();
-        }
-        else if (inputDirection != 0)
-        {
-            run();
-        }
-    }
-    break;
-    case STATE_IDLE_2:
-    {
-    }
-    break;
-    case STATE_RUN:
-    {
-        if (Input::isButtonBPressed() && isOnGround())
-        {
-            jump();
-        }
-        else if (inputDirection == 0)
-        {
-            wait();
-        }
-        else
-        {
-            b2Vec2 vel = m_body->GetLinearVelocity();
-            vel.x += inputDirection * RUN_ACC;
-            vel.x = std::max(-7.f, std::min(7.f, vel.x));
-            m_body->SetLinearVelocity(vel);
-        }
-    }
-    break;
-    case STATE_JUMP:
-    {
-        if (m_animator->isCurrentAnimationFinshed())
-        {
-            somersault();
-        }
-        else
-        {
-            if (inputDirection == 0)
-            {
-                stopHorizontalMovement();
-            }
-            else
-            {
-                b2Vec2 vel = m_body->GetLinearVelocity();
-                vel.x += inputDirection * RUN_ACC;
-                vel.x = std::max(-7.f, std::min(7.f, vel.x));
-                m_body->SetLinearVelocity(vel);
-            }
-        }
-    }
-    break;
-    case STATE_SOMERSULT:
-    {
-        if (m_animator->isCurrentAnimationFinshed())
-        {
-            fall();
-        }
-        else
-        {
-            if (inputDirection == 0)
-            {
-                stopHorizontalMovement();
-            }
-            else
-            {
-                b2Vec2 vel = m_body->GetLinearVelocity();
-                vel.x += inputDirection * RUN_ACC;
-                vel.x = std::max(-7.f, std::min(7.f, vel.x));
-                m_body->SetLinearVelocity(vel);
-            }
-        }
-    }
-    break;
-    case STATE_FALL:
-    {
-        float velX = m_body->GetLinearVelocity().x;
-        if (isOnGround())
-        {
-            if (velX != 0)
-            {
-                run();
-            }
-            else
-            {
-                wait();
-            }
-        }
-        else
-        {
-            if (inputDirection == 0)
-            {
-                stopHorizontalMovement();
-            }
-            else
-            {
-                b2Vec2 vel = m_body->GetLinearVelocity();
-                vel.x += inputDirection * RUN_ACC;
-                vel.x = std::max(-7.f, std::min(7.f, vel.x));
-                m_body->SetLinearVelocity(vel);
-            }
-        }
-    }
-    break;
-    case STATE_SWORD_SHEATHE:
-    {
-    }
-    break;
-    case STATE_SWORD_DRAW:
-    {
-    }
-    break;
-    case STATE_SLIDE:
-    {
-    }
-    break;
-    case STATE_STAND:
-    {
-    }
-    break;
-    case STATE_HURT:
-    {
-        if (m_animator->isCurrentAnimationFinshed())
-        {
-            wait();
-        }
-    }
-    break;
-    case STATE_DIE:
-    {
-		if (m_animator->isCurrentAnimationFinshed())
-		{
-			resetMembers();
-		}
-    }
-    break;
-    }
-}
-
-void Player::drawSword()
-{
-    setState(STATE_SWORD_DRAW, 0.f);
-    m_animator->play(ANIM_SWORD_DRAW, 0.f);
-}
-
-void Player::sheatheSword()
-{
-    setState(STATE_SWORD_SHEATHE, 0.f);
-    m_animator->play(ANIM_SWORD_SHEATHE, 0.f);
-}
-
-void Player::wait()
-{
-    setState(STATE_IDLE_1, 0.f);
-    m_animator->play(ANIM_IDLE_1, 0.f);
-    stopHorizontalMovement();
-}
-
-void Player::jump()
-{
-    setState(STATE_JUMP, 0.f);
-    m_animator->play(ANIM_JUMP, 0.f);
-    m_body->ApplyLinearImpulseToCenter(b2Vec2(0.f, -JUMP_VEL), true);
-    m_touchingGroundCount = 0;
-}
-
-void Player::run()
-{
-    setState(STATE_RUN, 0.f);
-    m_animator->play(ANIM_RUN, 0.f);
-}
-
-void Player::slide()
-{
-    setState(STATE_SLIDE, 0.f);
-    m_animator->play(ANIM_SLIDE, 0.f);
-}
-
-void Player::attack() { m_weapon->start(); }
-
-void Player::die()
-{
-    SDL_Log("Player die");
-    setState(STATE_DIE, 0.f);
-    m_animator->play(ANIM_DIE, 0.f);
-    stopHorizontalMovement();
-}
-
-void Player::hurt()
-{
-    setState(STATE_HURT, 0.f);
-    m_animator->play(ANIM_HURT, 0.f);
-    stopVerticalMovement();
-    m_weapon->cancel();
-    int sign = m_direction == DIRECTION_LEFT ? -1 : 1;
-    m_body->ApplyLinearImpulseToCenter(b2Vec2(-sign * 2.f, 0.f), true);
-}
-
-void Player::somersault()
-{
-    setState(STATE_SOMERSULT, m_timer);
-    m_animator->play(ANIM_SOMERSULT, 0.f);
-}
-
-void Player::fall()
-{
-    setState(STATE_FALL, 0.f);
-    m_animator->play(ANIM_FALL, 0.f);
-}
-
-void Player::castSpell() { SDL_Log("Player cast spell"); }
-
-void Player::stand()
-{
-    setState(STATE_STAND, 0.f);
-    m_animator->play(ANIM_STAND, 0.f);
-}
-
-void Player::getHit(int damage)
-{
-    SDL_Log("Player get hit");
-    if (!isDead() && m_state != STATE_HURT)
-    {
-        m_hitPoints -= damage;
-        if (m_hitPoints < 0)
-        {
-            m_hitPoints = 0;
-        }
-        if (m_hitPoints == 0)
-        {
-            die();
-        }
-        else
-        {
-            hurt();
-        }
+        delete m_state;
+        m_state           = newState;
+        m_state->m_player = this;
+        m_state->enter();
     }
 }
 
 bool Player::isDead() const { return m_hitPoints == 0; }
 
 bool Player::isOnGround() const { return m_touchingGroundCount > 0; }
-
-void Player::setState(int newState, float initialTime)
-{
-    m_state = newState;
-    m_timer = initialTime;
-}
 
 void Player::touchGround() { ++m_touchingGroundCount; }
 
@@ -517,4 +268,190 @@ void Player::untouchGround()
     {
         m_touchingGroundCount = 0;
     }
+}
+
+void Player::getHit(int damage) {}
+
+PlayerState::~PlayerState() {}
+
+PlayerState* PlayerOnGroundState::tick(float deltaTime)
+{
+
+    int inputDirection = Input::getInputDirectionX();
+    if (Input::isButtonAJustPressed() && Input::isButtonUpPressed())
+    {
+    }
+    else if (Input::isButtonAJustPressed())
+    {
+		m_player->m_weapon->start();
+    }
+    else if (Input::isButtonBPressed() && m_player->isOnGround())
+    {
+        return new PlayerJump();
+    }
+    else if (inputDirection != 0)
+    {
+        return new PlayerRun();
+    }
+    return nullptr;
+}
+
+void PlayerIdle1::enter()
+{
+    m_player->m_animator->play(Player::ANIM_IDLE_1, 0.f);
+    m_player->stopHorizontalMovement();
+}
+
+void PlayerRun::enter()
+{
+    m_player->m_animator->play(Player::ANIM_RUN, 0.f);
+}
+
+PlayerState* PlayerRun::tick(float deltaTime)
+{
+    int inputDirection = Input::getInputDirectionX();
+    if (inputDirection < 0)
+    {
+        m_player->m_direction = DIRECTION_LEFT;
+    }
+
+    if (inputDirection > 0)
+    {
+        m_player->m_direction = DIRECTION_RIGHT;
+    }
+
+	if (Input::isButtonBPressed() && m_player->isOnGround())
+	{
+		return new PlayerJump;
+	}
+    else if (inputDirection != 0)
+    {
+        b2Vec2 vel = m_player->m_body->GetLinearVelocity();
+        vel.x += inputDirection * Player::RUN_ACC;
+        vel.x = std::max(-Player::MAX_RUN_SPEED,
+                         std::min(Player::MAX_RUN_SPEED, vel.x));
+        m_player->m_body->SetLinearVelocity(vel);
+    }
+    else
+    {
+        return new PlayerIdle1();
+    }
+    return nullptr;
+}
+
+void PlayerJump::enter()
+{
+    m_player->m_animator->play(Player::ANIM_JUMP, 0.f);
+    m_player->m_body->ApplyLinearImpulseToCenter(b2Vec2(0.f, -Player::JUMP_VEL),
+                                                 true);
+}
+
+PlayerState* PlayerJump::tick(float deltaTime)
+{
+    if (m_player->m_animator->isCurrentAnimationFinshed())
+    {
+        return new PlayerSomersult();
+    }
+    int inputDirection = Input::getInputDirectionX();
+    if (inputDirection < 0)
+    {
+        m_player->m_direction = DIRECTION_LEFT;
+    }
+
+    if (inputDirection > 0)
+    {
+        m_player->m_direction = DIRECTION_RIGHT;
+    }
+    if (inputDirection != 0)
+    {
+        b2Vec2 vel = m_player->m_body->GetLinearVelocity();
+        vel.x += inputDirection * Player::RUN_ACC;
+        vel.x = std::max(-Player::MAX_RUN_SPEED,
+                         std::min(Player::MAX_RUN_SPEED, vel.x));
+        m_player->m_body->SetLinearVelocity(vel);
+    }
+	else 
+	{
+		m_player->stopHorizontalMovement();
+	}
+    return nullptr;
+}
+
+void PlayerSomersult::enter()
+{
+	m_player->m_animator->play(Player::ANIM_SOMERSULT, 0.f);
+}
+
+PlayerState* PlayerSomersult::tick(float deltaTime)
+{
+	if (m_player->m_animator->isCurrentAnimationFinshed())
+	{
+		return new PlayerFall();
+	}
+    int inputDirection = Input::getInputDirectionX();
+    if (inputDirection < 0)
+    {
+        m_player->m_direction = DIRECTION_LEFT;
+    }
+
+    if (inputDirection > 0)
+    {
+        m_player->m_direction = DIRECTION_RIGHT;
+    }
+    if (inputDirection != 0)
+    {
+        b2Vec2 vel = m_player->m_body->GetLinearVelocity();
+        vel.x += inputDirection * Player::RUN_ACC;
+        vel.x = std::max(-Player::MAX_RUN_SPEED,
+                         std::min(Player::MAX_RUN_SPEED, vel.x));
+        m_player->m_body->SetLinearVelocity(vel);
+    }
+	else 
+	{
+		m_player->stopHorizontalMovement();
+	}
+	return nullptr;
+}
+
+void PlayerFall::enter()
+{
+	m_player->m_animator->play(Player::ANIM_FALL, 0.f);	
+}
+
+PlayerState* PlayerFall::tick(float deltaTime)
+{
+    int inputDirection = Input::getInputDirectionX();
+	if (m_player->isOnGround())
+	{
+		if (inputDirection != 0)
+		{
+			return new PlayerRun;
+		}
+		else 
+		{
+			return new PlayerIdle1;
+		}
+	}
+    if (inputDirection < 0)
+    {
+        m_player->m_direction = DIRECTION_LEFT;
+    }
+
+    if (inputDirection > 0)
+    {
+        m_player->m_direction = DIRECTION_RIGHT;
+    }
+    if (inputDirection != 0)
+    {
+        b2Vec2 vel = m_player->m_body->GetLinearVelocity();
+        vel.x += inputDirection * Player::RUN_ACC;
+        vel.x = std::max(-Player::MAX_RUN_SPEED,
+                         std::min(Player::MAX_RUN_SPEED, vel.x));
+        m_player->m_body->SetLinearVelocity(vel);
+    }
+	else 
+	{
+		m_player->stopHorizontalMovement();
+	}
+	return nullptr;
 }
