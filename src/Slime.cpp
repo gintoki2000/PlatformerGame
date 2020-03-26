@@ -98,8 +98,8 @@ bool Slime::init(Level* level)
     sharedAsserts.incCount();
     auto spriteSheet   = sharedAsserts.spriteSheet;
     anims[ANIM_IDLE]   = new Animation(spriteSheet, 0, 4, 1.f / 4.f);
-    anims[ANIM_MOVE]   = new Animation(spriteSheet, 4, 4, 1.f / 8.f);
-    anims[ANIM_ATTACK] = new Animation(spriteSheet, 8, 5, 1.f / 8.f);
+    anims[ANIM_MOVE]   = new Animation(spriteSheet, 4, 4, 1.f / 4.f);
+    anims[ANIM_ATTACK] = new Animation(spriteSheet, 8, 5, 1.f / 6.f);
     anims[ANIM_HURT]   = new Animation(spriteSheet, 13, 4, 1.f / 8.f);
     anims[ANIM_DIE]    = new Animation(spriteSheet, 17, 4, 1.f / 8.f);
 
@@ -259,7 +259,7 @@ void Slime::setHorizontalSpeed(float speed)
 
 void Slime::checkDirection()
 {
-    if (m_changingDirTimer > 3.f)
+    if (m_changingDirTimer > 1.5f)
     {
         m_changingDirTimer = 0.f;
         m_direction        = getFacingPlayerDirection();
@@ -355,7 +355,6 @@ void Slime::move()
 
 void Slime::attack()
 {
-    SDL_Log("Slime attack");
     setState(STATE_ATTACK, 0.f);
     m_animator->play(ANIM_ATTACK, 0.f);
 }

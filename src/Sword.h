@@ -12,7 +12,7 @@ class Sword : public Weapon
 	void cancel() override;
 
   private:
-	bool m_chainAttack;
+	bool m_chain;
     int  m_phrase;
 	int  m_lastAnim;
 

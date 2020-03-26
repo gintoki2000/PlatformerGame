@@ -160,7 +160,8 @@ void Player::resetMembers()
     m_maxManaPoints       = 50;
     m_manaPoints          = m_maxManaPoints;
     wait();
-    setPosition(0.f, 0.f);
+    setPosition(100.f, 0.f);
+	m_body->SetAwake(true);
 }
 
 void Player::updateGraphics(float deltaTime)
@@ -388,6 +389,10 @@ void Player::updateLogic(float deltaTime)
     break;
     case STATE_DIE:
     {
+		if (m_animator->isCurrentAnimationFinshed())
+		{
+			resetMembers();
+		}
     }
     break;
     }
@@ -449,7 +454,7 @@ void Player::hurt()
     stopVerticalMovement();
     m_weapon->cancel();
     int sign = m_direction == DIRECTION_LEFT ? -1 : 1;
-    m_body->ApplyLinearImpulseToCenter(b2Vec2(-sign * 1.f, -5.f), true);
+    m_body->ApplyLinearImpulseToCenter(b2Vec2(-sign * 2.f, 0.f), true);
 }
 
 void Player::somersault()

@@ -10,6 +10,7 @@
 #include "NTRect.h"
 #include "ObjectList.h"
 #include "Player.h"
+#include "SDL_mouse.h"
 #include "SDL_render.h"
 #include "Slime.h"
 #include "TiledMap.h"
@@ -129,14 +130,11 @@ bool Level::init(const std::string& filename)
         m_world->CreateBody(&blockbdef)->CreateFixture(&blockfdef);
         delete blockfdef.shape;
     }
-    auto slime = Slime::create(this, 100.f, 100.f);
-    m_monsters->addObject(slime);
     if ((m_player = Player::create(this)) == nullptr)
     {
         SDL_Log("Failed to create player!");
         return false;
     }
-    m_player->setPosition(100.f, 10.f);
     return true;
 }
 
@@ -158,6 +156,17 @@ void Level::tick(float deltaTime)
         }
     }
     m_worldRenderer->setViewport(m_viewport);
+    int  x, y;
+    auto mouseState = SDL_GetMouseState(&x, &y);
+
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+    {
+        auto slime = Slime::create(this);
+        slime->setPositionX(x / Constances::SCALE_X + m_viewport.x);
+        slime->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
+        addMonster(slime);
+		SDL_Log("%d", m_monsters->getNumObjects());
+    }
 }
 
 void Level::render(float deltaTime)

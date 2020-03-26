@@ -12,10 +12,10 @@ void Sword::start()
     {
         return;
     }
-    m_phrase      = 0;
-    m_isActive    = true;
-    m_chainAttack = false;
-    m_lastAnim    = m_player->m_animator->getAnimationIndex();
+    m_phrase   = 0;
+    m_isActive = true;
+    m_chain    = false;
+    m_lastAnim = m_player->m_animator->getAnimationIndex();
     m_player->m_animator->play(Player::ANIM_ATK_1, 0.f);
 }
 
@@ -31,14 +31,14 @@ bool Sword::tick(float)
         {
             if (Input::isButtonAJustPressed())
             {
-                m_chainAttack = true;
+                m_chain = true;
             }
             if (m_player->m_animator->isCurrentAnimationFinshed())
             {
-                if (m_chainAttack)
+                if (m_chain)
                 {
-                    m_phrase      = 1;
-                    m_chainAttack = false;
+                    m_phrase = 1;
+                    m_chain  = false;
                     m_player->m_animator->play(Player::ANIM_ATK_2, 0.f);
                 }
                 else
@@ -53,14 +53,14 @@ bool Sword::tick(float)
         {
             if (Input::isButtonAJustPressed())
             {
-                m_chainAttack = true;
+                m_chain = true;
             }
             if (m_player->m_animator->isCurrentAnimationFinshed())
             {
-                if (m_chainAttack)
+                if (m_chain)
                 {
-                    m_phrase      = 2;
-                    m_chainAttack = false;
+                    m_phrase = 2;
+                    m_chain  = false;
                     m_player->m_animator->play(Player::ANIM_ATK_3, 0.f);
                 }
                 else

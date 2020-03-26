@@ -16,6 +16,7 @@ Game::Game() : m_isRunning(false), m_stateManager(new StateManager())
 
 Game::~Game()
 {
+	delete m_stateManager;
     Locator::terminate();
     IMG_Quit();
     SDL_Quit();

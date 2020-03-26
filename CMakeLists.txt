@@ -10,14 +10,11 @@ set(SOURCE_FILES
 	src/NTTextureRegion.cpp
     src/NTVec.cpp
     src/NTLayer.cpp
-
-	#base tiled map
 	src/NTTileLayer.cpp
 	src/NTTileLayerCell.cpp
 	src/NTTileLayerAnimatedTile.cpp
 	src/NTTileLayerStaticTile.cpp
 
-	#main
 	src/Constances.cpp
 	src/Main.cpp
 	src/Game.cpp
@@ -38,10 +35,10 @@ set(SOURCE_FILES
 	src/Builder.cpp
 	src/GameObject.cpp
 	src/Player.cpp
-
-	#monster
+	src/Sword.cpp
 	src/Monster.cpp
 	src/Slime.cpp
+	src/Weapon.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)
