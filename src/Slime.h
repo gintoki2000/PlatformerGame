@@ -3,32 +3,22 @@
 #include "Constances.h"
 #include "Monster.h"
 #include "SpriteSheet.h"
-#include <memory>
 class Animator;
 class Slime : public Monster
 {
   public:
-    static Slime* create(Level* level);
-    static Slime* create(Level* level, float cx, float cy);
+	Slime(Level* level);
     ~Slime();
 
     void getHit(int damage) override;
 
-    void tick(float deltaTime) override;
-    void paint() override;
-
   private:
+    Slime();
+	void updateLogic(float deltaTime) override;
     bool init(Level*);
     void resetMembers();
-    void updateGraphics(float deltaTime);
-    void updatePhysics();
-    void updateLogic(float deltaTime);
-    void onPositionChanged() override;
-    void setHorizontalSpeed(float speed);
-    void stopHorizontalMovement();
     void attackPlayer();
-    void synchronizeBodyTransform();
-	void checkDirection();
+    void checkDirection();
 
     void idle();
     void wait();
@@ -56,13 +46,11 @@ class Slime : public Monster
         STATE_DIE
     };
 
-    void      setState(State newState, float initialTime);
-    State     m_state;
-    float     m_timer;
-    float     m_changingDirTimer;
-    int       m_direction;
-    b2Body*   m_body;
-    Animator* m_animator;
+    void         setState(State newState, float initialTime);
+    State        m_state;
+    float        m_timer;
+    float        m_changingDirTimer;
+    SpriteSheet* m_spriteSheet;
 
     static constexpr float WIDTH             = 32.f;
     static constexpr float HEIGHT            = 25.f;
@@ -72,20 +60,5 @@ class Slime : public Monster
     static constexpr float ATTACK_DISTANCE   = Constances::TILE_SIZE * 1;
     static constexpr float MOVE_SPEED        = 1.f;
     static constexpr float MOVE_SPPED_2      = 15.f;
-
-    struct Asserts
-    {
-        Asserts();
-        ~Asserts();
-
-        bool load();
-        void incCount();
-        void decCount();
-
-        SDL_Texture* texture;
-        SpriteSheet* spriteSheet;
-        int          count;
-    };
-    static Asserts sharedAsserts;
 };
 #endif // SLIME_H

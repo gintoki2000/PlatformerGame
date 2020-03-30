@@ -1,11 +1,14 @@
 #ifndef MONSTER_H
 #define MONSTER_H
+#include "Animator.h"
 #include "GameObject.h"
 #include "box2d/box2d.h"
 class Level;
 class Monster : public GameObject
 {
   public:
+    Monster(Level* level, int monsterType, int hitPoints);
+	~Monster();
     virtual void getHit(int damage);
     bool         isDead() const { return m_hitPoints == 0; }
 
@@ -13,14 +16,31 @@ class Monster : public GameObject
     int getMonsterType() const { return m_monsterType; }
     int getHitPoints() const { return m_hitPoints; }
 
+	void tick(float deltaTime) override;
+	void paint() override;
+
   private:
     int m_monsterType;
 
   protected:
-	Monster();
-	virtual bool init(int monsterType, Level* level, int hitPoints);
+    virtual void updateGraphics(float deltaTime);
+    virtual void updatePhysics();
+    virtual void updateLogic(float deltaTime) = 0;
+
+    void  synchronizeBodyTransform();
+    void  synchronizeAnimatorTransform();
+    void  onPositionChanged() override;
+    void  setHorizontalSpeed(float speed);
+    void  stopHorizontalMovement();
     float getDistanceToPlayer();
     int   getFacingPlayerDirection();
-    int   m_hitPoints;
+	void  changeDirectionToPlayer();
+
+    int       m_hitPoints;
+    int       m_direction;
+    b2Body*   m_body;
+    Animator* m_animator;
+    int       m_width;
+    int       m_height;
 };
 #endif // MONSTER_H

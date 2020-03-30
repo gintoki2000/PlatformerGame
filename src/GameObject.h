@@ -8,6 +8,7 @@ class GameObject
 
   public:
     /// constructor && destructor
+	GameObject(int gameObjectType, Level* level);
     virtual ~GameObject();
     /// stuffs
     virtual void tick(float deltaTime) = 0;
@@ -31,8 +32,6 @@ class GameObject
     int getGameObjectType() const { return m_gameObjectType; }
 
   protected:
-	GameObject();
-	virtual bool init(int gameObjectType, Level* level);
     virtual void onPositionChanged();
 
     Level* m_level;

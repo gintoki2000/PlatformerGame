@@ -1,5 +1,6 @@
 
 #include "Level.h"
+#include "AssertManager.h"
 #include "Builder.h"
 #include "Cell.h"
 #include "Constances.h"
@@ -40,6 +41,7 @@ Level::Level()
     m_world->SetContactListener(this);
 
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
+    m_textureManager = new TextureManager(Locator::getRenderer());
 }
 
 Level::~Level()
@@ -78,6 +80,15 @@ findLayer(const std::vector<tmx::Layer::Ptr>& layers,
 
 bool Level::init(const std::string& filename)
 {
+    std::string textures[] = {"asserts/slime.png", "asserts/kobold.png"};
+	for (const auto& texture : textures)
+	{
+		if (!m_textureManager->load(texture))
+		{
+			SDL_Log("Failed to load asserts: %s", texture.c_str());
+			return false;
+		}
+	}
     /// load level  data
     tmx::Map levelData;
     if (!levelData.load(filename))
@@ -130,11 +141,7 @@ bool Level::init(const std::string& filename)
         m_world->CreateBody(&blockbdef)->CreateFixture(&blockfdef);
         delete blockfdef.shape;
     }
-    if ((m_player = Player::create(this)) == nullptr)
-    {
-        SDL_Log("Failed to create player!");
-        return false;
-    }
+    m_player = new Player(this);
     return true;
 }
 
@@ -165,7 +172,7 @@ void Level::tick(float deltaTime)
         slime->setPositionX(x / Constances::SCALE_X + m_viewport.x);
         slime->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
         addMonster(slime);
-		SDL_Log("%d", m_monsters->getNumObjects());
+        SDL_Log("%d", m_monsters->getNumObjects());
     }
 }
 
@@ -179,7 +186,7 @@ void Level::render(float deltaTime)
     m_tiledMap->paint();
     m_monsters->paint();
     m_player->paint();
-    //m_world->DrawDebugData();
+    // m_world->DrawDebugData();
 }
 
 void Level::addMonster(Monster* monster) { m_monsters->addObject(monster); }
@@ -244,3 +251,5 @@ void Level::EndContact(b2Contact* contact)
         }
     }
 }
+
+TextureManager* Level::getTextureManager() const { return m_textureManager; }

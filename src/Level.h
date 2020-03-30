@@ -1,5 +1,6 @@
 #ifndef LEVEL_H
 #define LEVEL_H
+#include "AssertManager.h"
 #include "NTRect.h"
 #include "TileSet.h"
 #include "WorldRenderer.h"
@@ -12,7 +13,7 @@ class TiledMap;
 class Level : public b2ContactListener
 {
   public:
-	static Level* create(const std::string& filename);
+    static Level* create(const std::string& filename);
     ~Level();
 
     /// getters
@@ -20,6 +21,7 @@ class Level : public b2ContactListener
     b2World*                     getWorld() const;
     Player*                      getPlayer() const;
     const std::vector<TileSet*>& getTilesets() const;
+    TextureManager*              getTextureManager() const;
 
     // stuff
     void render(float deltaTime);
@@ -30,11 +32,11 @@ class Level : public b2ContactListener
   private:
     Level();
     bool init(const std::string& filename);
-	void tick(float deltaTime);
-	void updateViewport(float deltaTime);
+    void tick(float deltaTime);
+    void updateViewport(float deltaTime);
 
-	void BeginContact(b2Contact *contact) override;
-	void EndContact(b2Contact *contact) override;
+    void BeginContact(b2Contact* contact) override;
+    void EndContact(b2Contact* contact) override;
 
     /// data fields
     bool                  m_isPaused;
@@ -45,6 +47,7 @@ class Level : public b2ContactListener
     TiledMap*             m_tiledMap;
     NTRect                m_viewport;
     WorldRenderer*        m_worldRenderer;
+    TextureManager*       m_textureManager;
 
     static const int MAX_SIZE = 20;
     Monster*         m_monstersToBeRemoved[MAX_SIZE];

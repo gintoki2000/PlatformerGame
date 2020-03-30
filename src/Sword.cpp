@@ -15,8 +15,8 @@ void Sword::start()
     m_phrase   = 0;
     m_isActive = true;
     m_chain    = false;
-    m_lastAnim = m_player->m_animator->getAnimationIndex();
-    m_player->m_animator->play(Player::ANIM_ATK_1, 0.f);
+    m_lastAnim = m_player->getAnimator()->getAnimationIndex();
+    m_player->getAnimator()->play(Player::ANIM_ATK_1, 0.f);
 }
 
 void Sword::cancel() { m_isActive = false; }
@@ -29,10 +29,10 @@ bool Sword::tick(float)
         {
         case 0:
 		{
-			if (m_player->m_animator->isCurrentAnimationFinshed())
+			if (m_player->getAnimator()->isCurrentAnimationFinshed())
 			{
 				m_isActive = false;
-				m_player->m_animator->play(m_lastAnim, 0.f);
+				m_player->getAnimator()->play(m_lastAnim, 0.f);
 			}
 		}
 		break;

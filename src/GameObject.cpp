@@ -1,27 +1,22 @@
 #include "GameObject.h"
-#include "Level.h"
 #include "NTRect.h"
 
-GameObject::GameObject() :
-    m_level(nullptr),
+GameObject::GameObject(int gameObjectType, Level* level):
+    m_level(level),
     m_positionX(0),
     m_positionY(0),
     m_rotation(0.0),
     m_isVisible(true),
-    m_gameObjectType(0),
+    m_gameObjectType(gameObjectType),
     m_next(nullptr),
     m_prev(nullptr)
 {
+	
 }
+
 GameObject::~GameObject()
 {
 	
-}
-bool GameObject::init(int gameObjectType, Level* level)
-{
-	m_gameObjectType = gameObjectType;
-	m_level = level;
-	return true;
 }
 
 float GameObject::getPositionX() const { return m_positionX; }

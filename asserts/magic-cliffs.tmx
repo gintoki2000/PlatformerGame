@@ -18,7 +18,7 @@
 </data>
  </layer>
  <objectgroup name="solid-objects">
-  <object id="18" x="17" y="97" width="399.5" height="94.5"/>
+  <object id="18" x="17" y="93" width="399.5" height="98.5"/>
  </objectgroup>
  <objectgroup name="monsters">
   <object id="26" type="Slime" x="297" y="29"/>
