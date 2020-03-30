@@ -38,7 +38,9 @@ set(SOURCE_FILES
 	src/Sword.cpp
 	src/Monster.cpp
 	src/Slime.cpp
+	src/Kobold.cpp
 	src/Weapon.cpp
+	src/AssertManager.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)

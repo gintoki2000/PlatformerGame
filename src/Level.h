@@ -48,6 +48,7 @@ class Level : public b2ContactListener
     NTRect                m_viewport;
     WorldRenderer*        m_worldRenderer;
     TextureManager*       m_textureManager;
+    float                 m_viewportX;
 
     static const int MAX_SIZE = 20;
     Monster*         m_monstersToBeRemoved[MAX_SIZE];

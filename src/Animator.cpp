@@ -1,4 +1,5 @@
 #include "Animator.h"
+#include "SDL_render.h"
 
 Animator::Animator(Animation* animations[], int numAnimations)
 {
@@ -8,9 +9,11 @@ Animator::Animator(Animation* animations[], int numAnimations)
     {
         m_animations[i] = animations[i];
     }
-    play(0, 0.f);
+	m_rotation = 0.f;
+	m_flip = SDL_FLIP_NONE;
 	m_origin.x = 0;
 	m_origin.y = 0;
+    play(0, 0.f);
 }
 Animator::~Animator()
 {

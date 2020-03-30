@@ -139,10 +139,6 @@ void Player::resetMembers()
     m_hitPoints           = m_maxHitPoints;
     m_maxManaPoints       = 50;
     m_manaPoints          = m_maxManaPoints;
-    if (m_state != nullptr)
-    {
-        delete m_state;
-    }
 	setState(new PlayerIdle1State());
     setPosition(100.f, 0.f);
     m_body->SetAwake(true);
@@ -294,6 +290,10 @@ PlayerState* PlayerOnGroundState::tick(float)
 {
 
     auto inputDirection = Input::getInputDirectionX();
+	if (Input::isButtonAJustPressed())
+	{
+		m_player->getWeapon()->start();
+	}
     if (Input::isButtonBPressed() && m_player->isOnGround())
     {
         return new PlayerJumpState;

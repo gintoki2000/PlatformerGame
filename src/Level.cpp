@@ -6,6 +6,7 @@
 #include "Constances.h"
 #include "Enums.h"
 #include "Input.h"
+#include "Kobold.h"
 #include "Locator.h"
 #include "Monster.h"
 #include "NTRect.h"
@@ -55,6 +56,7 @@ Level::~Level()
         delete t;
     }
     m_tileSets.clear();
+	delete m_textureManager;
 }
 
 Level* Level::create(const std::string& filename)
@@ -80,7 +82,7 @@ findLayer(const std::vector<tmx::Layer::Ptr>& layers,
 
 bool Level::init(const std::string& filename)
 {
-    std::string textures[] = {"asserts/slime.png", "asserts/kobold.png"};
+    std::string textures[] = {"asserts/player.png", "asserts/slime.png", "asserts/kobold.png"};
 	for (const auto& texture : textures)
 	{
 		if (!m_textureManager->load(texture))
@@ -116,7 +118,7 @@ bool Level::init(const std::string& filename)
 
     m_viewport.y = m_tiledMap->getHeight() * m_tiledMap->getTileHeight() -
                    Constances::GAME_HEIGHT;
-
+	m_viewportX = 0;
     /// create ground
     auto findResult2 = findLayer(layers, "solid-objects");
     if (findResult == std::end(layers))
@@ -162,18 +164,27 @@ void Level::tick(float deltaTime)
             m_monsters->removeObject(m_monstersToBeRemoved[i]);
         }
     }
+	updateViewport(deltaTime);
     m_worldRenderer->setViewport(m_viewport);
     int  x, y;
     auto mouseState = SDL_GetMouseState(&x, &y);
 
     if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
     {
-        auto slime = Slime::create(this);
+        auto slime = new Slime(this);
         slime->setPositionX(x / Constances::SCALE_X + m_viewport.x);
         slime->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
         addMonster(slime);
         SDL_Log("%d", m_monsters->getNumObjects());
     }
+
+	if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+	{
+		auto kobold = new Koblod(this);
+        kobold->setPositionX(x / Constances::SCALE_X + m_viewport.x);
+        kobold->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
+		addMonster(kobold);
+	}
 }
 
 void Level::render(float deltaTime)
@@ -186,7 +197,7 @@ void Level::render(float deltaTime)
     m_tiledMap->paint();
     m_monsters->paint();
     m_player->paint();
-    // m_world->DrawDebugData();
+    m_world->DrawDebugData();
 }
 
 void Level::addMonster(Monster* monster) { m_monsters->addObject(monster); }
@@ -253,3 +264,13 @@ void Level::EndContact(b2Contact* contact)
 }
 
 TextureManager* Level::getTextureManager() const { return m_textureManager; }
+
+
+
+void Level::updateViewport(float deltaTime)
+{
+	float targetX = m_player->getPositionX() - m_viewport.w / 2;	
+	m_viewportX += (targetX - m_viewportX) * 0.1; 
+
+	m_viewport.x = m_viewportX;
+}

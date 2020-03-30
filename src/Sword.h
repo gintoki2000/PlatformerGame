@@ -12,6 +12,7 @@ class Sword : public Weapon
 	void cancel() override;
 
   private:
+	void query();
 	bool m_chain;
     int  m_phrase;
 	int  m_lastAnim;

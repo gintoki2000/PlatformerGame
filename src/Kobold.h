@@ -33,6 +33,7 @@ class Koblod : public Monster
 
   private:
     void updateLogic(float deltaTime) override;
+	void resetMembers();
 
     void idle();
     void run();
@@ -41,8 +42,6 @@ class Koblod : public Monster
     void hurt();
     void die();
 
-    Animator* m_animator;
-    b2Body*   m_body;
     State     m_state;
     Direction m_direction;
     float     m_timer;
