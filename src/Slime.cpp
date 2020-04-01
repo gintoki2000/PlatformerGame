@@ -19,7 +19,7 @@ Slime::Slime(Level* level) :
     Monster(level, MONSTER_TYPE_SLIME, 10)
 {
 	Animation* anims[NUM_ANIMS];
-    auto texture   = level->getTextureManager()->get("asserts/slime.png");
+    auto texture   = level->getTextureManager()->get("asserts/spritesheets/slime.png");
 
 	m_spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
     anims[ANIM_IDLE]   = new Animation(m_spriteSheet, 0, 4, 1.f / 4.f);
@@ -120,7 +120,7 @@ void Slime::updateLogic(float deltaTime)
     {
         if (m_animator->isCurrentAnimationFinshed())
         {
-            attackPlayer();
+            checkAttackCollision();
             wait();
         }
         else
@@ -186,7 +186,7 @@ class SlimeAttackingCallBack : public b2QueryCallback
   private:
     Player* m_player;
 };
-void Slime::attackPlayer()
+void Slime::checkAttackCollision()
 {
     b2AABB area;
     area.lowerBound.x = (m_positionX - WIDTH / 2.f) / Constances::PPM;

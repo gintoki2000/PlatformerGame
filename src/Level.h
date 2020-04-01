@@ -2,6 +2,7 @@
 #define LEVEL_H
 #include "AssertManager.h"
 #include "NTRect.h"
+#include "SDL_mixer.h"
 #include "TileSet.h"
 #include "WorldRenderer.h"
 #include "box2d/box2d.h"
@@ -49,6 +50,7 @@ class Level : public b2ContactListener
     WorldRenderer*        m_worldRenderer;
     TextureManager*       m_textureManager;
     float                 m_viewportX;
+    Mix_Music*            m_music;
 
     static const int MAX_SIZE = 20;
     Monster*         m_monstersToBeRemoved[MAX_SIZE];

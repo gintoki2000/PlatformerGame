@@ -48,14 +48,79 @@ bool Input::isButtonRightJustPressed()
     return currentButtonState.buttonRight && !prevButtonState.buttonRight;
 }
 
-int Input::getInputDirectionX()
+bool Input::isButtonAReleased()
 {
-    int dir = 0;
+    return !currentButtonState.buttonA;
+}
+
+bool Input::isButtonBReleased()
+{
+    return !currentButtonState.buttonB;
+}
+
+bool Input::isButtonUpReleased()
+{
+    return !currentButtonState.buttonUp;
+}
+bool Input::isButtonDownReleased()
+{
+    return !currentButtonState.buttonDown;
+}
+bool Input::isButtonRightReleased()
+{
+    return !currentButtonState.buttonRight;
+}
+bool Input::isButtonLeftReleased()
+{
+    return !currentButtonState.buttonLeft;
+}
+
+bool Input::isButtonAJustReleased()
+{
+    return !currentButtonState.buttonA && prevButtonState.buttonA;
+}
+
+bool Input::isButtonBJustReleased()
+{
+    return !currentButtonState.buttonB && prevButtonState.buttonB;
+}
+
+bool Input::isButtonUpJustReleased()
+{
+    return !currentButtonState.buttonUp && prevButtonState.buttonUp;
+}
+bool Input::isButtonDownJustReleased()
+{
+    return !currentButtonState.buttonDown && prevButtonState.buttonDown;
+}
+bool Input::isButtonRightJustReleased()
+{
+    return !currentButtonState.buttonRight && prevButtonState.buttonRight;
+}
+bool Input::isButtonLeftJustReleased()
+{
+    return !currentButtonState.buttonLeft && prevButtonState.buttonLeft;
+}
+
+
+int Input::getHorizontalInputDirection()
+{
+    int horizontalDirection = 0;
     if (isButtonLeftPressed())
-        dir -= 1;
+        horizontalDirection -= 1;
     if (isButtonRightPressed())
-        dir += 1;
-    return dir;
+        horizontalDirection += 1;
+    return horizontalDirection;
+}
+
+int Input::getVerticalInputDirection()
+{
+    int verticalDirection = 0;
+    if (isButtonUpPressed())
+        verticalDirection -= 1;
+    if (isButtonDownPressed())
+        verticalDirection += 1;
+    return verticalDirection;
 }
 
 void Input::update()
@@ -63,8 +128,8 @@ void Input::update()
 
     const Uint8* keyState = SDL_GetKeyboardState(nullptr);
     prevButtonState = currentButtonState;
-    currentButtonState.buttonA = keyState[SDL_SCANCODE_X];
-    currentButtonState.buttonB = keyState[SDL_SCANCODE_Z];
+    currentButtonState.buttonA = keyState[SDL_SCANCODE_Z];
+    currentButtonState.buttonB = keyState[SDL_SCANCODE_X];
     currentButtonState.buttonUp = keyState[SDL_SCANCODE_UP];
     currentButtonState.buttonDown = keyState[SDL_SCANCODE_DOWN];
     currentButtonState.buttonLeft = keyState[SDL_SCANCODE_LEFT];

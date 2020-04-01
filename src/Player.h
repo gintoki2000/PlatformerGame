@@ -58,7 +58,7 @@ class PlayerJumpState : public PlayerState
     PlayerState* tick(float deltaTime) override;
 };
 
-class PlayerSomersultState : public PlayerState
+class PlayerSomersaultState : public PlayerState
 {
     void         enter() override;
     PlayerState* tick(float deltaTime) override;
@@ -82,6 +82,11 @@ class PlayerDieState : public PlayerState
     PlayerState* tick(float deltaTime) override;
 };
 
+class PlayerCrouchState : public PlayerState
+{
+   void enter() override;
+   PlayerState* tick(float deltaTime) override;
+};
 class Player : public GameObject
 {
 

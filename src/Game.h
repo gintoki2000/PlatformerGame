@@ -10,20 +10,17 @@ class Game
 
     ~Game();
 
-    bool initialize();
-
-    void render(float dt);
-
-	void stop();
-
-    bool isRunning() const { return m_isRunning; }
+    bool          initialize();
+    void          render(float dt);
+    void          stop();
+    bool          isRunning() const { return m_isRunning; }
+    StateManager* getStateManager() const { return m_stateManager; }
 
     static Game* getInstance() { return instance; }
 
   private:
-    bool m_isRunning;
-   	StateManager* m_stateManager;
-
+    bool          m_isRunning;
+    StateManager* m_stateManager;
 
     static Game* instance;
 };

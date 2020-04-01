@@ -17,8 +17,8 @@ Monster::Monster(Level* level, int monsterType, int hitPoints) :
 
 Monster::~Monster()
 {
-	delete m_animator;
-	m_body->GetWorld()->DestroyBody(m_body);
+    delete m_animator;
+    m_body->GetWorld()->DestroyBody(m_body);
 }
 void Monster::getHit(int damage)
 {
@@ -55,24 +55,27 @@ int Monster::getFacingPlayerDirection()
     return DIRECTION_NONE;
 }
 
-void Monster::updateGraphics(float deltaTime)
+void Monster::queryBoundingBox(NTRect& boundingBox) const
 {
-    const NTRect& viewport = m_level->getViewport();
-    NTRect        boundingBox;
     boundingBox.x = m_positionX - m_width / 2.f;
     boundingBox.y = m_positionY - m_height / 2.f;
     boundingBox.w = m_width;
     boundingBox.h = m_height;
+}
+
+void Monster::updateGraphics(float deltaTime)
+{
+    const NTRect& viewport = m_level->getViewport();
+    NTRect        boundingBox;
+    queryBoundingBox(boundingBox);
     if (SDL_HasIntersection(&viewport, &boundingBox))
     {
         setVisible(true);
+        synchronizeAnimatorTransform();
         m_animator->tick(deltaTime);
-        m_animator->setPositionX(m_positionX - viewport.x);
-        m_animator->setPositionY(m_positionY - viewport.y);
-        m_animator->setFlip(m_direction == DIRECTION_LEFT
-                                ? SDL_FLIP_NONE
-                                : SDL_FLIP_HORIZONTAL);
-        m_animator->setRotation(m_rotation);
+        auto flip =
+            m_direction == DIRECTION_LEFT ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+        m_animator->setFlip(flip);
     }
     else
     {
@@ -88,7 +91,11 @@ void Monster::updatePhysics()
     m_rotation           = (double)m_body->GetAngle();
 }
 
-void Monster::onPositionChanged() { synchronizeBodyTransform(); }
+void Monster::onPositionChanged()
+{
+    synchronizeBodyTransform();
+    synchronizeAnimatorTransform();
+}
 
 void Monster::synchronizeBodyTransform()
 {
@@ -125,4 +132,8 @@ void Monster::tick(float deltaTime)
     updateGraphics(deltaTime);
 }
 
-void Monster::paint() { m_animator->paint(Locator::getRenderer()); }
+void Monster::paint()
+{
+    if (m_isVisible)
+        m_animator->paint(Locator::getRenderer());
+}

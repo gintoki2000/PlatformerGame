@@ -1,20 +1,23 @@
-
 #include "Level.h"
 #include "AssertManager.h"
 #include "Builder.h"
 #include "Cell.h"
 #include "Constances.h"
 #include "Enums.h"
+#include "Game.h"
 #include "Input.h"
 #include "Kobold.h"
 #include "Locator.h"
+#include "MainState.h"
 #include "Monster.h"
 #include "NTRect.h"
 #include "ObjectList.h"
 #include "Player.h"
+#include "SDL_mixer.h"
 #include "SDL_mouse.h"
 #include "SDL_render.h"
 #include "Slime.h"
+#include "StateManager.h"
 #include "TiledMap.h"
 #include "WorldRenderer.h"
 #include "tmxlite/Map.hpp"
@@ -51,12 +54,14 @@ Level::~Level()
     delete m_world;
     delete m_tiledMap;
     delete m_worldRenderer;
+	Mix_FreeMusic(m_music);
+	m_music = nullptr;
     for (auto t : m_tileSets)
     {
         delete t;
     }
     m_tileSets.clear();
-	delete m_textureManager;
+    delete m_textureManager;
 }
 
 Level* Level::create(const std::string& filename)
@@ -82,20 +87,27 @@ findLayer(const std::vector<tmx::Layer::Ptr>& layers,
 
 bool Level::init(const std::string& filename)
 {
-    std::string textures[] = {"asserts/player.png", "asserts/slime.png", "asserts/kobold.png"};
-	for (const auto& texture : textures)
+    std::string textures[] = {"asserts/spritesheets/player.png",
+                              "asserts/spritesheets/slime.png",
+                              "asserts/spritesheets/kobold.png"};
+    for (const auto& texture : textures)
+    {
+        if (!m_textureManager->load(texture))
+        {
+            SDL_Log("Failed to load asserts: %s", texture.c_str());
+            return false;
+        }
+    }
+	if ((m_music = Mix_LoadMUS("asserts/musics/Next to You.mp3")) == nullptr)
 	{
-		if (!m_textureManager->load(texture))
-		{
-			SDL_Log("Failed to load asserts: %s", texture.c_str());
-			return false;
-		}
+		SDL_Log("Failed to load music: %s", Mix_GetError());
+		return false;
 	}
     /// load level  data
     tmx::Map levelData;
     if (!levelData.load(filename))
     {
-        SDL_Log("Loading level failed!");
+        SDL_Log("Failed to load file: %s", filename.c_str());
         return false;
     }
     /// load tilesets data
@@ -118,7 +130,7 @@ bool Level::init(const std::string& filename)
 
     m_viewport.y = m_tiledMap->getHeight() * m_tiledMap->getTileHeight() -
                    Constances::GAME_HEIGHT;
-	m_viewportX = 0;
+    m_viewportX = 0;
     /// create ground
     auto findResult2 = findLayer(layers, "solid-objects");
     if (findResult == std::end(layers))
@@ -144,6 +156,7 @@ bool Level::init(const std::string& filename)
         delete blockfdef.shape;
     }
     m_player = new Player(this);
+	Mix_PlayMusic(m_music, -1);
     return true;
 }
 
@@ -164,27 +177,26 @@ void Level::tick(float deltaTime)
             m_monsters->removeObject(m_monstersToBeRemoved[i]);
         }
     }
-	updateViewport(deltaTime);
+    updateViewport(deltaTime);
     m_worldRenderer->setViewport(m_viewport);
     int  x, y;
     auto mouseState = SDL_GetMouseState(&x, &y);
 
     if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
-    {
-        auto slime = new Slime(this);
-        slime->setPositionX(x / Constances::SCALE_X + m_viewport.x);
-        slime->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
-        addMonster(slime);
-        SDL_Log("%d", m_monsters->getNumObjects());
+    { /*
+         auto slime = new Slime(this);
+         slime->setPositionX(x / Constances::SCALE_X + m_viewport.x);
+         slime->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
+         addMonster(slime);*/
     }
 
-	if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
-	{
-		auto kobold = new Koblod(this);
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+    {
+        auto kobold = new Koblod(this);
         kobold->setPositionX(x / Constances::SCALE_X + m_viewport.x);
         kobold->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
-		addMonster(kobold);
-	}
+        addMonster(kobold);
+    }
 }
 
 void Level::render(float deltaTime)
@@ -197,7 +209,7 @@ void Level::render(float deltaTime)
     m_tiledMap->paint();
     m_monsters->paint();
     m_player->paint();
-    m_world->DrawDebugData();
+    // m_world->DrawDebugData();
 }
 
 void Level::addMonster(Monster* monster) { m_monsters->addObject(monster); }
@@ -265,12 +277,11 @@ void Level::EndContact(b2Contact* contact)
 
 TextureManager* Level::getTextureManager() const { return m_textureManager; }
 
-
-
 void Level::updateViewport(float deltaTime)
 {
-	float targetX = m_player->getPositionX() - m_viewport.w / 2;	
-	m_viewportX += (targetX - m_viewportX) * 0.1; 
+    int   sign    = m_player->getDirection() == DIRECTION_LEFT ? -1 : 1;
+    float targetX = m_player->getPositionX() - m_viewport.w / 2 + sign * 20.f;
+    m_viewportX += (targetX - m_viewportX) * 0.1;
 
-	m_viewport.x = m_viewportX;
+    m_viewport.x = m_viewportX;
 }

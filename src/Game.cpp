@@ -6,7 +6,9 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_video.h"
+#include "SDL_mixer.h"
 #include "StateManager.h"
+
 Game* Game::instance = nullptr;
 
 Game::Game() : m_isRunning(false), m_stateManager(new StateManager())
@@ -18,6 +20,7 @@ Game::~Game()
 {
 	delete m_stateManager;
     Locator::terminate();
+	Mix_CloseAudio();
     IMG_Quit();
     SDL_Quit();
 }
@@ -54,19 +57,33 @@ bool Game::initialize()
         return false;
     }
 
+	if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
+	{
+		SDL_Log("Failed to open audio!");
+		return false;
+	}
+
     SDL_RenderSetScale(renderer, Constances::SCALE_X, Constances::SCALE_Y);
 
     m_isRunning = true;
 
     Locator::setRenderer(renderer);
     Locator::setWindow(window);
-    m_stateManager->setState(MainState::create());
+    auto state = MainState::create();
+    if (state == nullptr)
+    {
+        SDL_Log("Failed to create initial state!\n");
+        return false;
+    }
+    m_stateManager->pushState(state);
     return true;
 }
 
 void Game::render(float deltaTime)
 {
     static SDL_Event event;
+	m_stateManager->update();
+    auto currentState = m_stateManager->getState();
     while (SDL_PollEvent(&event))
     {
         switch (event.type)
@@ -76,24 +93,24 @@ void Game::render(float deltaTime)
             switch (event.window.type)
             {
             case SDL_WINDOWEVENT_HIDDEN:
-                m_stateManager->getState()->hidden();
+                currentState->hidden();
                 break;
             case SDL_WINDOWEVENT_SHOWN:
-                m_stateManager->getState()->show();
+                currentState->show();
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
-                m_stateManager->getState()->resume();
+                currentState->resume();
                 break;
             case SDL_WINDOWEVENT_FOCUS_LOST:
-                m_stateManager->getState()->pause();
+                currentState->pause();
                 break;
             case SDL_WINDOWEVENT_TAKE_FOCUS:
-                m_stateManager->getState()->resume();
+                currentState->resume();
                 break;
             }
         }
     }
-    m_stateManager->getState()->render(deltaTime);
+    currentState->render(deltaTime);
     SDL_RenderPresent(Locator::getRenderer());
 }
 

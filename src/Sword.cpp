@@ -39,15 +39,17 @@ bool Sword::tick(float)
             }
             if (m_player->getAnimator()->isCurrentAnimationFinshed())
             {
-				query();
+                checkCollision();
                 if (m_chain)
                 {
                     m_phrase = 1;
+                    m_chain = false;
                     m_player->getAnimator()->play(Player::ANIM_ATK_2, 0.f);
                 }
                 else
                 {
                     m_isActive = false;
+					m_player->setProtected(false);
                     m_player->setState(new PlayerIdle2State());
                 }
             }
@@ -61,25 +63,29 @@ bool Sword::tick(float)
             }
             if (m_player->getAnimator()->isCurrentAnimationFinshed())
             {
-				query();
+                checkCollision();
                 if (m_chain)
                 {
                     m_phrase = 2;
+                    m_chain = false;
                     m_player->getAnimator()->play(Player::ANIM_ATK_3, 0.f);
                 }
                 else
                 {
                     m_isActive = false;
+					m_player->setProtected(false);
                     m_player->setState(new PlayerIdle2State());
                 }
             }
         }
+        break;
         case 2:
         {
             if (m_player->getAnimator()->isCurrentAnimationFinshed())
             {
-				query();
+                checkCollision();
                 m_isActive = false;
+				m_player->setProtected(false);
                 m_player->setState(new PlayerIdle2State());
             }
         }
@@ -100,14 +106,13 @@ class SwordAttackCallback : public b2QueryCallback
 			{
 				Monster* monster = (Monster*)userData;
 				monster->getHit(1);
-				SDL_Log("attack->%p", (void*)monster);
 			}
 		}
 		return true;
 	}
 };
 
-void Sword::query()
+void Sword::checkCollision()
 {
 	b2AABB area;
 	area.lowerBound.x = (m_player->getPositionX() - Player::WIDTH) / Constances::PPM;	

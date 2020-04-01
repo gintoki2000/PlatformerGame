@@ -17,7 +17,7 @@ class Slime : public Monster
 	void updateLogic(float deltaTime) override;
     bool init(Level*);
     void resetMembers();
-    void attackPlayer();
+    void checkAttackCollision();
     void checkDirection();
 
     void idle();

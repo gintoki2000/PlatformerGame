@@ -24,9 +24,10 @@ MainState* MainState::create()
 
 bool MainState::init()
 {
-	m_level = Level::create("asserts/magic-cliffs.tmx");
-	if (m_level == nullptr)
+    const char* file = "asserts/magic-cliffs.tmx";
+    if ((m_level = Level::create(file)) == nullptr)
 	{
+        SDL_Log("Failed to load level: %s", file);
 		return false;
 	}
 	return true;

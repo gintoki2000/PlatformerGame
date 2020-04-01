@@ -13,14 +13,23 @@ class Input
     static bool isButtonAJustPressed();
     static bool isButtonBJustPressed();
     static bool isButtonUpJustPressed();
-
     static bool isButtonDownJustPressed();
-
     static bool isButtonLeftJustPressed();
-
     static bool isButtonRightJustPressed();
-
-    static int getInputDirectionX();
+    static bool isButtonAReleased();
+    static bool isButtonBReleased();
+    static bool isButtonUpReleased();
+    static bool isButtonDownReleased();
+    static bool isButtonLeftReleased();
+    static bool isButtonRightReleased();
+    static bool isButtonAJustReleased();
+    static bool isButtonBJustReleased();
+    static bool isButtonUpJustReleased();
+    static bool isButtonDownJustReleased();
+    static bool isButtonLeftJustReleased();
+    static bool isButtonRightJustReleased();
+    static int getHorizontalInputDirection();
+    static int getVerticalInputDirection();
 
     static void update();
 

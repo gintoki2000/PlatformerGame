@@ -30,10 +30,11 @@ class Koblod : public Monster
   public:
     Koblod(Level* level);
     ~Koblod();
+	void getHit(int damage) override;
 
   private:
     void updateLogic(float deltaTime) override;
-	void resetMembers();
+    void resetMembers();
 
     void idle();
     void run();
@@ -43,15 +44,16 @@ class Koblod : public Monster
     void die();
 
     State     m_state;
-    Direction m_direction;
     float     m_timer;
 
     SpriteSheet* m_spriteSheet;
 
   public:
-    static constexpr int SPRITE_WIDTH  = 86;
-    static constexpr int SPRITE_HEIGHT = 69;
-    static constexpr int WIDTH         = 21;
-    static constexpr int HEIGHT        = 30;
+    static constexpr int SPRITE_WIDTH     = 86;
+    static constexpr int SPRITE_HEIGHT    = 69;
+    static constexpr int WIDTH            = 21;
+    static constexpr int HEIGHT           = 30;
+    static constexpr int ACTIVATE_RUN_DIS = 4 * 16;
+    static constexpr int ACTIVATE_ATK_DIS = 2 * 16;
 };
 #endif // KOBLOD_H

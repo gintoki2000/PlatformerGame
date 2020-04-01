@@ -43,7 +43,7 @@ Player::~Player()
 
 bool Player::initGraphicsComponent()
 {
-    auto texture = m_level->getTextureManager()->get("asserts/player.png");
+    auto texture = m_level->getTextureManager()->get("asserts/spritesheets/player.png");
     m_spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
     Animation* anims[NUM_OF_ANIMS];
     anims[ANIM_IDLE_1]        = new Animation(m_spriteSheet, 0, 4, 1.f / 8.f);
@@ -80,6 +80,7 @@ bool Player::initGraphicsComponent()
     anims[ANIM_RUN]->setPlayMode(Animation::PLAY_MODE_LOOP);
     anims[ANIM_FALL]->setPlayMode(Animation::PLAY_MODE_LOOP);
     anims[ANIM_SLIDE]->setPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_CROUCH]->setPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_OF_ANIMS);
     m_animator->setOriginX(SPRITE_WIDTH / 2);
@@ -233,6 +234,7 @@ void Player::untouchGround()
 }
 
 void Player::getHit(int damage) {
+	SDL_Log("player get hit!");
 	if (!isDead() && !isProtected())
 	{
 		m_hitPoints -= damage;
@@ -289,22 +291,26 @@ void PlayerState::changePlayerDirection(int inputDirection)
 PlayerState* PlayerOnGroundState::tick(float)
 {
 
-    auto inputDirection = Input::getInputDirectionX();
+    auto inputDirection = Input::getHorizontalInputDirection();
 	if (Input::isButtonAJustPressed())
 	{
 		m_player->getWeapon()->start();
 	}
     if (Input::isButtonBPressed() && m_player->isOnGround())
     {
-        return new PlayerJumpState;
+        return new PlayerJumpState();
+    }
+    if (Input::isButtonDownPressed())
+    {
+        return new PlayerCrouchState();
     }
     else if (inputDirection != 0)
     {
-        return new PlayerRunState;
+        return new PlayerRunState();
     }
 	else if (!m_player->isOnGround())
 	{
-		return new PlayerFallState;
+        return new PlayerFallState();
 	}
     return nullptr;
 }
@@ -344,7 +350,7 @@ void PlayerRunState::enter()
 
 PlayerState* PlayerRunState::tick(float deltaTime)
 {
-    auto inputDirection = Input::getInputDirectionX();
+    auto inputDirection = Input::getHorizontalInputDirection();
 	changePlayerDirection(inputDirection);
     if (Input::isButtonBJustPressed() && m_player->isOnGround())
     {
@@ -372,28 +378,32 @@ void PlayerJumpState::enter()
 
 PlayerState* PlayerJumpState::tick(float deltaTime)
 {
-    auto inputDirection = Input::getInputDirectionX();
+    auto inputDirection = Input::getHorizontalInputDirection();
 	changePlayerDirection(inputDirection);
     if (m_player->getAnimator()->isCurrentAnimationFinshed())
     {
-        return new PlayerSomersultState;
+        return new PlayerSomersaultState;
     }
     else if (inputDirection != 0)
     {
         m_player->move(inputDirection, deltaTime);
     }
+    else
+    {
+        m_player->stopHorizontalMovement();
+    }
     return nullptr;
 }
 
-void PlayerSomersultState::enter()
+void PlayerSomersaultState::enter()
 {
     m_player->getAnimator()->play(Player::ANIM_SOMERSULT, 0.f);
 }
 
-PlayerState* PlayerSomersultState::tick(float deltaTime)
+PlayerState* PlayerSomersaultState::tick(float deltaTime)
 {
 
-    auto inputDirection = Input::getInputDirectionX();
+    auto inputDirection = Input::getHorizontalInputDirection();
 	changePlayerDirection(inputDirection);
     if (m_player->getAnimator()->isCurrentAnimationFinshed())
     {
@@ -402,6 +412,10 @@ PlayerState* PlayerSomersultState::tick(float deltaTime)
     else if (inputDirection != 0)
     {
         m_player->move(inputDirection, deltaTime);
+    }
+    else
+    {
+        m_player->stopHorizontalMovement();
     }
     return nullptr;
 }
@@ -414,7 +428,7 @@ void PlayerFallState::enter()
 PlayerState* PlayerFallState::tick(float deltaTime)
 {
 	
-    auto inputDirection = Input::getInputDirectionX();
+    auto inputDirection = Input::getHorizontalInputDirection();
 	changePlayerDirection(inputDirection);
     if (m_player->isOnGround())
     {
@@ -430,6 +444,10 @@ PlayerState* PlayerFallState::tick(float deltaTime)
     else if (inputDirection != 0)
     {
         m_player->move(inputDirection, deltaTime);
+    }
+    else
+    {
+        m_player->stopHorizontalMovement();
     }
 	return nullptr;	
 }
@@ -470,4 +488,19 @@ PlayerState* PlayerDieState::tick(float)
 		m_player->resetMembers();
 	}
 	return nullptr;
+}
+
+void PlayerCrouchState::enter()
+{
+    m_player->getAnimator()->play(Player::ANIM_CROUCH, 0.f);
+}
+
+PlayerState* PlayerCrouchState::tick(float)
+{
+    changePlayerDirection(Input::getHorizontalInputDirection());
+    if (Input::isButtonUpPressed())
+    {
+        return new PlayerIdle1State();
+    }
+    return nullptr;
 }
