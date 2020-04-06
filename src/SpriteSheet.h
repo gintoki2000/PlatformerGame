@@ -3,7 +3,7 @@
 #include "NTTextureRegion.h"
 #include "SDL_render.h"
 #include <vector>
-typedef NTTextureRegion Sprite;
+typedef TextureRegion Sprite;
 class SpriteSheet
 {
   public:

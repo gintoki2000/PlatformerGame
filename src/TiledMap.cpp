@@ -5,7 +5,7 @@
 #include "NTTileLayer.h"
 #include "NTTileLayerAnimatedTile.h"
 #include "NTTileLayerCell.h"
-static NTTileLayerTile* getTile(const std::vector<TileSet*>& tileSets,
+static NTTileLayerTile* getTile(const std::vector<Tileset*>& tileSets,
                                 std::size_t                  id)
 {
     for (const auto& tileSet : tileSets)
@@ -27,7 +27,7 @@ TiledMap::TiledMap(Level* level, const tmx::Map& levelData,
     height = (int)levelData.getTileCount().y;
     tileWidth = (int)levelData.getTileSize().x;
     tileHeight = (int)levelData.getTileSize().y;
-    m_tileLayer = new NTTileLayer(width, height, tileWidth, tileHeight);
+    m_tileLayer = new TileLayer(width, height, tileWidth, tileHeight);
     const auto& tmxTiles = tileLayerData.getTiles();
     const auto& tileSets = m_level->getTilesets();
     for (int y = 0; y < height; ++y)
@@ -49,7 +49,7 @@ TiledMap::~TiledMap()
     delete m_tileLayer;
     m_tileLayer = nullptr;
 }
-void TiledMap::tick(float) { NTTileLayerAnimatedTile::updateBaseTime(); }
+void TiledMap::tick(float) { TileLayerAnimatedTile::updateBaseTime(); }
 
 void TiledMap::paint()
 {
@@ -63,5 +63,5 @@ Cell* TiledMap::getCellAt(int x, int y)
 
 void TiledMap::setCellAt(int x, int y, Cell* cell)
 {
-    m_tileLayer->setCellAt(x, y, (NTTileLayerCell*)cell);
+    m_tileLayer->setCellAt(x, y, (TileLayerCell*)cell);
 }

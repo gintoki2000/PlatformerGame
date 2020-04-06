@@ -1,11 +1,11 @@
 #include "NTTileLayerCell.h"
 #include "NTTileLayerTile.h"
-NTTileLayerCell::NTTileLayerCell() : NTTileLayerCell(nullptr) {}
+TileLayerCell::TileLayerCell() : TileLayerCell(nullptr) {}
 
-NTTileLayerCell::NTTileLayerCell(NTTileLayerTile* tile) : m_tile(tile) {}
+TileLayerCell::TileLayerCell(NTTileLayerTile* tile) : m_tile(tile) {}
 
-NTTileLayerCell::~NTTileLayerCell() {}
+TileLayerCell::~TileLayerCell() {}
 
-NTTileLayerTile* NTTileLayerCell::getTile() { return m_tile; }
+NTTileLayerTile* TileLayerCell::getTile() { return m_tile; }
 
-void NTTileLayerCell::setTile(NTTileLayerTile* tile) { m_tile = tile; }
+void TileLayerCell::setTile(NTTileLayerTile* tile) { m_tile = tile; }

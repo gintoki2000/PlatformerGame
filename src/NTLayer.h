@@ -3,14 +3,14 @@
 #include "NTRect.h"
 #include "NTVec.h"
 #include "SDL.h"
-class NTLayer
+class Layer
 {
   public:
-    NTLayer();
+    Layer();
 
-    virtual ~NTLayer() = 0;
+    virtual ~Layer() = 0;
 
-    virtual void render(SDL_Renderer* renderer, const NTRect& viewPort) = 0;
+    virtual void render(SDL_Renderer* renderer, const Rect& viewPort) = 0;
 
     bool isVisible() const { return m_isVisible; }
 

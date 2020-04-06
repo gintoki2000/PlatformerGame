@@ -14,7 +14,8 @@ class Koblod : public Monster
         STATE_ATTACK,
         STATE_HURT,
         STATE_DIE,
-        STATE_WAIT
+        STATE_WAIT,
+        STATE_WAIT_TO_ATTACK
     };
 
     enum Anim
@@ -30,7 +31,7 @@ class Koblod : public Monster
   public:
     Koblod(Level* level);
     ~Koblod();
-	void getHit(int damage) override;
+    void getHit(int damage) override;
 
   private:
     void updateLogic(float deltaTime) override;
@@ -38,13 +39,14 @@ class Koblod : public Monster
 
     void idle();
     void run();
+	void waitToAttack();
     void attack();
     void wait();
     void hurt();
     void die();
 
-    State     m_state;
-    float     m_timer;
+    State m_state;
+    float m_timer;
 
     SpriteSheet* m_spriteSheet;
 

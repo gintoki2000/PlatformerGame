@@ -35,12 +35,18 @@ set(SOURCE_FILES
 	src/Builder.cpp
 	src/GameObject.cpp
 	src/Player.cpp
-	src/Sword.cpp
 	src/Monster.cpp
 	src/Slime.cpp
 	src/Kobold.cpp
-	src/Weapon.cpp
 	src/AssertManager.cpp
+	src/PlayerSkill.cpp
+	src/PlayerCutSkill.cpp
+	src/PlayerDashSkill.cpp
+	src/PlayerFireBallSkill.cpp
+	src/Math.cpp
+	src/Fireball.cpp
+    src/HUD.cpp
+	src/Audio.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)

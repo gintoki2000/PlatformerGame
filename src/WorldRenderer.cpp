@@ -61,7 +61,7 @@ void WorldRenderer::DrawTransform(const b2Transform&) {}
 
 void WorldRenderer::DrawPoint(const b2Vec2&, float, const b2Color&) {}
 
-void WorldRenderer::setViewport(const NTRect& viewport)
+void WorldRenderer::setViewport(const Rect& viewport)
 {
     m_viewport = viewport;
 }

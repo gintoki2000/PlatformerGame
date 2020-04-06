@@ -9,11 +9,12 @@ Animator::Animator(Animation* animations[], int numAnimations)
     {
         m_animations[i] = animations[i];
     }
-	m_rotation = 0.f;
-	m_flip = SDL_FLIP_NONE;
-	m_origin.x = 0;
-	m_origin.y = 0;
-    play(0, 0.f);
+	m_numStates = 0;
+	setOriginX(0);
+	setOriginY(0);
+	setRotation(0.0);
+	setFlip(SDL_FLIP_NONE);
+	pushState(AnimatorState());
 }
 Animator::~Animator()
 {
@@ -26,32 +27,68 @@ Animator::~Animator()
 
 void Animator::play(int index, float initialTime)
 {
-    m_isPaused       = false;
-    m_animationIndex = index;
-    m_elapsedTime    = initialTime;
-    m_currentSprite =
-        m_animations[m_animationIndex]->getCurrentSprite(m_elapsedTime);
+    changeState(AnimatorState(index, initialTime));
 }
 
 void Animator::tick(float deltaTime)
 {
-    if (!m_isPaused)
+    AnimatorState& state = getCurrentState();
+    if (!state.isPaused)
     {
-        m_elapsedTime += deltaTime;
-        m_currentSprite =
-            m_animations[m_animationIndex]->getCurrentSprite(m_elapsedTime);
+        state.elapsedTime += deltaTime;
     }
 }
 
 void Animator::paint(SDL_Renderer* renderer)
 {
-    m_dstrect.x = m_position.x - m_origin.x;
-    m_dstrect.y = m_position.y - m_origin.y;
-    m_dstrect.w = m_currentSprite->getWidth();
-    m_dstrect.h = m_currentSprite->getHeight();
-    m_currentSprite->draw(renderer, &m_dstrect, m_rotation, &m_origin, m_flip);
+    AnimatorState& state     = getCurrentState();
+    Animation*     animation = m_animations[state.index];
+    const Sprite*  sprite    = animation->getCurrentSprite(state.elapsedTime);
+    m_dstrect.x              = m_position.x - m_origin.x;
+    m_dstrect.y              = m_position.y - m_origin.y;
+    m_dstrect.w              = sprite->getWidth();
+    m_dstrect.h              = sprite->getHeight();
+    sprite->draw(renderer, &m_dstrect, m_rotation, &m_origin, m_flip);
 }
+
+Animation* Animator::getCurrentAnimation() const
+{
+
+    return m_animations[getCurrentState().index];
+}
+
 bool Animator::isCurrentAnimationFinshed()
 {
-    return m_animations[m_animationIndex]->isFinished(m_elapsedTime);
+    const AnimatorState& state = getCurrentState();
+    return m_animations[state.index]->isFinished(state.elapsedTime);
 }
+
+void Animator::pushState(const AnimatorState& state)
+{
+    SDL_assert(m_numStates < MAX_STATES);
+    m_states[m_numStates++] = state;
+}
+
+void Animator::popState()
+{
+    SDL_assert(m_numStates > 1);
+    --m_numStates;
+}
+
+void Animator::changeState(const AnimatorState& state)
+{
+    m_states[m_numStates - 1] = state;
+}
+
+int Animator::getAnimationIndex() const { return getCurrentState().index; }
+
+float Animator::getElapsedTime() const { return getCurrentState().elapsedTime; }
+
+void Animator::setElapsedTime(float elapsedTime)
+{
+    getCurrentState().elapsedTime = elapsedTime;
+}
+
+bool Animator::isPaused() const { return getCurrentState().isPaused; }
+
+void Animator::setPaused(bool paused) { getCurrentState().isPaused = paused; }

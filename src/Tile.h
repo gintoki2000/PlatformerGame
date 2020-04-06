@@ -6,12 +6,12 @@
 class Tile : public NTTileLayerTile
 {
   public:
-    Tile(const std::vector<NTTextureRegion>& staticTiles,
+    Tile(const std::vector<TextureRegion>& staticTiles,
          const tmx::Tileset::Tile&           tmxTile);
 
     ~Tile() override;
 
-    const NTTextureRegion& getTextureRegion() override
+    const TextureRegion& getTextureRegion() override
     {
         return m_tile->getTextureRegion();
     }

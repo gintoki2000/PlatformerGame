@@ -26,6 +26,6 @@ class TiledMap
 
   private:
     Level*       m_level;
-    NTTileLayer* m_tileLayer;
+    TileLayer* m_tileLayer;
 };
 #endif // TILED_MAP_H

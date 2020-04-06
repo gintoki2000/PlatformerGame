@@ -19,7 +19,7 @@ class Monster : public GameObject
 	void tick(float deltaTime) override;
 	void paint() override;
 
-	void queryBoundingBox(NTRect& boundingBox) const;
+	void queryBoundingBox(Rect& boundingBox) const;
 
   private:
     int m_monsterType;

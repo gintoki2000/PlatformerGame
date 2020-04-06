@@ -6,6 +6,6 @@ public:
   NTTileLayerTile(){}
   virtual ~NTTileLayerTile() {}
 
-  virtual const NTTextureRegion &getTextureRegion() = 0;
+  virtual const TextureRegion &getTextureRegion() = 0;
 };
 #endif // NT_TILED_MAP_TILE_H

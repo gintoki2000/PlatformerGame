@@ -7,12 +7,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-NTTileLayer::NTTileLayer(int width, int height, int tileWidth, int tileHeight)
+TileLayer::TileLayer(int width, int height, int tileWidth, int tileHeight)
 {
     init(width, height, tileWidth, tileHeight);
 }
 
-NTTileLayer::~NTTileLayer()
+TileLayer::~TileLayer()
 {
     int count = m_width * m_height;
     for (int i = 0; i < count; ++i)
@@ -22,7 +22,7 @@ NTTileLayer::~NTTileLayer()
     delete[] m_cells;
 }
 
-bool NTTileLayer::init(int width, int height, int tileWidth, int tileHeight)
+bool TileLayer::init(int width, int height, int tileWidth, int tileHeight)
 {
     m_width = width;
     m_height = height;
@@ -31,7 +31,7 @@ bool NTTileLayer::init(int width, int height, int tileWidth, int tileHeight)
     m_positionX = 0;
     m_positionY = 0;
     int count = m_width * m_height;
-    m_cells = new NTTileLayerCell*[(unsigned)count];
+    m_cells = new TileLayerCell*[(unsigned)count];
     for (int i = 0; i < count; ++i)
     {
         m_cells[i] = nullptr;
@@ -40,7 +40,7 @@ bool NTTileLayer::init(int width, int height, int tileWidth, int tileHeight)
     return true;
 }
 
-void NTTileLayer::render(SDL_Renderer* renderer, const NTRect& viewport)
+void TileLayer::render(SDL_Renderer* renderer, const Rect& viewport)
 {
     if (!isVisible())
         return;
@@ -54,7 +54,7 @@ void NTTileLayer::render(SDL_Renderer* renderer, const NTRect& viewport)
     endX = std::min(m_width - 1, endX);
     endY = std::min(m_height - 1, endY);
 
-    NTRect dstrect;
+    Rect dstrect;
     dstrect.x = startX * m_tileWidth + (int)getPositionX();
     dstrect.y = startY * m_tileHeight + (int)getPositionY();
     dstrect.w = m_tileWidth;
@@ -63,7 +63,7 @@ void NTTileLayer::render(SDL_Renderer* renderer, const NTRect& viewport)
     {
         for (int x = startX; x <= endX; ++x)
         {
-            NTTileLayerCell* cell = m_cells[x + y * m_width];
+            TileLayerCell* cell = m_cells[x + y * m_width];
             if (cell == nullptr)
             {
                 continue;
@@ -75,13 +75,13 @@ void NTTileLayer::render(SDL_Renderer* renderer, const NTRect& viewport)
             }
             dstrect.x = x * m_tileWidth + getPositionX() - viewport.x;
             dstrect.y = y * m_tileHeight + getPositionY() - viewport.y;
-            const NTTextureRegion& textureRegion = tile->getTextureRegion();
+            const TextureRegion& textureRegion = tile->getTextureRegion();
             textureRegion.draw(renderer, &dstrect);
         }
     }
 }
 
-NTTileLayerCell* NTTileLayer::getCellAt(int x, int y)
+TileLayerCell* TileLayer::getCellAt(int x, int y)
 {
     if (x < 0 || x > m_width)
         return nullptr;
@@ -90,7 +90,7 @@ NTTileLayerCell* NTTileLayer::getCellAt(int x, int y)
     return m_cells[x + y * m_width];
 }
 
-void NTTileLayer::setCellAt(int x, int y, NTTileLayerCell* cell)
+void TileLayer::setCellAt(int x, int y, TileLayerCell* cell)
 {
     if (x < 0 || x > m_width)
         return;

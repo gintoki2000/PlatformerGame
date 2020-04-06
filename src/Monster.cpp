@@ -5,6 +5,7 @@
 #include "Level.h"
 #include "Locator.h"
 #include "Player.h"
+#include "SDL_log.h"
 #include <cmath>
 
 Monster::Monster(Level* level, int monsterType, int hitPoints) :
@@ -55,7 +56,7 @@ int Monster::getFacingPlayerDirection()
     return DIRECTION_NONE;
 }
 
-void Monster::queryBoundingBox(NTRect& boundingBox) const
+void Monster::queryBoundingBox(Rect& boundingBox) const
 {
     boundingBox.x = m_positionX - m_width / 2.f;
     boundingBox.y = m_positionY - m_height / 2.f;
@@ -65,8 +66,8 @@ void Monster::queryBoundingBox(NTRect& boundingBox) const
 
 void Monster::updateGraphics(float deltaTime)
 {
-    const NTRect& viewport = m_level->getViewport();
-    NTRect        boundingBox;
+    const Rect& viewport = m_level->getViewport();
+    Rect        boundingBox;
     queryBoundingBox(boundingBox);
     if (SDL_HasIntersection(&viewport, &boundingBox))
     {

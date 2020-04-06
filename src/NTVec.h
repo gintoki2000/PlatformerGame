@@ -1,68 +1,68 @@
 #ifndef NT_VEC_H
 #define NT_VEC_H
 #include <cmath>
-struct NTVec
+struct Vec2
 {
     float x, y;
-    NTVec() : x(0.0f), y(0.0f) {}
+    Vec2() : x(0.0f), y(0.0f) {}
 
-    NTVec(float _x, float _y) : x(_x), y(_y) {}
+    Vec2(float _x, float _y) : x(_x), y(_y) {}
 
     float len() const { return std::sqrt(x * x + y * y); }
 
-    NTVec& operator+=(const NTVec& v)
+    Vec2& operator+=(const Vec2& v)
     {
         x += v.x;
         y += v.y;
         return *this;
     }
 
-    NTVec& operator-=(const NTVec& v)
+    Vec2& operator-=(const Vec2& v)
     {
         x -= v.x;
         y -= v.y;
         return *this;
     }
 
-    NTVec& operator*=(float k)
+    Vec2& operator*=(float k)
     {
         x *= k;
         y *= k;
         return *this;
     }
 
-    static const NTVec UP;
-    static const NTVec DOWN;
-    static const NTVec LEFT;
-    static const NTVec RIGHT;
+    static const Vec2 UP;
+    static const Vec2 DOWN;
+    static const Vec2 LEFT;
+    static const Vec2 RIGHT;
 };
 
-inline NTVec operator+(const NTVec& lhs, const NTVec& rhs)
+inline Vec2 operator+(const Vec2& lhs, const Vec2& rhs)
 {
-    return NTVec(lhs.x + rhs.x, lhs.y + rhs.y);
+    return Vec2(lhs.x + rhs.x, lhs.y + rhs.y);
 }
 
-inline NTVec operator-(const NTVec& lhs, const NTVec& rhs)
+inline Vec2 operator-(const Vec2& lhs, const Vec2& rhs)
 {
-    return NTVec(lhs.x - rhs.x, lhs.y - rhs.y);
+    return Vec2(lhs.x - rhs.x, lhs.y - rhs.y);
 }
 
-inline NTVec operator*(const NTVec& lhs, float rhs)
+inline Vec2 operator*(const Vec2& lhs, float rhs)
 {
-    return NTVec(lhs.x * rhs, lhs.y * rhs);
+    return Vec2(lhs.x * rhs, lhs.y * rhs);
 }
 
-inline NTVec operator*(float lhs, const NTVec& rhs)
+inline Vec2 operator*(float lhs, const Vec2& rhs)
 {
-    return NTVec(lhs * rhs.x, lhs * rhs.y);
+    return Vec2(lhs * rhs.x, lhs * rhs.y);
 }
 
-inline NTVec operator/(const NTVec& lhs, float rhs)
+inline Vec2 operator/(const Vec2& lhs, float rhs)
 {
-    return NTVec(lhs.x / rhs, lhs.y / rhs);
+    return Vec2(lhs.x / rhs, lhs.y / rhs);
 }
 
-inline float NTDot(const NTVec& lhs, const NTVec& rhs)
+inline float NTDot(const Vec2& lhs, const Vec2& rhs)
 {
     return lhs.x * rhs.x + lhs.y * rhs.y;
 }

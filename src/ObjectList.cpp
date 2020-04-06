@@ -37,6 +37,7 @@ void ObjectList::removeObject(GameObject* obj)
         obj->m_next->m_prev = obj->m_prev;
     if (obj->m_prev != nullptr)
         obj->m_prev->m_next = obj->m_next;
+	delete obj;
     --m_numObjects;
 }
 

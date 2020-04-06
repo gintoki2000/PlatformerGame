@@ -26,11 +26,11 @@ class WorldRenderer : public b2Draw
 
     void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override;
 
-    void setViewport(const NTRect& viewport);
+    void setViewport(const Rect& viewport);
 
   private:
     SDL_Renderer* m_renderer;
     float         m_ppm;
-    NTRect        m_viewport;
+    Rect        m_viewport;
 };
 #endif // WORLD_RENDERER_H

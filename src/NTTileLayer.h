@@ -3,14 +3,14 @@
 #include "NTLayer.h"
 #include "NTRect.h"
 #include "SDL2/SDL.h"
-class NTTileLayerCell;
-class NTTileLayer : public NTLayer
+class TileLayerCell;
+class TileLayer : public Layer
 {
 
   public:
-    NTTileLayer(int width, int height, int tileWidth, int tileHeight);
+    TileLayer(int width, int height, int tileWidth, int tileHeight);
 
-    virtual ~NTTileLayer();
+    virtual ~TileLayer();
 
     /// setters && getters
     int   getWidth() const { return m_width; }
@@ -24,12 +24,12 @@ class NTTileLayer : public NTLayer
 
     /// stuffs
     virtual void     render(SDL_Renderer* renderer,
-                            const NTRect& viewport) override;
-    NTTileLayerCell* getCellAt(int x, int y);
-    void             setCellAt(int x, int y, NTTileLayerCell* cell);
+                            const Rect& viewport) override;
+    TileLayerCell* getCellAt(int x, int y);
+    void             setCellAt(int x, int y, TileLayerCell* cell);
 
   protected:
-    NTTileLayer();
+    TileLayer();
     virtual bool init(int width, int height, int tileWidth, int tileHeight);
 
   private:
@@ -40,6 +40,6 @@ class NTTileLayer : public NTLayer
     float m_positionX;
     float m_positionY;
 
-    NTTileLayerCell** m_cells;
+    TileLayerCell** m_cells;
 };
 #endif // TILED_MAP_H

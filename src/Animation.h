@@ -1,8 +1,6 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 #include "SpriteSheet.h"
-#include <algorithm>
-#include <vector>
 class Animation
 {
   public:

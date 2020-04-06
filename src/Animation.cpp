@@ -1,7 +1,6 @@
 #include "Animation.h"
 #include "SpriteSheet.h"
-#include <algorithm>
-
+#include "Math.h"
 Animation::Animation(const Sprite* sprites[], int numSprites, float duration,
                      int playMode) :
     m_sprites(nullptr)
@@ -21,7 +20,7 @@ Animation::Animation(const SpriteSheet* spriteSheet, int sIndex, int numSprites,
                      float duration, int playMode)
 {
     m_numSprites = numSprites;
-    m_sprites = new const Sprite*[(unsigned long)m_numSprites];
+    m_sprites    = new const Sprite*[(unsigned long)m_numSprites];
     for (int i = sIndex, j = 0; i < sIndex + numSprites; ++i, ++j)
     {
         m_sprites[j] = &spriteSheet->getSprite(i);
@@ -41,7 +40,7 @@ int Animation::getCurrentIndex(float elapsedTime) const
     int index = elapsedTime / m_duration;
     switch (m_playMode)
     {
-    case PLAY_MODE_NORMAL: index = std::min(index, m_numSprites - 1); break;
+    case PLAY_MODE_NORMAL: index = Math::min(index, m_numSprites - 1); break;
     case PLAY_MODE_LOOP: index = index % m_numSprites; break;
     case PLAY_MODE_LOOP_PINGPONG:
         index = index % ((m_numSprites * 2) - 2);
@@ -51,7 +50,7 @@ int Animation::getCurrentIndex(float elapsedTime) const
         }
     }
     m_lastIndex = index;
-    m_lastTime = elapsedTime;
+    m_lastTime  = elapsedTime;
     return index;
 }
 
@@ -65,11 +64,11 @@ void Animation::setSprites(const Sprite* sprites[], int numSprites)
     if (m_sprites != nullptr)
     {
         delete[] m_sprites;
-        m_sprites = nullptr;
+        m_sprites    = nullptr;
         m_numSprites = 0;
     }
     m_numSprites = numSprites;
-    m_sprites = new const Sprite*[(unsigned long)m_numSprites];
+    m_sprites    = new const Sprite*[(unsigned long)m_numSprites];
     for (int i = 0; i < m_numSprites; ++i)
     {
         m_sprites[i] = sprites[i];
@@ -78,6 +77,6 @@ void Animation::setSprites(const Sprite* sprites[], int numSprites)
 
 bool Animation::isFinished(float elapsedTime) const
 {
-	int index = elapsedTime / m_duration;
-	return index >= m_numSprites - 1;
+    int index = elapsedTime / m_duration;
+    return index >= m_numSprites - 1;
 }

@@ -7,6 +7,7 @@
 #include "SDL_image.h"
 #include "SDL_video.h"
 #include "SDL_mixer.h"
+#include "Audio.h"
 #include "StateManager.h"
 
 Game* Game::instance = nullptr;
@@ -63,12 +64,20 @@ bool Game::initialize()
 		return false;
 	}
 
+	Audio* audio = new Audio();
+	if (audio->load() == false)
+	{
+		delete audio;
+		return false;
+	}
+
     SDL_RenderSetScale(renderer, Constances::SCALE_X, Constances::SCALE_Y);
 
     m_isRunning = true;
 
     Locator::setRenderer(renderer);
     Locator::setWindow(window);
+	Locator::setAudio(audio);
     auto state = MainState::create();
     if (state == nullptr)
     {

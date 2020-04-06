@@ -2,7 +2,7 @@
 #define CELL_H
 #include "NTTileLayerCell.h"
 #include "Tile.h"
-class Cell : public NTTileLayerCell
+class Cell : public TileLayerCell
 {
   public:
     bool isSoild() { return ((Tile*)getTile())->isSolid(); }

@@ -2,15 +2,15 @@
 #define NT_TEXTURE_REGION_H
 #include "SDL2/SDL.h"
 #include "SDL_render.h"
-struct NTTextureRegion {
+struct TextureRegion {
   SDL_Texture *texture;
   SDL_Rect rect;
 
-  NTTextureRegion();
+  TextureRegion();
 
-  NTTextureRegion(SDL_Texture *_texture);
+  TextureRegion(SDL_Texture *_texture);
 
-  NTTextureRegion(SDL_Texture *_texture, const SDL_Rect &_rect);
+  TextureRegion(SDL_Texture *_texture, const SDL_Rect &_rect);
 
   int draw(SDL_Renderer *renderer, const SDL_Rect *dstrect) const;
   int draw(SDL_Renderer *renderer, const SDL_Rect *dstrect, double angle,

@@ -13,7 +13,8 @@ enum CateroryBit
 {
     CATEGORY_BIT_PLAYER  = 1 << 0,
     CATEGORY_BIT_MONSTER = 1 << 1,
-    CATEGORY_BIT_BLOCK   = 1 << 2
+    CATEGORY_BIT_BLOCK   = 1 << 2,
+	CATEGORY_BIT_SPELL   = 1 << 3
 };
 
 enum

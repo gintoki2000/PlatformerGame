@@ -2,12 +2,12 @@
 #define MY_TILE_SET_H
 #include "NTTileLayerTile.h"
 #include "tmxlite/Tileset.hpp"
-class TileSet
+class Tileset
 {
 public:
-    TileSet(const tmx::Tileset& data, SDL_Renderer* renderer);
+    Tileset(const tmx::Tileset& data, SDL_Renderer* renderer);
 
-    ~TileSet();
+    ~Tileset();
 
     NTTileLayerTile* getTile(std::size_t id);
 

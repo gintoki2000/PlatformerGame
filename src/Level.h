@@ -11,6 +11,8 @@ class Monster;
 class Player;
 class ObjectList;
 class TiledMap;
+class Fireball;
+class HUD;
 class Level : public b2ContactListener
 {
   public:
@@ -18,16 +20,18 @@ class Level : public b2ContactListener
     ~Level();
 
     /// getters
-    const NTRect&                getViewport() const;
+    const Rect&                  getViewport() const;
     b2World*                     getWorld() const;
     Player*                      getPlayer() const;
-    const std::vector<TileSet*>& getTilesets() const;
+    const std::vector<Tileset*>& getTilesets() const;
     TextureManager*              getTextureManager() const;
 
     // stuff
     void render(float deltaTime);
     void addMonster(Monster* monster);
     void removeMonster(Monster* monster);
+    void addFireball(Fireball* fireball);
+    void removeFireball(Fireball* fireball);
     void setPaused(bool paused);
 
   private:
@@ -36,6 +40,7 @@ class Level : public b2ContactListener
     void tick(float deltaTime);
     void updateViewport(float deltaTime);
 
+    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override;
     void BeginContact(b2Contact* contact) override;
     void EndContact(b2Contact* contact) override;
 
@@ -43,17 +48,22 @@ class Level : public b2ContactListener
     bool                  m_isPaused;
     Player*               m_player;
     ObjectList*           m_monsters;
-    std::vector<TileSet*> m_tileSets;
+    std::vector<Tileset*> m_tileSets;
     b2World*              m_world;
     TiledMap*             m_tiledMap;
-    NTRect                m_viewport;
+    Rect                  m_viewport;
     WorldRenderer*        m_worldRenderer;
     TextureManager*       m_textureManager;
     float                 m_viewportX;
     Mix_Music*            m_music;
+    ObjectList*           m_fireballs;
+    HUD*                  m_HUD;
 
     static const int MAX_SIZE = 20;
     Monster*         m_monstersToBeRemoved[MAX_SIZE];
     int              m_monstersToBeRemovedCount;
+
+    Fireball* m_fireballsToBeRemoved[MAX_SIZE];
+    int       m_fireballsToBeRemovedCount;
 };
 #endif // LEVEL_H

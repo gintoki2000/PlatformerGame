@@ -11,6 +11,7 @@ class Animator;
 class Weapon;
 class Spell;
 class Player;
+class PlayerSkill;
 class PlayerState
 {
   public:
@@ -21,7 +22,6 @@ class PlayerState
 
     Player* getPlayer() const { return m_player; }
     void    setPlayer(Player* player) { m_player = player; }
-    void    changePlayerDirection(int inputDirection);
 
   protected:
     Player* m_player;
@@ -84,8 +84,8 @@ class PlayerDieState : public PlayerState
 
 class PlayerCrouchState : public PlayerState
 {
-   void enter() override;
-   PlayerState* tick(float deltaTime) override;
+    void         enter() override;
+    PlayerState* tick(float deltaTime) override;
 };
 class Player : public GameObject
 {
@@ -101,12 +101,8 @@ class Player : public GameObject
     static constexpr float HEIGHT_IN_METER = HEIGHT / Constances::PPM;
     static constexpr float SLIDE_SPEED     = 8.f;
     static const float     MAX_RUN_SPEED;
-    enum
-    {
-        FIXTURE_TYPE_MAIN_BODY,
-        FIXTURE_TYPE_FOOT_SENSOR,
-        FIXTURE_TYPE_WALL_SENSOR
-    };
+    static constexpr int   NUM_SKILLS      = 3;
+    static constexpr float CUT_JUMP_HEIGHT = 0.5f;
     enum
     {
         ANIM_IDLE_1,
@@ -136,24 +132,27 @@ class Player : public GameObject
         ANIM_AIR_ATK_2,
         ANIM_AIR_ATK_3_LOOP,
         ANIM_AIR_ATK_3_RDY,
-        NUM_OF_ANIMS
+        ANIM_DASH,
+        NUM_ANIMS
+    };
+
+    enum Status
+    {
+        STATTUS_DIE,
+        STATUS_HURT,
+        STATUS_NORMAL
     };
 
   public:
-	Player(Level* level);
-    ~Player();
+    Player(Level* level);
+    ~Player() override;
 
-    void      tick(float deltaTime) override;
-    void      paint() override;
-    void      touchGround();
-    void      untouchGround();
-    void      touchWall();
-    void      untouchWall();
-    bool      isOnGround() const;
+    void tick(float deltaTime) override;
+    void paint() override;
+
     bool      isTouchingWall() const;
     void      getHit(int damage);
     bool      isDead() const;
-    Weapon*   getWeapon() const { return m_weapon; }
     void      setWeapon(Weapon* weapon);
     b2Body*   getBody() const { return m_body; }
     Animator* getAnimator() const { return m_animator; }
@@ -161,15 +160,35 @@ class Player : public GameObject
     void      setDirection(Direction direction) { m_direction = direction; }
     int       getHitPoints() const { return m_hitPoints; }
     int       getManaPoints() const { return m_manaPoints; }
+    int       getMaxHitPoints() const { return m_maxHitPoints; }
     void      setHorizontalSpeed(float vx);
     void      stopHorizontalMovement();
     void      stopVerticalMovement();
     void      resetMembers();
     void      move(int sign, float deltaTime);
-    void      setUnGround() { m_touchingGroundCount = 0; }
     void      setState(PlayerState* newState);
-    void      setProtected(bool v) { m_isProtected = v; }
-    bool      isProtected() const { return m_isProtected; }
+    Status    getStatus() const { return m_status; }
+    void      setStatus(Status status) { m_status = status; }
+    void      setSkill(PlayerSkill* skill, int slot);
+    void      getSkill(int slot);
+    float     getJumpPressedRemember() const { return m_jumpPressedRemember; }
+    void      resetJumpPressedRemember();
+    void      setJumpPressedRemember(float time);
+    void      setGroundedRemember(float time);
+    bool      isGrounded() const;
+    bool      wasGrounded() const { return m_prevGroundState; }
+    bool      justGrounded() const;
+    float     getGroundedRemember() const { return m_groundedRemember; }
+    void      resetGroundedRemember();
+    void      setUnGrounded() { m_isGrounded = false; }
+    float     getHorizontalAcceleration() const
+    {
+        return m_horiziontalAcceleration;
+    }
+    void setHorizontalAcceleration(float horizontalAcceleration)
+    {
+        m_horiziontalAcceleration = horizontalAcceleration;
+    }
 
   private:
     bool initGraphicsComponent();
@@ -190,13 +209,25 @@ class Player : public GameObject
     int          m_touchingWallCount;
     b2Body*      m_body;
     Animator*    m_animator;
-    Weapon*      m_weapon;
-    Spell*       m_spell;
     PlayerState* m_state;
     int          m_hitPoints;
     int          m_manaPoints;
     int          m_maxHitPoints;
     int          m_maxManaPoints;
-    bool         m_isProtected;
+    Status       m_status;
+    PlayerSkill* m_skills[NUM_SKILLS];
+    PlayerSkill* m_activeSkill;
+    float        m_horiziontalAcceleration;
+    float        m_horizontalDampingWhenStoping;
+    float        m_horizontalDampingWhenTurning;
+    float        m_horizontalDampingBasic;
+    bool         m_prevGroundState;
+    bool         m_isGrounded;
+    float        m_jumpPressedRememberTime;
+    float        m_groundedRememberTime;
+    float        m_cutJumpHeight;
+    float        m_jumpPressedRemember;
+    float        m_groundedRemember;
+    float        m_maxHoriontalSpeed;
 };
 #endif // PLAYER_H

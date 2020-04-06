@@ -1,13 +1,13 @@
 #ifndef NT_TILED_MAP_CELL_H
 #define NT_TILED_MAP_CELL_H
 class NTTileLayerTile;
-class NTTileLayerCell {
+class TileLayerCell {
 public:
-  NTTileLayerCell();
+  TileLayerCell();
 
-  NTTileLayerCell(NTTileLayerTile *tile);
+  TileLayerCell(NTTileLayerTile *tile);
 
-  virtual ~NTTileLayerCell();
+  virtual ~TileLayerCell();
 
   virtual NTTileLayerTile *getTile();
 

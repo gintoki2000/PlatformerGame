@@ -6,7 +6,7 @@
 #include "NTRect.h"
 #include "Tile.h"
 
-TileSet::TileSet(const tmx::Tileset& data, SDL_Renderer* renderer) :
+Tileset::Tileset(const tmx::Tileset& data, SDL_Renderer* renderer) :
     m_tiles(data.getTileCount()), m_tileCount(data.getTileCount()),
     m_firstGID(data.getFirstGID()), m_texture(nullptr)
 {
@@ -14,16 +14,16 @@ TileSet::TileSet(const tmx::Tileset& data, SDL_Renderer* renderer) :
     SDL_Surface* surface = IMG_Load(data.getImagePath().c_str());
     m_texture = SDL_CreateTextureFromSurface(renderer, surface);
 
-    std::vector<NTTextureRegion> staticTiles(m_tileCount);
+    std::vector<TextureRegion> staticTiles(m_tileCount);
 
     std::size_t index = 0;
     for (const auto& tileData : data.getTiles())
     {
 
-        NTRect rect((int)tileData.imagePosition.x,
+        Rect rect((int)tileData.imagePosition.x,
                     (int)tileData.imagePosition.y, (int)tileData.imageSize.x,
                     (int)tileData.imageSize.y);
-        staticTiles[index++] = NTTextureRegion(m_texture, rect);
+        staticTiles[index++] = TextureRegion(m_texture, rect);
     }
 
 	index = 0;
@@ -34,7 +34,7 @@ TileSet::TileSet(const tmx::Tileset& data, SDL_Renderer* renderer) :
 	
 }
 
-TileSet::~TileSet()
+Tileset::~Tileset()
 {
 		for(auto tile : m_tiles)
 		{
@@ -43,7 +43,7 @@ TileSet::~TileSet()
 		SDL_DestroyTexture(m_texture);
 }
 
-NTTileLayerTile* TileSet::getTile(std::size_t id)
+NTTileLayerTile* Tileset::getTile(std::size_t id)
 {
 		if(!hasTile(id))
 				return nullptr;

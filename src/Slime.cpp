@@ -123,17 +123,22 @@ void Slime::updateLogic(float deltaTime)
             checkAttackCollision();
             wait();
         }
-        else
-        {
-        }
     }
     break;
     case STATE_HURT:
     {
+		if (m_animator->isCurrentAnimationFinshed())
+		{
+			wait();
+		}
     }
     break;
     case STATE_DIE:
     {
+		if (m_animator->isCurrentAnimationFinshed())
+		{
+			m_level->removeMonster(this);
+		}
     }
     break;
     }

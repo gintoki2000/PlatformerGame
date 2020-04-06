@@ -1,17 +1,17 @@
 #ifndef NT_TILED_MAP_STATIC_TILE_H
 #define NT_TILED_MAP_STATIC_TILE_H
 #include "NTTileLayerTile.h"
-class NTTileLayerStaticTile : public NTTileLayerTile
+class TileLayerStaticTile : public NTTileLayerTile
 {
   public:
-    NTTileLayerStaticTile(const NTTextureRegion& textureRegion) :
+    TileLayerStaticTile(const TextureRegion& textureRegion) :
         m_textureRegion(textureRegion)
     {
     }
 
-    const NTTextureRegion& getTextureRegion() override;
+    const TextureRegion& getTextureRegion() override;
 
   private:
-    NTTextureRegion m_textureRegion;
+    TextureRegion m_textureRegion;
 };
 #endif // NT_TILED_MAP_STATIC_TILE_H
