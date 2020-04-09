@@ -8,7 +8,7 @@ class Builder
 {
   public:
     static b2PolygonShape*
-                           buildPolygon(const std::vector<tmx::Vector2f>& points);
+                           buildPolygon(const tmx::Vector2f& position, const std::vector<tmx::Vector2f>& points);
     static b2PolygonShape* buildRectangle(const tmx::Rectangle<float>& rect);
     static b2Shape*        buildShape(const tmx::Object& object);
 

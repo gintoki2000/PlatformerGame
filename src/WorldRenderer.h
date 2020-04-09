@@ -31,6 +31,6 @@ class WorldRenderer : public b2Draw
   private:
     SDL_Renderer* m_renderer;
     float         m_ppm;
-    Rect        m_viewport;
+    Rect          m_viewport;
 };
 #endif // WORLD_RENDERER_H

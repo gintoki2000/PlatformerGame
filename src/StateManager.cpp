@@ -12,6 +12,7 @@ StateManager::~StateManager() {
 	update();
 	for (int i = 0; i < m_numStates; ++i)
 	{
+		SDL_Log("%d", i);
 		delete m_stateStack[i];
 		m_stateStack[i] = nullptr;
 	}

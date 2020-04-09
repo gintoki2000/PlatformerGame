@@ -22,9 +22,10 @@ set(SOURCE_FILES
 	src/GameState.cpp
 	src/Locator.cpp
 	src/StateManager.cpp
-	src/TileSet.cpp
+	src/Tileset.cpp
 	src/Tile.cpp
 	src/TiledMap.cpp
+	src/Tilesets.cpp
 	src/WorldRenderer.cpp
 	src/Animator.cpp
 	src/Animation.cpp

@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Animation.h"
 #include "Animator.h"
+#include "Audio.h"
 #include "Constances.h"
 #include "Enums.h"
 #include "GameObject.h"
@@ -63,8 +64,8 @@ bool Player::initGraphicsComponent()
     anims[ANIM_IDLE_1]        = new Animation(m_spriteSheet, 0, 4, 1.f / 8.f);
     anims[ANIM_CROUCH]        = new Animation(m_spriteSheet, 4, 4, 1.f / 8.f);
     anims[ANIM_RUN]           = new Animation(m_spriteSheet, 8, 6, 1.f / 8.f);
-    anims[ANIM_JUMP]          = new Animation(m_spriteSheet, 14, 4, 1.f / 8.f);
-    anims[ANIM_SOMERSULT]     = new Animation(m_spriteSheet, 18, 4, 1.f / 10.f);
+    anims[ANIM_JUMP]          = new Animation(m_spriteSheet, 14, 4, 1.f / 6.f);
+    anims[ANIM_SOMERSULT]     = new Animation(m_spriteSheet, 18, 4, 1.f / 12.f);
     anims[ANIM_FALL]          = new Animation(m_spriteSheet, 22, 2, 1.f / 10.f);
     anims[ANIM_SLIDE]         = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
     anims[ANIM_STAND]         = new Animation(m_spriteSheet, 26, 3, 1.f / 8.f);
@@ -114,32 +115,52 @@ void Player::initPhysicsComponent()
     m_body = m_level->getWorld()->CreateBody(&bdef);
 
     b2PolygonShape box;
-    box.SetAsBox(WIDTH / 2.f / Constances::PPM, HEIGHT / 2.f / Constances::PPM);
+    box.SetAsBox(WIDTH / 2.f / Constances::PPM, HEIGHT_IN_METER / 2.f * 0.75f,
+                 b2Vec2(0.f, -HEIGHT_IN_METER * 0.25f), 0.f);
 
     b2FixtureDef fdef;
     fdef.shape               = &box;
     fdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
     fdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
-    fdef.friction            = 0.1f;
+    fdef.friction            = 0.0f;
+    fdef.restitution         = 0.f;
+    fdef.isSensor            = true;
+    m_body->CreateFixture(&fdef);
+
+    b2CircleShape circle;
+    circle.m_radius = WIDTH_IN_METER / 2.f;
+    circle.m_p.Set(0, HEIGHT_IN_METER / 2.f * 0.5f);
+
+    b2FixtureDef gfdef;
+    gfdef.shape               = &circle;
+    gfdef.restitution         = 0.f;
+    gfdef.friction            = 0.f;
+    gfdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
+    gfdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
+
+    m_body->CreateFixture(&gfdef);
 }
 
 void Player::resetMembers()
 {
-    m_direction               = DIRECTION_RIGHT;
-    m_touchingGroundCount     = 0;
-    m_touchingWallCount       = 0;
-    m_maxHitPoints            = 5;
-    m_hitPoints               = m_maxHitPoints;
-    m_maxManaPoints           = 50;
-    m_manaPoints              = m_maxManaPoints;
-    m_status                  = STATUS_NORMAL;
-    m_isGrounded              = false;
-    m_prevGroundState         = false;
-    m_jumpPressedRemember     = 0.f;
-    m_jumpPressedRememberTime = 0.3f;
-    m_groundedRemember        = 0.f;
-    m_groundedRememberTime    = 1.5f;
-    m_horiziontalAcceleration = 0.f;
+    m_direction                    = DIRECTION_RIGHT;
+    m_maxHitPoints                 = 5;
+    m_hitPoints                    = m_maxHitPoints;
+    m_maxManaPoints                = 50;
+    m_manaPoints                   = m_maxManaPoints;
+    m_status                       = STATUS_NORMAL;
+    m_isGrounded                   = false;
+    m_prevGroundState              = false;
+    m_jumpPressedRemember          = 0.f;
+    m_jumpPressedRememberTime      = 0.3f;
+    m_groundedRemember             = 0.f;
+    m_groundedRememberTime         = 1.5f;
+    m_horiziontalAcceleration      = 0.f;
+    m_horizontalDampingWhenStoping = 0.8f;
+    m_horizontalDampingBasic       = 0.7f;
+    m_horizontalDampingWhenTurning = 0.8f;
+    m_extrasJump                   = 1;
+    m_extrasJumpCount              = 0;
     setState(new PlayerIdle1State());
     setPosition(100.f, 0.f);
     m_body->SetAwake(true);
@@ -182,19 +203,20 @@ static bool testOverlap(b2World* world, const b2AABB& box, uint16 bitMasks)
     return callback.fixture != nullptr;
 }
 
-void Player::updatePhysics()
+void Player::updatePhysics(float deltaTime)
 {
     m_positionX       = m_body->GetPosition().x * Constances::PPM;
     m_positionY       = m_body->GetPosition().y * Constances::PPM;
     m_rotation        = m_body->GetAngle();
     m_prevGroundState = m_isGrounded;
-    // m_isOnGround      = m_touchingGroundCount > 0;
 
     b2AABB groundBox;
-    groundBox.lowerBound.x = m_body->GetPosition().x - WIDTH_IN_METER / 2.f;
+    groundBox.lowerBound.x =
+        m_body->GetPosition().x - WIDTH_IN_METER / 2.f + 5.f / Constances::PPM;
     groundBox.lowerBound.y =
         m_body->GetPosition().y + HEIGHT_IN_METER / 2.f - 1.f / Constances::PPM;
-    groundBox.upperBound.x = m_body->GetPosition().x + WIDTH_IN_METER / 2.f;
+    groundBox.upperBound.x =
+        m_body->GetPosition().x + WIDTH_IN_METER / 2.f - 5.f / Constances::PPM;
     groundBox.upperBound.y =
         m_body->GetPosition().y + HEIGHT_IN_METER / 2.f + 1.f / Constances::PPM;
 
@@ -203,7 +225,21 @@ void Player::updatePhysics()
 
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x += m_horiziontalAcceleration;
-    vel.x = Math::clamp(-MAX_RUN_SPEED, MAX_RUN_SPEED, vel.x);
+    if (m_horiziontalAcceleration == 0.f)
+    {
+        vel.x *=
+            SDL_powf(1.f - m_horizontalDampingWhenStoping, deltaTime * 10.f);
+    }
+    else if (Math::sign(vel.x) != Math::sign(m_horiziontalAcceleration))
+    {
+        vel.x *=
+            SDL_powf(1.f - m_horizontalDampingWhenTurning, deltaTime * 10.f);
+    }
+    else
+    {
+        vel.x *= SDL_powf(1.f - m_horizontalDampingBasic, deltaTime * 10.f);
+    }
+    m_body->SetLinearVelocity(vel);
 }
 
 void Player::synchronizeBodyTransform()
@@ -230,7 +266,7 @@ void Player::onPositionChanged()
 
 void Player::tick(float deltaTime)
 {
-    updatePhysics();
+    updatePhysics(deltaTime);
     updateLogic(deltaTime);
     updateGraphics(deltaTime);
 }
@@ -263,6 +299,7 @@ void Player::updateLogic(float deltaTime)
     if (m_isGrounded)
     {
         resetGroundedRemember();
+        m_extrasJumpCount = m_extrasJump;
     }
     m_jumpPressedRemember -= deltaTime;
     if (Input::isButtonBPressed())
@@ -309,16 +346,6 @@ void Player::getHit(int damage)
     }
 }
 
-void Player::move(int sign, float deltaTime)
-{
-
-    b2Vec2 vel = m_body->GetLinearVelocity();
-    vel.x += sign * Player::RUN_ACC * deltaTime;
-    vel.x = std::max(-Player::MAX_RUN_SPEED,
-                     std::min(Player::MAX_RUN_SPEED, vel.x));
-    m_body->SetLinearVelocity(vel);
-    m_body->SetAwake(true);
-}
 void Player::setState(PlayerState* newState)
 {
     if (newState != nullptr)
@@ -367,7 +394,7 @@ PlayerState::~PlayerState() {}
 PlayerState* PlayerOnGroundState::tick(float)
 {
 
-    auto inputDirection = Input::getHorizontalInputDirection();
+    int inputDirection = Input::getHorizontalInputDirection();
     if (Input::isButtonAJustPressed())
     {
     }
@@ -393,14 +420,14 @@ PlayerState* PlayerOnGroundState::tick(float)
 
 void PlayerIdle1State::enter()
 {
-    m_player->stopHorizontalMovement();
+    m_player->setHorizontalAcceleration(0.f);
     m_player->getAnimator()->play(Player::ANIM_IDLE_1, 0.f);
 }
 
 void PlayerIdle2State::enter()
 {
     m_timer = 0.f;
-    m_player->stopHorizontalMovement();
+    m_player->setHorizontalAcceleration(0.f);
     m_player->getAnimator()->play(Player::ANIM_IDLE_2, 0.f);
 }
 
@@ -414,7 +441,7 @@ PlayerState* PlayerIdle2State::tick(float deltaTime)
     }
     else if (m_timer > 3.f)
     {
-        return new PlayerIdle1State;
+        return new PlayerIdle1State();
     }
     return nullptr;
 }
@@ -424,7 +451,7 @@ void PlayerRunState::enter()
     m_player->getAnimator()->play(Player::ANIM_RUN, 0.f);
 }
 
-PlayerState* PlayerRunState::tick(float deltaTime)
+PlayerState* PlayerRunState::tick(float)
 {
     auto inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
@@ -450,7 +477,7 @@ PlayerState* PlayerRunState::tick(float deltaTime)
     }
     else
     {
-        m_player->move(inputDirection, deltaTime);
+        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
     }
     return nullptr;
 }
@@ -462,11 +489,11 @@ void PlayerJumpState::enter()
     m_player->getBody()->SetLinearVelocity(vel);
     m_player->getAnimator()->play(Player::ANIM_JUMP, 0.f);
     m_player->setUnGrounded();
-    m_player->setJumpPressedRemember(0.f);
-    m_player->setGroundedRemember(0.f);
+    m_player->m_jumpPressedRemember = 0.f;
+    m_player->m_groundedRemember    = 0.f;
 }
 
-PlayerState* PlayerJumpState::tick(float deltaTime)
+PlayerState* PlayerJumpState::tick(float)
 {
     auto inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
@@ -490,17 +517,22 @@ PlayerState* PlayerJumpState::tick(float deltaTime)
     {
         return new PlayerIdle1State();
     }
-    else if (m_player->getAnimator()->isCurrentAnimationFinshed())
+    else if (Input::isButtonBJustPressed() && m_player->m_extrasJumpCount > 0)
     {
-        return new PlayerSomersaultState();
+        --m_player->m_extrasJumpCount;
+        return new PlayerAirJumpState();
+    }
+    else if (m_player->getBody()->GetLinearVelocity().y > 0.f)
+    {
+        return new PlayerFallState();
     }
     else if (inputDirection != 0)
     {
-        m_player->move(inputDirection, deltaTime);
+        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
     }
     else
     {
-        m_player->stopHorizontalMovement();
+        m_player->setHorizontalAcceleration(0.f);
     }
     return nullptr;
 }
@@ -532,11 +564,11 @@ PlayerState* PlayerSomersaultState::tick(float deltaTime)
     }
     else if (inputDirection != 0)
     {
-        m_player->move(inputDirection, deltaTime);
+        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
     }
     else
     {
-        m_player->stopHorizontalMovement();
+        m_player->setHorizontalAcceleration(0.f);
     }
     return nullptr;
 }
@@ -546,7 +578,7 @@ void PlayerFallState::enter()
     m_player->getAnimator()->play(Player::ANIM_FALL, 0.f);
 }
 
-PlayerState* PlayerFallState::tick(float deltaTime)
+PlayerState* PlayerFallState::tick(float)
 {
     int inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
@@ -564,6 +596,7 @@ PlayerState* PlayerFallState::tick(float deltaTime)
     }
     else if (m_player->isGrounded())
     {
+        Locator::getAudio().play(Audio::LANDING);
         if (inputDirection == 0)
         {
             return new PlayerIdle1State();
@@ -573,13 +606,18 @@ PlayerState* PlayerFallState::tick(float deltaTime)
             return new PlayerRunState();
         }
     }
+    else if (Input::isButtonBJustPressed() && m_player->m_extrasJumpCount > 0)
+    {
+        --m_player->m_extrasJumpCount;
+        return new PlayerAirJumpState();
+    }
     else if (inputDirection != 0)
     {
-        m_player->move(inputDirection, deltaTime);
+        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
     }
     else
     {
-        m_player->stopHorizontalMovement();
+        m_player->setHorizontalAcceleration(0.f);
     }
     return nullptr;
 }
@@ -587,7 +625,7 @@ PlayerState* PlayerFallState::tick(float deltaTime)
 void PlayerHurtState::enter()
 {
     m_player->setStatus(Player::STATUS_HURT);
-    m_player->stopHorizontalMovement();
+    m_player->setHorizontalAcceleration(0.f);
     m_player->getAnimator()->play(Player::ANIM_HURT, 0.f);
 }
 
@@ -642,6 +680,32 @@ PlayerState* PlayerCrouchState::tick(float)
     if (Input::isButtonUpPressed())
     {
         return new PlayerIdle1State();
+    }
+    return nullptr;
+}
+
+void PlayerAirJumpState::enter()
+{
+    m_player->getAnimator()->play(Player::ANIM_JUMP, 0.f);
+    b2Vec2 vel = m_player->getBody()->GetLinearVelocity();
+    vel.y      = -Player::JUMP_VEL;
+    m_player->getBody()->SetLinearVelocity(vel);
+}
+
+PlayerState* PlayerAirJumpState::tick(float)
+{
+    int inputDirection = Input::getHorizontalInputDirection();
+    if (inputDirection < 0)
+    {
+        m_player->setDirection(DIRECTION_LEFT);
+    }
+    if (inputDirection > 0)
+    {
+        m_player->setDirection(DIRECTION_RIGHT);
+    }
+    if (m_player->getAnimator()->isCurrentAnimationFinshed())
+    {
+        return new PlayerSomersaultState();
     }
     return nullptr;
 }

@@ -87,6 +87,12 @@ class PlayerCrouchState : public PlayerState
     void         enter() override;
     PlayerState* tick(float deltaTime) override;
 };
+
+class PlayerAirJumpState : public PlayerState
+{
+    void         enter() override;
+    PlayerState* tick(float deltaTime) override;
+};
 class Player : public GameObject
 {
 
@@ -95,8 +101,8 @@ class Player : public GameObject
     static constexpr float HEIGHT          = 30.f;
     static constexpr int   SPRITE_WIDTH    = 50;
     static constexpr int   SPRITE_HEIGHT   = 37;
-    static constexpr float JUMP_VEL        = 13.f;
-    static constexpr float RUN_ACC         = 0.8f * 60.f;
+    static constexpr float JUMP_VEL        = 16.f;
+    static constexpr float RUN_ACC         = 2.f;
     static constexpr float WIDTH_IN_METER  = WIDTH / Constances::PPM;
     static constexpr float HEIGHT_IN_METER = HEIGHT / Constances::PPM;
     static constexpr float SLIDE_SPEED     = 8.f;
@@ -165,7 +171,6 @@ class Player : public GameObject
     void      stopHorizontalMovement();
     void      stopVerticalMovement();
     void      resetMembers();
-    void      move(int sign, float deltaTime);
     void      setState(PlayerState* newState);
     Status    getStatus() const { return m_status; }
     void      setStatus(Status status) { m_status = status; }
@@ -193,7 +198,7 @@ class Player : public GameObject
   private:
     bool initGraphicsComponent();
     void initPhysicsComponent();
-    void updatePhysics();
+    void updatePhysics(float deltaTime);
     void updateGraphics(float deltaTime);
     void updateLogic(float deltaTime);
     void onPositionChanged() override;
@@ -203,10 +208,7 @@ class Player : public GameObject
     /// asserts
     SpriteSheet* m_spriteSheet;
 
-    Direction    m_direction;
     bool         m_isWallSliding;
-    int          m_touchingGroundCount;
-    int          m_touchingWallCount;
     b2Body*      m_body;
     Animator*    m_animator;
     PlayerState* m_state;
@@ -217,17 +219,22 @@ class Player : public GameObject
     Status       m_status;
     PlayerSkill* m_skills[NUM_SKILLS];
     PlayerSkill* m_activeSkill;
-    float        m_horiziontalAcceleration;
-    float        m_horizontalDampingWhenStoping;
-    float        m_horizontalDampingWhenTurning;
-    float        m_horizontalDampingBasic;
-    bool         m_prevGroundState;
-    bool         m_isGrounded;
-    float        m_jumpPressedRememberTime;
-    float        m_groundedRememberTime;
-    float        m_cutJumpHeight;
-    float        m_jumpPressedRemember;
-    float        m_groundedRemember;
-    float        m_maxHoriontalSpeed;
+
+  public:
+    Direction m_direction;
+    float     m_horiziontalAcceleration;
+    float     m_horizontalDampingWhenStoping;
+    float     m_horizontalDampingWhenTurning;
+    float     m_horizontalDampingBasic;
+    bool      m_prevGroundState;
+    bool      m_isGrounded;
+    float     m_jumpPressedRememberTime;
+    float     m_groundedRememberTime;
+    float     m_cutJumpHeight;
+    float     m_jumpPressedRemember;
+    float     m_groundedRemember;
+    float     m_maxHoriontalSpeed;
+    int       m_extrasJump;
+    int       m_extrasJumpCount;
 };
 #endif // PLAYER_H

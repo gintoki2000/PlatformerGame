@@ -53,6 +53,7 @@ Fireball::~Fireball()
     delete m_animation;
     delete m_spriteSheet;
     m_body->GetWorld()->DestroyBody(m_body);
+	m_body = nullptr;
 }
 
 void Fireball::tick(float deltaTime)

@@ -3,7 +3,6 @@
 #include "AssertManager.h"
 #include "NTRect.h"
 #include "SDL_mixer.h"
-#include "TileSet.h"
 #include "WorldRenderer.h"
 #include "box2d/box2d.h"
 #include <vector>
@@ -13,6 +12,7 @@ class ObjectList;
 class TiledMap;
 class Fireball;
 class HUD;
+class Tilesets;
 class Level : public b2ContactListener
 {
   public:
@@ -20,11 +20,11 @@ class Level : public b2ContactListener
     ~Level();
 
     /// getters
-    const Rect&                  getViewport() const;
-    b2World*                     getWorld() const;
-    Player*                      getPlayer() const;
-    const std::vector<Tileset*>& getTilesets() const;
-    TextureManager*              getTextureManager() const;
+    const Rect&     getViewport() const;
+    b2World*        getWorld() const;
+    Player*         getPlayer() const;
+    Tilesets*       getTilesets() const;
+    TextureManager* getTextureManager() const;
 
     // stuff
     void render(float deltaTime);
@@ -40,30 +40,31 @@ class Level : public b2ContactListener
     void tick(float deltaTime);
     void updateViewport(float deltaTime);
 
+    // Box2d callback functions
     void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override;
     void BeginContact(b2Contact* contact) override;
     void EndContact(b2Contact* contact) override;
 
-    /// data fields
-    bool                  m_isPaused;
-    Player*               m_player;
-    ObjectList*           m_monsters;
-    std::vector<Tileset*> m_tileSets;
-    b2World*              m_world;
-    TiledMap*             m_tiledMap;
-    Rect                  m_viewport;
-    WorldRenderer*        m_worldRenderer;
-    TextureManager*       m_textureManager;
-    float                 m_viewportX;
-    Mix_Music*            m_music;
-    ObjectList*           m_fireballs;
-    HUD*                  m_HUD;
-
     static const int MAX_SIZE = 20;
+	static const int NUM_BACKGROUNDS = 5;
+    /// data fields
+    bool             m_isPaused;
+    Player*          m_player;
+    ObjectList*      m_monsters;
+    Tilesets*        m_tileSets;
+    b2World*         m_world;
+    TiledMap*        m_tiledMap;
+    Rect             m_viewport;
+    WorldRenderer*   m_worldRenderer;
+    TextureManager*  m_textureManager;
+    float            m_viewportX;
+    Mix_Music*       m_music;
+    ObjectList*      m_fireballs;
+    HUD*             m_HUD;
+    SDL_Texture*     m_backgrounds[NUM_BACKGROUNDS];
     Monster*         m_monstersToBeRemoved[MAX_SIZE];
     int              m_monstersToBeRemovedCount;
-
-    Fireball* m_fireballsToBeRemoved[MAX_SIZE];
-    int       m_fireballsToBeRemovedCount;
+    Fireball*        m_fireballsToBeRemoved[MAX_SIZE];
+    int              m_fireballsToBeRemovedCount;
 };
 #endif // LEVEL_H

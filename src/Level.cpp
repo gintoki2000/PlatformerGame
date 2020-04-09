@@ -23,6 +23,7 @@
 #include "Slime.h"
 #include "StateManager.h"
 #include "TiledMap.h"
+#include "Tilesets.h"
 #include "WorldRenderer.h"
 #include "box2d/b2_fixture.h"
 #include "tmxlite/Map.hpp"
@@ -51,6 +52,7 @@ Level::Level()
     m_world->SetContactListener(this);
 
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
+	m_worldRenderer->AppendFlags(b2Draw::e_centerOfMassBit);
     m_textureManager = new TextureManager(Locator::getRenderer());
 }
 
@@ -61,14 +63,18 @@ Level::~Level()
     delete m_tiledMap;
     delete m_worldRenderer;
     delete m_fireballs;
-    Mix_FreeMusic(m_music);
-    m_music = nullptr;
-    for (auto t : m_tileSets)
-    {
-        delete t;
-    }
-    m_tileSets.clear();
     delete m_textureManager;
+    delete m_tileSets;
+    Mix_FreeMusic(m_music);
+
+    m_monsters       = nullptr;
+    m_world          = nullptr;
+    m_tiledMap       = nullptr;
+    m_worldRenderer  = nullptr;
+    m_fireballs      = nullptr;
+    m_textureManager = nullptr;
+    m_tileSets       = nullptr;
+    m_music          = nullptr;
 }
 
 Level* Level::create(const std::string& filename)
@@ -95,9 +101,17 @@ findLayer(const std::vector<tmx::Layer::Ptr>& layers,
 bool Level::init(const std::string& filename)
 {
     std::string textures[] = {
-        "asserts/spritesheets/player.png", "asserts/spritesheets/slime.png",
-        "asserts/spritesheets/kobold.png", "asserts/spritesheets/fire-ball.png",
-        "asserts/spritesheets/potions-sheet.png"};
+        "asserts/spritesheets/player.png",
+        "asserts/spritesheets/slime.png",
+        "asserts/spritesheets/kobold.png",
+        "asserts/spritesheets/fire-ball.png",
+        "asserts/spritesheets/potions-sheet.png",
+        "asserts/backgrounds/background1.png",
+        "asserts/backgrounds/background2.png",
+        "asserts/backgrounds/background3.png",
+        "asserts/backgrounds/background4.png",
+        "asserts/backgrounds/background5.png",
+    };
     for (const auto& texture : textures)
     {
         if (!m_textureManager->load(texture))
@@ -120,15 +134,11 @@ bool Level::init(const std::string& filename)
         return false;
     }
     /// load tilesets data
-    m_tileSets.reserve(levelData.getTilesets().size());
-    for (const auto& tileSetData : levelData.getTilesets())
-    {
-        m_tileSets.push_back(new Tileset(tileSetData, Locator::getRenderer()));
-    }
+    m_tileSets = new Tilesets(levelData.getTilesets(), Locator::getRenderer());
 
     /// create soild tiledmap
     const auto& layers     = levelData.getLayers();
-    auto        findResult = findLayer(layers, "tiledmap");
+    auto        findResult = findLayer(layers, "main-layer");
     if (findResult == std::end(layers))
     {
         SDL_Log("Invalid level data!");
@@ -141,29 +151,36 @@ bool Level::init(const std::string& filename)
                    Constances::GAME_HEIGHT;
     m_viewportX = 0;
     /// create ground
-    auto findResult2 = findLayer(layers, "solid-objects");
-    if (findResult == std::end(layers))
-    {
-        SDL_Log("Invalid level data!");
-        return false;
-    }
-    auto solidObjects = (tmx::ObjectGroup*)findResult2->get();
+    /*
+auto findResult2 = findLayer(layers, "solid-objects");
+if (findResult == std::end(layers))
+{
+    SDL_Log("Invalid level data!");
+    return false;
+}
+auto solidObjects = (tmx::ObjectGroup*)findResult2->get();
 
-    for (const auto& solidObject : solidObjects->getObjects())
-    {
+for (const auto& solidObject : solidObjects->getObjects())
+{
 
-        b2BodyDef blockbdef;
-        blockbdef.fixedRotation = true;
-        blockbdef.type          = b2_staticBody;
-        blockbdef.position.x    = solidObject.getPosition().x / Constances::PPM;
-        blockbdef.position.y    = solidObject.getPosition().y / Constances::PPM;
+    b2BodyDef blockbdef;
+    blockbdef.fixedRotation = true;
+    blockbdef.type          = b2_staticBody;
+    blockbdef.position.x    = solidObject.getPosition().x / Constances::PPM;
+    blockbdef.position.y    = solidObject.getPosition().y / Constances::PPM;
 
-        b2FixtureDef blockfdef;
-        blockfdef.shape               = Builder::buildShape(solidObject);
-        blockfdef.filter.categoryBits = CATEGORY_BIT_BLOCK;
-        m_world->CreateBody(&blockbdef)->CreateFixture(&blockfdef);
-        delete blockfdef.shape;
-    }
+    b2FixtureDef blockfdef;
+    blockfdef.shape               = Builder::buildShape(solidObject);
+    blockfdef.filter.categoryBits = CATEGORY_BIT_BLOCK;
+    m_world->CreateBody(&blockbdef)->CreateFixture(&blockfdef);
+    delete blockfdef.shape;
+}
+    */
+	m_backgrounds[0] = m_textureManager->get("asserts/backgrounds/background1.png");
+	m_backgrounds[1] = m_textureManager->get("asserts/backgrounds/background2.png");
+	m_backgrounds[2] = m_textureManager->get("asserts/backgrounds/background3.png");
+	m_backgrounds[3] = m_textureManager->get("asserts/backgrounds/background4.png");
+	m_backgrounds[4] = m_textureManager->get("asserts/backgrounds/background5.png");
     m_player = new Player(this);
     Mix_PlayMusic(m_music, -1);
     m_HUD = new HUD(this);
@@ -222,15 +239,29 @@ void Level::render(float deltaTime)
 {
 
     tick(deltaTime);
-    SDL_SetRenderDrawColor(Locator::getRenderer(), 0x00, 0x00, 0x00, 0xff);
-    SDL_RenderClear(Locator::getRenderer());
-    m_monstersToBeRemovedCount = 0;
+	SDL_Renderer* renderer = Locator::getRenderer();
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+    SDL_RenderClear(renderer);
+
+	//draw backgrounds
+	int bgw, bgh;
+	SDL_QueryTexture(m_backgrounds[0], nullptr, nullptr, &bgw, &bgh);
+	SDL_Rect bgdst;
+	bgdst.x = -m_viewport.x;
+	bgdst.y = m_tiledMap->getHeight() * m_tiledMap->getTileHeight() - bgh - m_viewport.y;
+	bgdst.w = bgw;
+	bgdst.h = bgh;
+	for (int i = 0; i < NUM_BACKGROUNDS; ++i)
+	{
+		SDL_RenderCopy(renderer, m_backgrounds[i], nullptr, &bgdst);
+	}
+
     m_tiledMap->paint();
     m_monsters->paint();
     m_player->paint();
     m_fireballs->paint();
     m_HUD->paint();
-    m_world->DrawDebugData();
+     m_world->DrawDebugData();
 }
 
 void Level::addMonster(Monster* monster) { m_monsters->addObject(monster); }
@@ -247,13 +278,11 @@ b2World* Level::getWorld() const { return m_world; }
 
 Player* Level::getPlayer() const { return m_player; }
 
-const std::vector<Tileset*>& Level::getTilesets() const { return m_tileSets; }
+Tilesets* Level::getTilesets() const { return m_tileSets; }
 
 void Level::setPaused(bool paused) { m_isPaused = paused; }
 
-void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
-{
-}
+void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold) {}
 
 void Level::BeginContact(b2Contact* contact)
 {
@@ -267,11 +296,10 @@ void Level::BeginContact(b2Contact* contact)
         if (objectB != nullptr &&
             objectB->getGameObjectType() == GAME_OBJECT_TYPE_MONSTER)
         {
-            //Fireball* fireball = (Fireball*)objectA;
-            Monster*  monster  = (Monster*)objectB;
+            Monster* monster = (Monster*)objectB;
             if (!monster->isDead())
             {
-                monster->getHit(1);
+                monster->getHit(10);
             }
         }
     }
@@ -281,11 +309,10 @@ void Level::BeginContact(b2Contact* contact)
         if (objectB != nullptr &&
             objectB->getGameObjectType() == GAME_OBJECT_TYPE_SPELL)
         {
-            //Fireball* fireball = (Fireball*)objectB;
-            Monster*  monster  = (Monster*)objectA;
+            Monster* monster = (Monster*)objectA;
             if (!monster->isDead())
             {
-                monster->getHit(1);
+                monster->getHit(10);
             }
         }
     }

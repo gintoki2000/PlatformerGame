@@ -4,7 +4,5 @@
 #include "Tile.h"
 class Cell : public TileLayerCell
 {
-  public:
-    bool isSoild() { return ((Tile*)getTile())->isSolid(); }
 };
 #endif // CELL_H

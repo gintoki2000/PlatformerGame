@@ -7,6 +7,7 @@ class Audio
     enum ID
     {
         FIREBALL,
+        LANDING,
         NUM_SOUNDS
     };
     Audio();
