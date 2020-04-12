@@ -1,7 +1,7 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 #include "AssertManager.h"
-#include "NTRect.h"
+#include "Rect.h"
 #include "SDL_mixer.h"
 #include "WorldRenderer.h"
 #include "box2d/box2d.h"
@@ -50,7 +50,7 @@ class Level : public b2ContactListener
     /// data fields
     bool             m_isPaused;
     Player*          m_player;
-    ObjectList*      m_monsters;
+
     Tilesets*        m_tileSets;
     b2World*         m_world;
     TiledMap*        m_tiledMap;
@@ -59,12 +59,14 @@ class Level : public b2ContactListener
     TextureManager*  m_textureManager;
     float            m_viewportX;
     Mix_Music*       m_music;
-    ObjectList*      m_fireballs;
+
     HUD*             m_HUD;
     SDL_Texture*     m_backgrounds[NUM_BACKGROUNDS];
+    /*
     Monster*         m_monstersToBeRemoved[MAX_SIZE];
     int              m_monstersToBeRemovedCount;
     Fireball*        m_fireballsToBeRemoved[MAX_SIZE];
     int              m_fireballsToBeRemovedCount;
+    */
 };
 #endif // LEVEL_H

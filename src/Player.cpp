@@ -10,31 +10,36 @@
 #include "Locator.h"
 #include "Math.h"
 #include "PlayerCutSkill.h"
-#include "PlayerDashSkill.h"
 #include "PlayerFireBallSkill.h"
 #include "PlayerSkill.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
-const float Player::MAX_RUN_SPEED = 8.f;
-Player::Player(Level* level) : GameObject(GAME_OBJECT_TYPE_PLAYER, level)
+#include "box2d/b2_body.h"
+const float           Player::MAX_RUN_SPEED   = 8.f;
+PlayerIdle1State      Player::idle1State      = PlayerIdle1State();
+PlayerIdle2State      Player::idle2State      = PlayerIdle2State();
+PlayerRunState        Player::runState        = PlayerRunState();
+PlayerJumpState       Player::jumpState       = PlayerJumpState();
+PlayerSomersaultState Player::somersaultState = PlayerSomersaultState();
+PlayerFallState       Player::fallState       = PlayerFallState();
+PlayerCrouchState     Player::crouchState     = PlayerCrouchState();
+PlayerHurtState       Player::hurtState       = PlayerHurtState();
+PlayerDieState        Player::dieState        = PlayerDieState();
+PlayerAirJumpState    Player::airJumpState    = PlayerAirJumpState();
+Player::Player(Level* level) : GameObject(level)
 {
     m_body        = nullptr;
     m_spriteSheet = nullptr;
     m_animator    = nullptr;
     m_state       = nullptr;
-
-    for (int i = 0; i < NUM_SKILLS; ++i)
-    {
-        m_skills[i] = nullptr;
-    }
     m_activeSkill = nullptr;
 
     initGraphicsComponent();
     initPhysicsComponent();
     resetMembers();
 
-    setSkill(new PlayerFireballSkill(), 0);
-    setSkill(new PlayerCutSkill(), 1);
+    setSkillA(new PlayerFireballSkill());
+    setSkillB(new PlayerCutSkill());
 }
 
 Player::~Player()
@@ -42,11 +47,8 @@ Player::~Player()
     m_body->GetWorld()->DestroyBody(m_body);
     delete m_animator;
     delete m_spriteSheet;
-    delete m_state;
-    for (int i = 0; i < NUM_SKILLS; ++i)
-    {
-        delete m_skills[i];
-    }
+    delete m_skillA;
+    delete m_skillB;
 
     m_body        = nullptr;
     m_animator    = nullptr;
@@ -81,8 +83,8 @@ bool Player::initGraphicsComponent()
     anims[ANIM_CORNER_JUMP]   = new Animation(m_spriteSheet, 73, 2, 1.f / 8.f);
     anims[ANIM_WALL_SLIDE]    = new Animation(m_spriteSheet, 75, 2, 1.f / 8.f);
     anims[ANIM_WALL_CLIMB]    = new Animation(m_spriteSheet, 77, 4, 1.f / 8.f);
-    anims[ANIM_CAST_SPELL]    = new Animation(m_spriteSheet, 85, 4, 1.f / 8.f);
-    anims[ANIM_CAST_LOOP]     = new Animation(m_spriteSheet, 89, 4, 1.f / 8.f);
+    anims[ANIM_CAST_SPELL]    = new Animation(m_spriteSheet, 85, 4, 1.f / 12.f);
+    anims[ANIM_CAST_LOOP]     = new Animation(m_spriteSheet, 89, 4, 1.f / 15.f);
     anims[ANIM_USE_ITEM]      = new Animation(m_spriteSheet, 93, 3, 1.f / 8.f);
     anims[ANIM_AIR_ATK_1]     = new Animation(m_spriteSheet, 96, 4, 1.f / 8.f);
     anims[ANIM_AIR_ATK_2]     = new Animation(m_spriteSheet, 100, 3, 1.f / 8.f);
@@ -100,6 +102,7 @@ bool Player::initGraphicsComponent()
     anims[ANIM_CAST_LOOP]->setPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_ANIMS);
+    m_animator->setOwner(this);
     m_animator->setOriginX(SPRITE_WIDTH / 2);
     m_animator->setOriginY(SPRITE_HEIGHT / 2);
     return true;
@@ -156,14 +159,19 @@ void Player::resetMembers()
     m_groundedRemember             = 0.f;
     m_groundedRememberTime         = 1.5f;
     m_horiziontalAcceleration      = 0.f;
-    m_horizontalDampingWhenStoping = 0.8f;
-    m_horizontalDampingBasic       = 0.7f;
-    m_horizontalDampingWhenTurning = 0.8f;
-    m_extrasJump                   = 1;
+    m_horizontalDampingWhenStoping = 1.f;
+    m_horizontalDampingBasic       = 0.4f;
+    m_horizontalDampingWhenTurning = 0.4f;
+    m_totalExtrasJump              = 1;
     m_extrasJumpCount              = 0;
-    setState(new PlayerIdle1State());
-    setPosition(100.f, 0.f);
+    m_cutJumpHeight                = DEFAULT_CUT_JUMP_HEIGHT;
+    m_runAcceleration              = DEFAULT_RUN_ACCELERATION;
+    m_ableToUseSkill               = true;
+    m_state                        = &idle1State;
+    m_state->enter(*this);
+    // setPosition(100.f, 0.f);
     m_body->SetAwake(true);
+    m_body->SetTransform(b2Vec2(10, 0), (float)m_rotation);
 }
 
 void Player::updateGraphics(float deltaTime)
@@ -171,7 +179,6 @@ void Player::updateGraphics(float deltaTime)
     m_animator->tick(deltaTime);
     m_animator->setFlip(m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL
                                                       : SDL_FLIP_NONE);
-    synchronizeAnimatorTransform();
 }
 
 struct OverlapTestCallback : public b2QueryCallback
@@ -250,20 +257,6 @@ void Player::synchronizeBodyTransform()
     m_body->SetTransform(position, (float)m_rotation);
 }
 
-void Player::synchronizeAnimatorTransform()
-{
-    const auto& viewport = m_level->getViewport();
-    m_animator->setPositionX(m_positionX - viewport.x);
-    m_animator->setPositionY(m_positionY - viewport.y);
-    m_animator->setRotation(m_rotation);
-}
-
-void Player::onPositionChanged()
-{
-    synchronizeBodyTransform();
-    synchronizeAnimatorTransform();
-}
-
 void Player::tick(float deltaTime)
 {
     updatePhysics(deltaTime);
@@ -271,24 +264,7 @@ void Player::tick(float deltaTime)
     updateGraphics(deltaTime);
 }
 
-void Player::paint() { m_animator->paint(Locator::getRenderer()); }
-
-void Player::setHorizontalSpeed(float vx)
-{
-    b2Vec2 vel = m_body->GetLinearVelocity();
-    vel.x      = vx;
-    m_body->SetLinearVelocity(vel);
-}
-
-void Player::stopHorizontalMovement() { setHorizontalSpeed(0.f); }
-
-void Player::stopVerticalMovement()
-{
-
-    b2Vec2 vel = m_body->GetLinearVelocity();
-    vel.y      = 0.f;
-    m_body->SetLinearVelocity(vel);
-}
+void Player::paint() { m_animator->paint(); }
 
 void Player::updateLogic(float deltaTime)
 {
@@ -299,7 +275,7 @@ void Player::updateLogic(float deltaTime)
     if (m_isGrounded)
     {
         resetGroundedRemember();
-        m_extrasJumpCount = m_extrasJump;
+        m_extrasJumpCount = m_totalExtrasJump;
     }
     m_jumpPressedRemember -= deltaTime;
     if (Input::isButtonBPressed())
@@ -310,62 +286,37 @@ void Player::updateLogic(float deltaTime)
     {
         if (m_activeSkill->tick(*this, deltaTime))
         {
+            m_activeSkill->exit(*this);
             m_activeSkill = nullptr;
         }
         return;
     }
-    for (int i = 0; i < NUM_SKILLS; ++i)
+    if (m_skillA->activate(*this))
     {
-        if (m_skills[i] != nullptr && m_skills[i]->activate(*this))
-        {
-            m_activeSkill = m_skills[i];
-            return;
-        }
+        m_activeSkill = m_skillA;
+        m_activeSkill->enter(*this);
     }
-    setState(m_state->tick(deltaTime));
-}
-
-bool Player::isDead() const { return m_hitPoints == 0; }
-
-bool Player::isGrounded() const { return m_isGrounded; }
-
-void Player::getHit(int damage)
-{
-    if (m_status == STATUS_NORMAL)
+    else if (m_skillB->activate(*this))
     {
-        m_hitPoints -= damage;
-        if (m_hitPoints <= 0)
-        {
-            m_hitPoints = 0;
-            setState(new PlayerDieState());
-        }
-        else
-        {
-            setState(new PlayerHurtState());
-        }
+        m_activeSkill = m_skillB;
+        m_activeSkill->enter(*this);
     }
-}
-
-void Player::setState(PlayerState* newState)
-{
+    /*
+    if (m_skillA->activate(*this))
+    {
+        m_activeSkill = m_skillA;
+        m_activeSkill->enter(*this);
+    }*/
+    PlayerState* newState = m_state->tick(*this, deltaTime);
     if (newState != nullptr)
     {
-        delete m_state;
+        m_state->exit(*this);
         m_state = newState;
-        m_state->setPlayer(this);
-        m_state->enter();
+        m_state->enter(*this);
     }
 }
 
-void Player::setSkill(PlayerSkill* skill, int slot)
-{
-    SDL_assert(slot >= 0 && slot < NUM_SKILLS);
-    if (m_skills[slot] != nullptr)
-    {
-        delete m_skills[slot];
-    }
-    m_skills[slot] = skill;
-}
+bool Player::isGrounded() const { return m_isGrounded; }
 
 bool Player::justGrounded() const { return !m_prevGroundState && m_isGrounded; }
 
@@ -379,61 +330,66 @@ void Player::resetJumpPressedRemember()
     m_jumpPressedRemember = m_jumpPressedRememberTime;
 }
 
-void Player::setGroundedRemember(float time) { m_groundedRemember = time; }
-
-void Player::setJumpPressedRemember(float time)
+void Player::onBeginContact(b2Contact* contact, b2Fixture* other)
 {
-    m_jumpPressedRemember = time;
 }
+
+void Player::onEndContact(b2Contact* contact, b2Fixture* other)
+{
+}
+
 //**************************************************************************//
 // 								States
 // 																			//
 //**************************************************************************//
 PlayerState::~PlayerState() {}
 
-PlayerState* PlayerOnGroundState::tick(float)
+void PlayerState::enter(Player&) {}
+
+void PlayerState::exit(Player&) {}
+
+PlayerState* PlayerOnGroundState::tick(Player& player, float)
 {
 
     int inputDirection = Input::getHorizontalInputDirection();
     if (Input::isButtonAJustPressed())
     {
     }
-    if (m_player->getJumpPressedRemember() > 0.f &&
-        m_player->getGroundedRemember())
+    if (player.m_jumpPressedRemember > 0.f)
     {
-        return new PlayerJumpState();
+        return &Player::jumpState;
     }
     if (Input::isButtonDownPressed())
     {
-        return new PlayerCrouchState();
+        return &Player::crouchState;
     }
     else if (inputDirection != 0)
     {
-        return new PlayerRunState();
+        return &Player::runState;
     }
-    else if (!m_player->isGrounded())
+    else if (!player.isGrounded())
     {
-        return new PlayerFallState();
+        return &Player::fallState;
     }
     return nullptr;
 }
 
-void PlayerIdle1State::enter()
+void PlayerIdle1State::enter(Player& player)
 {
-    m_player->setHorizontalAcceleration(0.f);
-    m_player->getAnimator()->play(Player::ANIM_IDLE_1, 0.f);
+    player.m_horiziontalAcceleration = 0.f;
+    player.getAnimator()->play(Player::ANIM_IDLE_1, 0.f);
 }
 
-void PlayerIdle2State::enter()
+void PlayerIdle2State::enter(Player& player)
 {
-    m_timer = 0.f;
-    m_player->setHorizontalAcceleration(0.f);
-    m_player->getAnimator()->play(Player::ANIM_IDLE_2, 0.f);
+    m_timer                          = 0.f;
+    player.m_horiziontalAcceleration = 0;
+    player.getAnimator()->play(Player::ANIM_IDLE_2, 0.f);
 }
 
-PlayerState* PlayerIdle2State::tick(float deltaTime)
+PlayerState* PlayerIdle2State::tick(Player& player, float deltaTime)
 {
-    auto newState = PlayerOnGroundState::tick(deltaTime);
+    auto newState = PlayerOnGroundState::tick(player, deltaTime);
     m_timer += deltaTime;
     if (newState != nullptr)
     {
@@ -441,271 +397,282 @@ PlayerState* PlayerIdle2State::tick(float deltaTime)
     }
     else if (m_timer > 3.f)
     {
-        return new PlayerIdle1State();
+        return &Player::idle1State;
     }
     return nullptr;
 }
 
-void PlayerRunState::enter()
+void PlayerRunState::enter(Player& player)
 {
-    m_player->getAnimator()->play(Player::ANIM_RUN, 0.f);
+    player.getAnimator()->play(Player::ANIM_RUN, 0.f);
 }
 
-PlayerState* PlayerRunState::tick(float)
+PlayerState* PlayerRunState::tick(Player& player, float)
 {
     auto inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
-        m_player->setDirection(DIRECTION_LEFT);
+        player.setDirection(DIRECTION_LEFT);
     }
     if (inputDirection > 0)
     {
-        m_player->setDirection(DIRECTION_RIGHT);
+        player.setDirection(DIRECTION_RIGHT);
     }
-    if (m_player->getJumpPressedRemember() > 0.f &&
-        m_player->getGroundedRemember())
+    if (player.m_jumpPressedRemember > 0.f)
     {
-        return new PlayerJumpState();
+        return &Player::jumpState;
     }
-    else if (!m_player->isGrounded())
+    else if (!player.isGrounded())
     {
-        return new PlayerFallState();
+        return &Player::fallState;
     }
     else if (inputDirection == 0)
     {
-        return new PlayerIdle1State();
+        return &Player::idle1State;
     }
     else
     {
-        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
+        player.m_horiziontalAcceleration =
+            player.m_runAcceleration * inputDirection;
     }
     return nullptr;
 }
 
-void PlayerJumpState::enter()
+void PlayerJumpState::enter(Player& player)
 {
-    b2Vec2 vel = m_player->getBody()->GetLinearVelocity();
+    b2Vec2 vel = player.getBody()->GetLinearVelocity();
     vel.y      = -Player::JUMP_VEL;
-    m_player->getBody()->SetLinearVelocity(vel);
-    m_player->getAnimator()->play(Player::ANIM_JUMP, 0.f);
-    m_player->setUnGrounded();
-    m_player->m_jumpPressedRemember = 0.f;
-    m_player->m_groundedRemember    = 0.f;
+    player.getBody()->SetLinearVelocity(vel);
+    player.getAnimator()->play(Player::ANIM_JUMP, 0.f);
+    player.setUnGrounded();
+    player.m_jumpPressedRemember = 0.f;
+    player.m_groundedRemember    = 0.f;
 }
 
-PlayerState* PlayerJumpState::tick(float)
+PlayerState* PlayerJumpState::tick(Player& player, float)
 {
     auto inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
-        m_player->setDirection(DIRECTION_LEFT);
+        player.setDirection(DIRECTION_LEFT);
     }
     if (inputDirection > 0)
     {
-        m_player->setDirection(DIRECTION_RIGHT);
+        player.setDirection(DIRECTION_RIGHT);
     }
     if (Input::isButtonBReleased())
     {
-        b2Vec2 vel = m_player->getBody()->GetLinearVelocity();
+        b2Vec2 vel = player.getBody()->GetLinearVelocity();
         if (vel.y < 0.f)
         {
-            vel.y *= Player::CUT_JUMP_HEIGHT;
-            m_player->getBody()->SetLinearVelocity(vel);
+            vel.y *= player.m_cutJumpHeight;
+            player.getBody()->SetLinearVelocity(vel);
         }
     }
-    if (m_player->isGrounded())
+    if (player.isGrounded())
     {
-        return new PlayerIdle1State();
+        return &Player::idle1State;
     }
-    else if (Input::isButtonBJustPressed() && m_player->m_extrasJumpCount > 0)
+    else if (Input::isButtonBJustPressed() && player.m_extrasJumpCount > 0)
     {
-        --m_player->m_extrasJumpCount;
-        return new PlayerAirJumpState();
+        --player.m_extrasJumpCount;
+        return &Player::airJumpState;
     }
-    else if (m_player->getBody()->GetLinearVelocity().y > 0.f)
+    else if (player.getBody()->GetLinearVelocity().y > 0.f)
     {
-        return new PlayerFallState();
+        return &Player::fallState;
     }
     else if (inputDirection != 0)
     {
-        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
+        player.m_horiziontalAcceleration =
+            player.m_runAcceleration * inputDirection;
     }
     else
     {
-        m_player->setHorizontalAcceleration(0.f);
+        player.m_horiziontalAcceleration = 0.f;
     }
     return nullptr;
 }
 
-void PlayerSomersaultState::enter()
+void PlayerSomersaultState::enter(Player& player)
 {
-    m_player->getAnimator()->play(Player::ANIM_SOMERSULT, 0.f);
+    player.getAnimator()->play(Player::ANIM_SOMERSULT, 0.f);
+    player.m_ableToUseSkill = false;
 }
 
-PlayerState* PlayerSomersaultState::tick(float deltaTime)
+PlayerState* PlayerSomersaultState::tick(Player& player, float deltaTime)
 {
 
     auto inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
-        m_player->setDirection(DIRECTION_LEFT);
+        player.m_direction = DIRECTION_LEFT;
     }
     if (inputDirection > 0)
     {
-        m_player->setDirection(DIRECTION_RIGHT);
+        player.m_direction = DIRECTION_RIGHT;
     }
-    if (m_player->isGrounded())
+    if (player.isGrounded())
     {
-        return new PlayerIdle1State();
+        return &Player::idle1State;
     }
-    else if (m_player->getAnimator()->isCurrentAnimationFinshed())
+    else if (player.getAnimator()->isCurrentAnimationFinshed())
     {
-        return new PlayerFallState();
+        return &Player::fallState;
     }
     else if (inputDirection != 0)
     {
-        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
+        player.m_horiziontalAcceleration =
+            player.m_runAcceleration * inputDirection;
     }
     else
     {
-        m_player->setHorizontalAcceleration(0.f);
+        player.m_horiziontalAcceleration = 0.f;
     }
     return nullptr;
 }
 
-void PlayerFallState::enter()
+void PlayerSomersaultState::exit(Player& player)
 {
-    m_player->getAnimator()->play(Player::ANIM_FALL, 0.f);
+    player.m_ableToUseSkill = true;
 }
 
-PlayerState* PlayerFallState::tick(float)
+void PlayerFallState::enter(Player& player)
+{
+    player.getAnimator()->play(Player::ANIM_FALL, 0.f);
+}
+
+PlayerState* PlayerFallState::tick(Player& player, float)
 {
     int inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
-        m_player->setDirection(DIRECTION_LEFT);
+        player.setDirection(DIRECTION_LEFT);
     }
     if (inputDirection > 0)
     {
-        m_player->setDirection(DIRECTION_RIGHT);
+        player.setDirection(DIRECTION_RIGHT);
     }
-    if (m_player->getJumpPressedRemember() > 0.f &&
-        m_player->getGroundedRemember() > 0.f)
+    if (player.m_jumpPressedRemember > 0.f && player.m_groundedRemember > 0.f)
     {
-        return new PlayerJumpState();
+        return &Player::jumpState;
     }
-    else if (m_player->isGrounded())
+    else if (player.isGrounded())
     {
         Locator::getAudio().play(Audio::LANDING);
         if (inputDirection == 0)
         {
-            return new PlayerIdle1State();
+            return &Player::idle1State;
         }
         else
         {
-            return new PlayerRunState();
+            return &Player::runState;
         }
     }
-    else if (Input::isButtonBJustPressed() && m_player->m_extrasJumpCount > 0)
+    else if (Input::isButtonBJustPressed() && player.m_extrasJumpCount > 0)
     {
-        --m_player->m_extrasJumpCount;
-        return new PlayerAirJumpState();
+        --player.m_extrasJumpCount;
+        return &Player::airJumpState;
     }
     else if (inputDirection != 0)
     {
-        m_player->setHorizontalAcceleration(Player::RUN_ACC * inputDirection);
+        player.m_horiziontalAcceleration =
+            player.m_runAcceleration * inputDirection;
     }
     else
     {
-        m_player->setHorizontalAcceleration(0.f);
+        player.m_horiziontalAcceleration = 0.f;
     }
     return nullptr;
 }
 
-void PlayerHurtState::enter()
+void PlayerHurtState::enter(Player& player)
 {
-    m_player->setStatus(Player::STATUS_HURT);
-    m_player->setHorizontalAcceleration(0.f);
-    m_player->getAnimator()->play(Player::ANIM_HURT, 0.f);
+    player.m_horiziontalAcceleration = 0.f;
+    player.getAnimator()->play(Player::ANIM_HURT, 0.f);
+    player.m_ableToUseSkill = false;
 }
 
-PlayerState* PlayerHurtState::tick(float)
+PlayerState* PlayerHurtState::tick(Player& player, float)
 {
-    if (m_player->getAnimator()->isCurrentAnimationFinshed())
+    if (player.getAnimator()->isCurrentAnimationFinshed())
     {
-        m_player->setStatus(Player::STATUS_NORMAL);
-        if (m_player->isGrounded())
+        if (player.isGrounded())
         {
-            return new PlayerIdle1State();
+            return &Player::idle1State;
         }
         else
         {
-            return new PlayerFallState();
+            return &Player::fallState;
         }
     }
     return nullptr;
 }
 
-void PlayerDieState::enter()
+void PlayerHurtState::exit(Player& player) { player.m_ableToUseSkill = true; }
+
+void PlayerDieState::enter(Player& player)
 {
-    m_player->getAnimator()->play(Player::ANIM_DIE, 0.f);
-    m_player->setStatus(Player::STATTUS_DIE);
+    player.getAnimator()->play(Player::ANIM_DIE, 0.f);
+    player.m_ableToUseSkill = false;
 }
 
-PlayerState* PlayerDieState::tick(float)
+PlayerState* PlayerDieState::tick(Player& player, float)
 {
-    if (m_player->getAnimator()->isCurrentAnimationFinshed())
+    if (player.getAnimator()->isCurrentAnimationFinshed())
     {
-        m_player->resetMembers();
+        player.resetMembers();
     }
     return nullptr;
 }
 
-void PlayerCrouchState::enter()
+void PlayerDieState::exit(Player& player) { player.m_ableToUseSkill = true; }
+
+void PlayerCrouchState::enter(Player& player)
 {
-    m_player->getAnimator()->play(Player::ANIM_CROUCH, 0.f);
+    player.getAnimator()->play(Player::ANIM_CROUCH, 0.f);
 }
 
-PlayerState* PlayerCrouchState::tick(float)
+PlayerState* PlayerCrouchState::tick(Player& player, float)
 {
     auto inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
-        m_player->setDirection(DIRECTION_LEFT);
+        player.setDirection(DIRECTION_LEFT);
     }
     if (inputDirection > 0)
     {
-        m_player->setDirection(DIRECTION_RIGHT);
+        player.setDirection(DIRECTION_RIGHT);
     }
     if (Input::isButtonUpPressed())
     {
-        return new PlayerIdle1State();
+        return &Player::idle1State;
     }
     return nullptr;
 }
 
-void PlayerAirJumpState::enter()
+void PlayerAirJumpState::enter(Player& player)
 {
-    m_player->getAnimator()->play(Player::ANIM_JUMP, 0.f);
-    b2Vec2 vel = m_player->getBody()->GetLinearVelocity();
+    player.getAnimator()->play(Player::ANIM_JUMP, 0.f);
+    b2Vec2 vel = player.getBody()->GetLinearVelocity();
     vel.y      = -Player::JUMP_VEL;
-    m_player->getBody()->SetLinearVelocity(vel);
+    player.getBody()->SetLinearVelocity(vel);
 }
 
-PlayerState* PlayerAirJumpState::tick(float)
+PlayerState* PlayerAirJumpState::tick(Player& player, float)
 {
     int inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
-        m_player->setDirection(DIRECTION_LEFT);
+        player.setDirection(DIRECTION_LEFT);
     }
     if (inputDirection > 0)
     {
-        m_player->setDirection(DIRECTION_RIGHT);
+        player.setDirection(DIRECTION_RIGHT);
     }
-    if (m_player->getAnimator()->isCurrentAnimationFinshed())
+    if (player.getAnimator()->isCurrentAnimationFinshed())
     {
-        return new PlayerSomersaultState();
+        return &Player::somersaultState;
     }
     return nullptr;
 }

@@ -1,5 +1,5 @@
 #include "Slime.h"
-#include "Animation.h"
+/*#include "Animation.h"
 #include "Animator.h"
 #include "Constances.h"
 #include "Enums.h"
@@ -244,4 +244,4 @@ void Slime::die()
     setState(STATE_DIE, 0.f);
     m_animator->play(ANIM_DIE, 0.f);
 }
-
+*/

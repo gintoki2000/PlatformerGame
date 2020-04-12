@@ -1,6 +1,6 @@
 #ifndef SLIME_H
 #define SLIME_H
-#include "Constances.h"
+/*#include "Constances.h"
 #include "Monster.h"
 #include "SpriteSheet.h"
 class Animator;
@@ -60,5 +60,5 @@ class Slime : public Monster
     static constexpr float ATTACK_DISTANCE   = Constances::TILE_SIZE * 1;
     static constexpr float MOVE_SPEED        = 1.f;
     static constexpr float MOVE_SPPED_2      = 15.f;
-};
+};*/
 #endif // SLIME_H

@@ -10,7 +10,7 @@
 #include "SpriteSheet.h"
 Fireball::Fireball(Level* level, const b2Vec2& initialPosition,
                    const b2Vec2& speed) :
-    GameObject(GAME_OBJECT_TYPE_SPELL, level)
+    GameObject(level)
 {
     SDL_Texture* texture =
         level->getTextureManager()->get("asserts/spritesheets/fire-ball.png");

@@ -14,7 +14,7 @@
 #include "MainState.h"
 #include "Math.h"
 #include "Monster.h"
-#include "NTRect.h"
+#include "Rect.h"
 #include "ObjectList.h"
 #include "Player.h"
 #include "SDL_mixer.h"
@@ -34,44 +34,44 @@
 #include <vector>
 Level::Level()
 {
-    m_world                     = new b2World(Constances::GRAVITY);
+    m_world = new b2World(Constances::GRAVITY);
+    /*
     m_monstersToBeRemovedCount  = 0;
     m_fireballsToBeRemovedCount = 0;
-    m_isPaused                  = false;
-    m_monsters                  = new ObjectList();
-    m_tiledMap                  = nullptr;
-    m_player                    = nullptr;
-    m_viewport.x                = 0;
-    m_viewport.y                = 0;
-    m_viewport.w                = Constances::GAME_WIDTH;
-    m_viewport.h                = Constances::GAME_HEIGHT;
-    m_fireballs                 = new ObjectList();
+    */
+    m_isPaused = false;
+
+    m_tiledMap   = nullptr;
+    m_player     = nullptr;
+    m_viewport.x = 0;
+    m_viewport.y = 0;
+    m_viewport.w = Constances::GAME_WIDTH;
+    m_viewport.h = Constances::GAME_HEIGHT;
+
     m_worldRenderer =
         new WorldRenderer(Locator::getRenderer(), Constances::PPM);
     m_world->SetDebugDraw(m_worldRenderer);
     m_world->SetContactListener(this);
 
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
-	m_worldRenderer->AppendFlags(b2Draw::e_centerOfMassBit);
+	m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
     m_textureManager = new TextureManager(Locator::getRenderer());
 }
 
 Level::~Level()
 {
-    delete m_monsters;
     delete m_world;
     delete m_tiledMap;
     delete m_worldRenderer;
-    delete m_fireballs;
+
     delete m_textureManager;
     delete m_tileSets;
     Mix_FreeMusic(m_music);
 
-    m_monsters       = nullptr;
-    m_world          = nullptr;
-    m_tiledMap       = nullptr;
-    m_worldRenderer  = nullptr;
-    m_fireballs      = nullptr;
+    m_world         = nullptr;
+    m_tiledMap      = nullptr;
+    m_worldRenderer = nullptr;
+
     m_textureManager = nullptr;
     m_tileSets       = nullptr;
     m_music          = nullptr;
@@ -136,7 +136,6 @@ bool Level::init(const std::string& filename)
     /// load tilesets data
     m_tileSets = new Tilesets(levelData.getTilesets(), Locator::getRenderer());
 
-    /// create soild tiledmap
     const auto& layers     = levelData.getLayers();
     auto        findResult = findLayer(layers, "main-layer");
     if (findResult == std::end(layers))
@@ -150,39 +149,18 @@ bool Level::init(const std::string& filename)
     m_viewport.y = m_tiledMap->getHeight() * m_tiledMap->getTileHeight() -
                    Constances::GAME_HEIGHT;
     m_viewportX = 0;
-    /// create ground
-    /*
-auto findResult2 = findLayer(layers, "solid-objects");
-if (findResult == std::end(layers))
-{
-    SDL_Log("Invalid level data!");
-    return false;
-}
-auto solidObjects = (tmx::ObjectGroup*)findResult2->get();
-
-for (const auto& solidObject : solidObjects->getObjects())
-{
-
-    b2BodyDef blockbdef;
-    blockbdef.fixedRotation = true;
-    blockbdef.type          = b2_staticBody;
-    blockbdef.position.x    = solidObject.getPosition().x / Constances::PPM;
-    blockbdef.position.y    = solidObject.getPosition().y / Constances::PPM;
-
-    b2FixtureDef blockfdef;
-    blockfdef.shape               = Builder::buildShape(solidObject);
-    blockfdef.filter.categoryBits = CATEGORY_BIT_BLOCK;
-    m_world->CreateBody(&blockbdef)->CreateFixture(&blockfdef);
-    delete blockfdef.shape;
-}
-    */
-	m_backgrounds[0] = m_textureManager->get("asserts/backgrounds/background1.png");
-	m_backgrounds[1] = m_textureManager->get("asserts/backgrounds/background2.png");
-	m_backgrounds[2] = m_textureManager->get("asserts/backgrounds/background3.png");
-	m_backgrounds[3] = m_textureManager->get("asserts/backgrounds/background4.png");
-	m_backgrounds[4] = m_textureManager->get("asserts/backgrounds/background5.png");
+    m_backgrounds[0] =
+        m_textureManager->get("asserts/backgrounds/background1.png");
+    m_backgrounds[1] =
+        m_textureManager->get("asserts/backgrounds/background2.png");
+    m_backgrounds[2] =
+        m_textureManager->get("asserts/backgrounds/background3.png");
+    m_backgrounds[3] =
+        m_textureManager->get("asserts/backgrounds/background4.png");
+    m_backgrounds[4] =
+        m_textureManager->get("asserts/backgrounds/background5.png");
     m_player = new Player(this);
-    Mix_PlayMusic(m_music, -1);
+    //Mix_PlayMusic(m_music, -1);
     m_HUD = new HUD(this);
     return true;
 }
@@ -190,29 +168,9 @@ for (const auto& solidObject : solidObjects->getObjects())
 void Level::tick(float deltaTime)
 {
     Input::update();
-    if (!m_isPaused)
-    {
-        m_world->Step(deltaTime, 2, 6);
-        if (!m_isPaused)
-        {
-            m_monsters->tick(deltaTime);
-            m_tiledMap->tick(deltaTime);
-            m_player->tick(deltaTime);
-            m_fireballs->tick(deltaTime);
-        }
-        for (int i = 0; i < m_monstersToBeRemovedCount; ++i)
-        {
-            m_monsters->removeObject(m_monstersToBeRemoved[i]);
-        }
-        for (int i = 0; i < m_fireballsToBeRemovedCount; ++i)
-        {
-            m_fireballs->removeObject(m_fireballsToBeRemoved[i]);
-        }
-
-        m_fireballsToBeRemovedCount = 0;
-        m_monstersToBeRemovedCount  = 0;
-    }
     updateViewport(deltaTime);
+    m_player->tick(deltaTime);
+    m_world->Step(deltaTime, 2, 6);
     m_worldRenderer->setViewport(m_viewport);
 
     int    x, y;
@@ -226,50 +184,54 @@ void Level::tick(float deltaTime)
         addMonster(slime);
     }*/
 
+    /*
     if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
     {
         auto kobold = new Koblod(this);
         kobold->setPositionX(x / Constances::SCALE_X + m_viewport.x);
         kobold->setPositionY(y / Constances::SCALE_Y + m_viewport.y);
         addMonster(kobold);
-    }
+    }*/
 }
 
 void Level::render(float deltaTime)
 {
 
     tick(deltaTime);
-	SDL_Renderer* renderer = Locator::getRenderer();
+    SDL_Renderer* renderer = Locator::getRenderer();
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
     SDL_RenderClear(renderer);
 
-	//draw backgrounds
-	int bgw, bgh;
-	SDL_QueryTexture(m_backgrounds[0], nullptr, nullptr, &bgw, &bgh);
-	SDL_Rect bgdst;
-	bgdst.x = -m_viewport.x;
-	bgdst.y = m_tiledMap->getHeight() * m_tiledMap->getTileHeight() - bgh - m_viewport.y;
-	bgdst.w = bgw;
-	bgdst.h = bgh;
-	for (int i = 0; i < NUM_BACKGROUNDS; ++i)
-	{
-		SDL_RenderCopy(renderer, m_backgrounds[i], nullptr, &bgdst);
-	}
+    // draw backgrounds
+    int bgw, bgh;
+    SDL_QueryTexture(m_backgrounds[0], nullptr, nullptr, &bgw, &bgh);
+    SDL_Rect bgdst;
+    bgdst.x = -m_viewport.x;
+    bgdst.y = m_tiledMap->getHeight() * m_tiledMap->getTileHeight() - bgh -
+              m_viewport.y;
+    bgdst.w = bgw;
+    bgdst.h = bgh;
+    for (int i = 0; i < NUM_BACKGROUNDS; ++i)
+    {
+        SDL_RenderCopy(renderer, m_backgrounds[i], nullptr, &bgdst);
+    }
 
     m_tiledMap->paint();
-    m_monsters->paint();
     m_player->paint();
-    m_fireballs->paint();
     m_HUD->paint();
-     m_world->DrawDebugData();
+    m_world->DrawDebugData();
 }
 
-void Level::addMonster(Monster* monster) { m_monsters->addObject(monster); }
+void Level::addMonster(Monster* monster)
+{ /*m_monsters->addObject(monster);*/
+}
 
 void Level::removeMonster(Monster* monster)
 {
+    /*
     SDL_assert(m_monstersToBeRemovedCount < MAX_SIZE);
     m_monstersToBeRemoved[m_monstersToBeRemovedCount++] = monster;
+    */
 }
 
 const Rect& Level::getViewport() const { return m_viewport; }
@@ -282,42 +244,42 @@ Tilesets* Level::getTilesets() const { return m_tileSets; }
 
 void Level::setPaused(bool paused) { m_isPaused = paused; }
 
-void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold) {}
+void Level::PreSolve(b2Contact* /*contact*/, const b2Manifold* /*oldManifold*/)
+{
+}
 
 void Level::BeginContact(b2Contact* contact)
 {
-    b2Fixture*  fixtureA = contact->GetFixtureA();
-    b2Fixture*  fixtureB = contact->GetFixtureB();
-    GameObject* objectA  = (GameObject*)fixtureA->GetBody()->GetUserData();
-    GameObject* objectB  = (GameObject*)fixtureB->GetBody()->GetUserData();
-    if (objectA != nullptr &&
-        objectA->getGameObjectType() == GAME_OBJECT_TYPE_SPELL)
+    b2Fixture* fixtureA = contact->GetFixtureA();
+    b2Fixture* fixtureB = contact->GetFixtureB();
+
+    GameObject* gameObjectA = (GameObject*)fixtureA->GetBody()->GetUserData();
+    GameObject* gameObjectB = (GameObject*)fixtureB->GetBody()->GetUserData();
+    if (gameObjectA != nullptr)
     {
-        if (objectB != nullptr &&
-            objectB->getGameObjectType() == GAME_OBJECT_TYPE_MONSTER)
-        {
-            Monster* monster = (Monster*)objectB;
-            if (!monster->isDead())
-            {
-                monster->getHit(10);
-            }
-        }
+        gameObjectA->onBeginContact(contact, fixtureB);
     }
-    if (objectA != nullptr &&
-        objectA->getGameObjectType() == GAME_OBJECT_TYPE_MONSTER)
+    if (gameObjectB != nullptr)
     {
-        if (objectB != nullptr &&
-            objectB->getGameObjectType() == GAME_OBJECT_TYPE_SPELL)
-        {
-            Monster* monster = (Monster*)objectA;
-            if (!monster->isDead())
-            {
-                monster->getHit(10);
-            }
-        }
+        gameObjectB->onBeginContact(contact, fixtureA);
     }
 }
-void Level::EndContact(b2Contact*) {}
+void Level::EndContact(b2Contact* contact)
+{
+    b2Fixture* fixtureA = contact->GetFixtureA();
+    b2Fixture* fixtureB = contact->GetFixtureB();
+
+    GameObject* gameObjectA = (GameObject*)fixtureA->GetBody()->GetUserData();
+    GameObject* gameObjectB = (GameObject*)fixtureB->GetBody()->GetUserData();
+    if (gameObjectA != nullptr)
+    {
+        gameObjectA->onEndContact(contact, fixtureB);
+    }
+    if (gameObjectB != nullptr)
+    {
+        gameObjectB->onEndContact(contact, fixtureA);
+    }
+}
 
 TextureManager* Level::getTextureManager() const { return m_textureManager; }
 
@@ -331,12 +293,6 @@ void Level::updateViewport(float)
     m_viewport.x = Math::clamp(0.f, levelWidth - m_viewport.w, m_viewportX);
 }
 
-void Level::addFireball(Fireball* fireball)
-{
-    m_fireballs->addObject(fireball);
-}
+void Level::addFireball(Fireball* fireball) {}
 
-void Level::removeFireball(Fireball* fireball)
-{
-    m_fireballsToBeRemoved[m_fireballsToBeRemovedCount++] = fireball;
-}
+void Level::removeFireball(Fireball* fireball) {}

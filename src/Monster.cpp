@@ -1,5 +1,5 @@
 #include "Monster.h"
-#include "Constances.h"
+/*#include "Constances.h"
 #include "Enums.h"
 #include "GameObject.h"
 #include "Level.h"
@@ -8,8 +8,8 @@
 #include "SDL_log.h"
 #include <cmath>
 
-Monster::Monster(Level* level, int monsterType, int hitPoints) :
-    GameObject(GAME_OBJECT_TYPE_MONSTER, level), m_monsterType(monsterType),
+Monster::Monster(Level* level, int hitPoints) :
+    GameObject(level),
     m_hitPoints(hitPoints), m_direction(DIRECTION_LEFT), m_body(nullptr),
     m_animator(nullptr), m_width(Constances::TILE_SIZE),
     m_height(Constances::TILE_SIZE)
@@ -18,8 +18,6 @@ Monster::Monster(Level* level, int monsterType, int hitPoints) :
 
 Monster::~Monster()
 {
-    delete m_animator;
-    m_body->GetWorld()->DestroyBody(m_body);
 }
 void Monster::getHit(int damage)
 {
@@ -138,3 +136,4 @@ void Monster::paint()
     if (m_isVisible)
         m_animator->paint(Locator::getRenderer());
 }
+*/

@@ -8,7 +8,7 @@
 #include "Monster.h"
 #include "Player.h"
 #include "SpriteSheet.h"
-
+/*
 Koblod::Koblod(Level* level) : Monster(level, MONSTER_TYPE_KOBLOD, 20)
 {
     m_width  = WIDTH;
@@ -236,3 +236,4 @@ void Koblod::getHit(int damage)
         }
     }
 }
+*/

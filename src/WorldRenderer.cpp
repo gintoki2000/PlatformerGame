@@ -72,7 +72,6 @@ void WorldRenderer::DrawSolidCircle(const b2Vec2& p, float r, const b2Vec2&,
     rect.y = (p.y - r) * m_ppm - m_viewport.y;
     rect.w = r * 2.f * m_ppm;
     rect.h = r * 2.f * m_ppm;
-	SDL_Log("%f", r * 2.f * m_ppm);
     SDL_SetRenderDrawColor(m_renderer, c.r * 255, c.g * 255, c.b * 255,
                            c.a * 255);
     SDL_RenderDrawRect(m_renderer, &rect);

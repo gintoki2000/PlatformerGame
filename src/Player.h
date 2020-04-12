@@ -8,107 +8,102 @@
 #include "box2d/box2d.h"
 class Level;
 class Animator;
-class Weapon;
-class Spell;
 class Player;
 class PlayerSkill;
 class PlayerState
 {
   public:
     virtual ~PlayerState();
-
-    virtual void         enter()               = 0;
-    virtual PlayerState* tick(float deltaTime) = 0;
-
-    Player* getPlayer() const { return m_player; }
-    void    setPlayer(Player* player) { m_player = player; }
-
-  protected:
-    Player* m_player;
+    virtual void         enter(Player& player);
+    virtual PlayerState* tick(Player& player, float deltaTime) = 0;
+    virtual void         exit(Player& player);
 };
 
 class PlayerOnGroundState : public PlayerState
 {
   public:
-    PlayerState* tick(float deltaTime) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 };
 
 class PlayerIdle1State : public PlayerOnGroundState
 {
-    void enter() override;
+    void enter(Player& player) override;
 };
 
 class PlayerIdle2State : public PlayerOnGroundState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 
     float m_timer;
 };
 
 class PlayerRunState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 };
 
 class PlayerJumpState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 };
 
 class PlayerSomersaultState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
+    void         exit(Player& player) override;
 };
 
 class PlayerFallState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 };
 
 class PlayerHurtState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
+    void         exit(Player& player) override;
 };
 
 class PlayerDieState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
+    void         exit(Player& player) override;
 };
 
 class PlayerCrouchState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 };
 
 class PlayerAirJumpState : public PlayerState
 {
-    void         enter() override;
-    PlayerState* tick(float deltaTime) override;
+    void         enter(Player& player) override;
+    PlayerState* tick(Player& player, float deltaTime) override;
 };
 class Player : public GameObject
 {
 
   public:
-    static constexpr float WIDTH           = 16.f;
-    static constexpr float HEIGHT          = 30.f;
-    static constexpr int   SPRITE_WIDTH    = 50;
-    static constexpr int   SPRITE_HEIGHT   = 37;
-    static constexpr float JUMP_VEL        = 16.f;
-    static constexpr float RUN_ACC         = 2.f;
-    static constexpr float WIDTH_IN_METER  = WIDTH / Constances::PPM;
-    static constexpr float HEIGHT_IN_METER = HEIGHT / Constances::PPM;
-    static constexpr float SLIDE_SPEED     = 8.f;
+    static constexpr float WIDTH                    = 16.f;
+    static constexpr float HEIGHT                   = 30.f;
+    static constexpr int   SPRITE_WIDTH             = 50;
+    static constexpr int   SPRITE_HEIGHT            = 37;
+    static constexpr float JUMP_VEL                 = 16.f;
+    static constexpr float DEFAULT_RUN_ACCELERATION = 2.f;
+    static constexpr float WIDTH_IN_METER           = WIDTH / Constances::PPM;
+    static constexpr float HEIGHT_IN_METER          = HEIGHT / Constances::PPM;
+    static constexpr float SLIDE_SPEED              = 8.f;
     static const float     MAX_RUN_SPEED;
-    static constexpr int   NUM_SKILLS      = 3;
-    static constexpr float CUT_JUMP_HEIGHT = 0.5f;
+    static constexpr int   NUM_SKILLS              = 3;
+    static constexpr float DEFAULT_CUT_JUMP_HEIGHT = 0.5f;
     enum
     {
         ANIM_IDLE_1,
@@ -156,44 +151,21 @@ class Player : public GameObject
     void tick(float deltaTime) override;
     void paint() override;
 
-    bool      isTouchingWall() const;
-    void      getHit(int damage);
-    bool      isDead() const;
-    void      setWeapon(Weapon* weapon);
-    b2Body*   getBody() const { return m_body; }
-    Animator* getAnimator() const { return m_animator; }
-    Direction getDirection() const { return m_direction; }
-    void      setDirection(Direction direction) { m_direction = direction; }
-    int       getHitPoints() const { return m_hitPoints; }
-    int       getManaPoints() const { return m_manaPoints; }
-    int       getMaxHitPoints() const { return m_maxHitPoints; }
-    void      setHorizontalSpeed(float vx);
-    void      stopHorizontalMovement();
-    void      stopVerticalMovement();
-    void      resetMembers();
-    void      setState(PlayerState* newState);
-    Status    getStatus() const { return m_status; }
-    void      setStatus(Status status) { m_status = status; }
-    void      setSkill(PlayerSkill* skill, int slot);
-    void      getSkill(int slot);
-    float     getJumpPressedRemember() const { return m_jumpPressedRemember; }
-    void      resetJumpPressedRemember();
-    void      setJumpPressedRemember(float time);
-    void      setGroundedRemember(float time);
-    bool      isGrounded() const;
-    bool      wasGrounded() const { return m_prevGroundState; }
-    bool      justGrounded() const;
-    float     getGroundedRemember() const { return m_groundedRemember; }
-    void      resetGroundedRemember();
-    void      setUnGrounded() { m_isGrounded = false; }
-    float     getHorizontalAcceleration() const
-    {
-        return m_horiziontalAcceleration;
-    }
-    void setHorizontalAcceleration(float horizontalAcceleration)
-    {
-        m_horiziontalAcceleration = horizontalAcceleration;
-    }
+    b2Body*      getBody() const { return m_body; }
+    Animator*    getAnimator() const { return m_animator; }
+    Direction    getDirection() const { return m_direction; }
+    void         setDirection(Direction direction) { m_direction = direction; }
+    void         resetMembers();
+    PlayerSkill* getSkillA() const { return m_skillA; }
+    void         setSkillA(PlayerSkill* skill) { m_skillA = skill; }
+    PlayerSkill* getSkillB() { return m_skillB; }
+    void         setSkillB(PlayerSkill* skill) { m_skillB = skill; }
+    void         resetJumpPressedRemember();
+    bool         isGrounded() const;
+    bool         wasGrounded() const { return m_prevGroundState; }
+    bool         justGrounded() const;
+    void         resetGroundedRemember();
+    void         setUnGrounded() { m_isGrounded = false; }
 
   private:
     bool initGraphicsComponent();
@@ -201,14 +173,13 @@ class Player : public GameObject
     void updatePhysics(float deltaTime);
     void updateGraphics(float deltaTime);
     void updateLogic(float deltaTime);
-    void onPositionChanged() override;
     void synchronizeBodyTransform();
-    void synchronizeAnimatorTransform();
+    void onBeginContact(b2Contact* contact, b2Fixture* fixture) override;
+    void onEndContact(b2Contact* contact, b2Fixture* fixture) override;
 
     /// asserts
     SpriteSheet* m_spriteSheet;
 
-    bool         m_isWallSliding;
     b2Body*      m_body;
     Animator*    m_animator;
     PlayerState* m_state;
@@ -217,8 +188,11 @@ class Player : public GameObject
     int          m_maxHitPoints;
     int          m_maxManaPoints;
     Status       m_status;
-    PlayerSkill* m_skills[NUM_SKILLS];
     PlayerSkill* m_activeSkill;
+    PlayerSkill* m_skillA;
+    PlayerSkill* m_skillB;
+    bool         m_prevGroundState;
+    bool         m_isGrounded;
 
   public:
     Direction m_direction;
@@ -226,15 +200,27 @@ class Player : public GameObject
     float     m_horizontalDampingWhenStoping;
     float     m_horizontalDampingWhenTurning;
     float     m_horizontalDampingBasic;
-    bool      m_prevGroundState;
-    bool      m_isGrounded;
-    float     m_jumpPressedRememberTime;
-    float     m_groundedRememberTime;
-    float     m_cutJumpHeight;
-    float     m_jumpPressedRemember;
-    float     m_groundedRemember;
-    float     m_maxHoriontalSpeed;
-    int       m_extrasJump;
-    int       m_extrasJumpCount;
+
+    float m_jumpPressedRememberTime;
+    float m_groundedRememberTime;
+    float m_cutJumpHeight;
+    float m_jumpPressedRemember;
+    float m_groundedRemember;
+    float m_maxHoriontalSpeed;
+    int   m_totalExtrasJump;
+    int   m_extrasJumpCount;
+    bool  m_ableToUseSkill;
+    float m_runAcceleration;
+
+    static PlayerIdle1State      idle1State;
+    static PlayerIdle2State      idle2State;
+    static PlayerRunState        runState;
+    static PlayerJumpState       jumpState;
+    static PlayerSomersaultState somersaultState;
+    static PlayerFallState       fallState;
+    static PlayerCrouchState     crouchState;
+    static PlayerHurtState       hurtState;
+    static PlayerDieState        dieState;
+    static PlayerAirJumpState    airJumpState;
 };
 #endif // PLAYER_H

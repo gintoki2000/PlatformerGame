@@ -1,7 +1,7 @@
 #include "Tile.h"
 #include "Builder.h"
-#include "NTTileLayerAnimatedTile.h"
-#include "NTTileLayerStaticTile.h"
+#include "TileLayerAnimatedTile.h"
+#include "TileLayerStaticTile.h"
 
 Tile::Tile(const std::vector<TextureRegion>& staticTiles,
            const tmx::Tileset::Tile&         tileData)

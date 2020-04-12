@@ -6,10 +6,10 @@ PlayerCutSkill::PlayerCutSkill() {}
 
 bool PlayerCutSkill::activate(Player& player)
 {
-    if (player.getStatus() == Player::STATUS_NORMAL &&
+    if (player.m_ableToUseSkill &&
         Input::isButtonAJustPressed())
     {
-        player.stopHorizontalMovement();
+        player.m_horiziontalAcceleration = 0.f;
         player.getAnimator()->pushState(AnimatorState(Player::ANIM_ATK_2));
         return true;
     }

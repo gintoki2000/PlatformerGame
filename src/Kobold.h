@@ -5,6 +5,7 @@
 #include "Monster.h"
 #include "SpriteSheet.h"
 #include "box2d/box2d.h"
+/*
 class Koblod : public Monster
 {
     enum State
@@ -57,5 +58,6 @@ class Koblod : public Monster
     static constexpr int HEIGHT           = 30;
     static constexpr int ACTIVATE_RUN_DIS = 4 * 16;
     static constexpr int ACTIVATE_ATK_DIS = 2 * 16;
-};
+};*/
 #endif // KOBLOD_H
+

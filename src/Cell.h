@@ -1,6 +1,6 @@
 #ifndef CELL_H
 #define CELL_H
-#include "NTTileLayerCell.h"
+#include "TileLayerCell.h"
 #include "Tile.h"
 class Cell : public TileLayerCell
 {

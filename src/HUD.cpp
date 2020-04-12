@@ -22,6 +22,7 @@ void HUD::tick(float deltaTime)
 
 void HUD::paint()
 {
+    /*
     SDL_Renderer* renderer = Locator::getRenderer();
     const Sprite* sprite = m_animatedPotions[ANIM_RED_POTION]->getCurrentSprite(m_animationTimeState);
     SDL_Rect redPotionDst;
@@ -51,4 +52,5 @@ void HUD::paint()
     SDL_RenderDrawRect(renderer, &border);
     SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 0xff);
     SDL_RenderFillRect(renderer, &hitPointsBar);
+    */
 }

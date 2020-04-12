@@ -1,6 +1,6 @@
 #include "Tileset.h"
-#include "NTRect.h"
-#include "NTTileLayerTile.h"
+#include "Rect.h"
+#include "TileLayerTile.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
 #include "Tile.h"

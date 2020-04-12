@@ -1,10 +1,10 @@
-#ifndef NT_TMX_TILED_MAP_TILE_H
-#define NT_TMX_TILED_MAP_TILE_H
-#include "NTTileLayerTile.h"
+#ifndef TMX_TILED_MAP_TILE_H
+#define TMX_TILED_MAP_TILE_H
+#include "TileLayerTile.h"
 #include "box2d/box2d.h"
 #include "tmxlite/Tileset.hpp"
 #include <vector>
-class Tile : public NTTileLayerTile
+class Tile : public TileLayerTile
 {
   public:
     Tile(const std::vector<TextureRegion>& staticTiles,
@@ -21,8 +21,8 @@ class Tile : public NTTileLayerTile
     b2Shape** getShapes() const { return m_shapes; }
 
   private:
-    NTTileLayerTile* m_tile;
+    TileLayerTile* m_tile;
     b2Shape**        m_shapes;
     int              m_numShapes;
 };
-#endif // NT_TMX_TILED_MAP_TILE_H
+#endif // TMX_TILED_MAP_TILE_H

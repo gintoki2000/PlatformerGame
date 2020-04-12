@@ -13,45 +13,38 @@ PlayerFireballSkill::PlayerFireballSkill() : m_phrase(0), m_timer(0.f) {}
 
 bool PlayerFireballSkill::activate(Player& player)
 {
-    int    mouseX, mouseY;
-    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
-    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+    if (Input::isButtonAJustPressed() && Input::isButtonUpPressed() && player.m_ableToUseSkill)
     {
-        m_phrase = 0;
+        m_phrase = 1;
         m_timer  = 0.f;
 
         player.getAnimator()->pushState(AnimatorState(Player::ANIM_CAST_SPELL));
-        player.stopHorizontalMovement();
-
-        const SDL_Rect& viewport = player.getLevel()->getViewport();
-
-        mouseX = mouseX / Constances::SCALE_X + viewport.x;
-        mouseY = mouseY / Constances::SCALE_Y + viewport.y;
-
-        Level* level   = player.getLevel();
-        b2Vec2 initPos = player.getBody()->GetPosition();
-        b2Vec2 speed =
-            b2Vec2(mouseX / Constances::PPM, mouseY / Constances::PPM) -
-            initPos;
-		float magnitude = speed.Length();
-		speed.x /= magnitude;
-		speed.y /= magnitude;
-		speed.x *= 16.f;
-		speed.y *= 16.f;
-        Fireball* fireball = new Fireball(level, initPos, speed);
-        level->addFireball(fireball);
+        player.m_horiziontalAcceleration = 0.f;
 
         return true;
     }
     return false;
 }
 
-bool PlayerFireballSkill::tick(Player& player, float)
+bool PlayerFireballSkill::tick(Player& player, float deltaTime)
 {
-    if (player.getAnimator()->isCurrentAnimationFinshed())
+    if (m_phrase == 1)
     {
-        player.getAnimator()->popState();
-        return true;
+        if (player.getAnimator()->isCurrentAnimationFinshed())
+        {
+            player.getAnimator()->changeState(AnimatorState(Player::ANIM_CAST_LOOP));
+            m_phrase = 2;
+            m_timer = 0.f;
+        }
+    }
+    else if (m_phrase == 2)
+    {
+        m_timer += deltaTime;
+        if (m_timer >= .5f)
+        {
+            player.getAnimator()->popState();
+            return true;
+        }
     }
     return false;
 }

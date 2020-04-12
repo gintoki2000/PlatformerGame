@@ -3,6 +3,7 @@
 #include "Animation.h"
 #include "NTTextureRegion.h"
 #include "SDL_render.h"
+class GameObject;
 struct AnimatorState
 {
     AnimatorState()
@@ -39,7 +40,7 @@ class Animator
 
     void play(int index, float initialTime);
     void tick(float deltaTime);
-    void paint(SDL_Renderer* renderer);
+    void paint();
     void pause();
     void resume(); 
     bool isCurrentAnimationFinshed();
@@ -50,37 +51,27 @@ class Animator
 	void 			 setElapsedTime(float elapsedTime);
     bool             isPaused() const; 
     void             setPaused(bool paused); 
-    int              getPositionX() const { return m_position.x; }
-    void             setPositionX(int x) { m_position.x = x; }
-    int              getPositionY() const { return m_position.y; }
-    void             setPositionY(int y) { m_position.y = y; }
     int              getOriginX() const { return m_origin.x; }
     void             setOriginX(int originX) { m_origin.x = originX; }
     int              getOriginY() const { return m_origin.y; }
     void             setOriginY(int originY) { m_origin.y = originY; }
     SDL_RendererFlip getFlip() const { return m_flip; }
     void             setFlip(SDL_RendererFlip flip) { m_flip = flip; }
-    double           getRotation() const { return m_rotation; }
-    void             setRotation(double rotation) { m_rotation = rotation; }
     Animation*       getCurrentAnimation() const;
 
     void pushState(const AnimatorState& state);
     void popState();
     void changeState(const AnimatorState& state);
 
+    void setOwner(GameObject* gameObject) { m_owner = gameObject; }
+    GameObject* getOwner() const { return m_owner;}
+
   private:
-    AnimatorState&       getCurrentState() { return m_states[m_numStates - 1]; }
-    const AnimatorState& getCurrentState() const
-    {
-        return m_states[m_numStates - 1];
-    }
     Animation**      m_animations;
     int              m_numAnimations;
-    SDL_Rect         m_dstrect;
-    SDL_Point        m_position;
     SDL_Point        m_origin;
-    double           m_rotation;
     SDL_RendererFlip m_flip;
+    GameObject*      m_owner;
 
     static constexpr int MAX_STATES = 5;
     AnimatorState        m_states[MAX_STATES];

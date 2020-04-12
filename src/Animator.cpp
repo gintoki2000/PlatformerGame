@@ -1,6 +1,8 @@
 #include "Animator.h"
 #include "SDL_render.h"
-
+#include "GameObject.h"
+#include "Level.h"
+#include "Locator.h"
 Animator::Animator(Animation* animations[], int numAnimations)
 {
     m_numAnimations = numAnimations;
@@ -11,9 +13,8 @@ Animator::Animator(Animation* animations[], int numAnimations)
     }
 	m_numStates = 0;
 	setOriginX(0);
-	setOriginY(0);
-	setRotation(0.0);
-	setFlip(SDL_FLIP_NONE);
+    setOriginY(0);
+    setFlip(SDL_FLIP_NONE);
 	pushState(AnimatorState());
 }
 Animator::~Animator()
@@ -32,35 +33,42 @@ void Animator::play(int index, float initialTime)
 
 void Animator::tick(float deltaTime)
 {
-    AnimatorState& state = getCurrentState();
+    AnimatorState& state = m_states[m_numStates - 1];
     if (!state.isPaused)
     {
         state.elapsedTime += deltaTime;
     }
 }
 
-void Animator::paint(SDL_Renderer* renderer)
+void Animator::paint()
 {
-    AnimatorState& state     = getCurrentState();
-    Animation*     animation = m_animations[state.index];
-    const Sprite*  sprite    = animation->getCurrentSprite(state.elapsedTime);
-    m_dstrect.x              = m_position.x - m_origin.x;
-    m_dstrect.y              = m_position.y - m_origin.y;
-    m_dstrect.w              = sprite->getWidth();
-    m_dstrect.h              = sprite->getHeight();
-    sprite->draw(renderer, &m_dstrect, m_rotation, &m_origin, m_flip);
+    const Sprite* sprite = getCurrentAnimation()->getCurrentSprite(getElapsedTime());
+    const SDL_Rect& viewport = m_owner->m_level->getViewport();
+    SDL_Renderer* renderer = Locator::getRenderer();
+    SDL_Rect dstrect;
+    dstrect.x = m_owner->m_positionX - m_origin.x;
+    dstrect.y = m_owner->m_positionY - m_origin.y;
+    dstrect.w = sprite->getWidth();
+    dstrect.h = sprite->getHeight();
+
+    if (SDL_HasIntersection(&dstrect, &viewport))
+    {
+        dstrect.x -= viewport.x;
+        dstrect.y -= viewport.y;
+        sprite->draw(renderer, &dstrect, m_owner->m_rotation, &m_origin, m_flip);
+    }
+
 }
 
 Animation* Animator::getCurrentAnimation() const
 {
 
-    return m_animations[getCurrentState().index];
+    return m_animations[m_states[m_numStates - 1].index];
 }
 
 bool Animator::isCurrentAnimationFinshed()
 {
-    const AnimatorState& state = getCurrentState();
-    return m_animations[state.index]->isFinished(state.elapsedTime);
+    return getCurrentAnimation()->isFinished(getElapsedTime());
 }
 
 void Animator::pushState(const AnimatorState& state)
@@ -80,15 +88,15 @@ void Animator::changeState(const AnimatorState& state)
     m_states[m_numStates - 1] = state;
 }
 
-int Animator::getAnimationIndex() const { return getCurrentState().index; }
+int Animator::getAnimationIndex() const { return m_states[m_numStates - 1].index; }
 
-float Animator::getElapsedTime() const { return getCurrentState().elapsedTime; }
+float Animator::getElapsedTime() const { return m_states[m_numStates - 1].elapsedTime; }
 
 void Animator::setElapsedTime(float elapsedTime)
 {
-    getCurrentState().elapsedTime = elapsedTime;
+    m_states[m_numStates - 1].elapsedTime = elapsedTime;
 }
 
-bool Animator::isPaused() const { return getCurrentState().isPaused; }
+bool Animator::isPaused() const { return m_states[m_numStates - 1].isPaused; }
 
-void Animator::setPaused(bool paused) { getCurrentState().isPaused = paused; }
+void Animator::setPaused(bool paused) { m_states[m_numStates - 1].isPaused = paused; }

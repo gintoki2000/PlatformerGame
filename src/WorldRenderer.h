@@ -1,6 +1,6 @@
 #ifndef WORLD_RENDERER_H
 #define WORLD_RENDERER_H
-#include "NTRect.h"
+#include "Rect.h"
 #include "SDL_render.h"
 #include "box2d/box2d.h"
 class WorldRenderer : public b2Draw

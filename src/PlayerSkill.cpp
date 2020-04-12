@@ -1,7 +1,6 @@
 #include "PlayerSkill.h"
-PlayerSkill::~PlayerSkill()
-{
-	
-}
+PlayerSkill::~PlayerSkill() {}
 
+void PlayerSkill::enter(Player &) {}
 
+void PlayerSkill::exit(Player &) {}
