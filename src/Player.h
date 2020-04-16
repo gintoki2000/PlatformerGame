@@ -1,10 +1,11 @@
 #ifndef PLAYER_H
 #define PLAYER_H
+#include "CollisionCallback.h"
 #include "Constances.h"
 #include "Enums.h"
 #include "GameObject.h"
-#include "NTLayer.h"
 #include "SpriteSheet.h"
+#include "Utils.h"
 #include "box2d/box2d.h"
 class Level;
 class Animator;
@@ -88,7 +89,7 @@ class PlayerAirJumpState : public PlayerState
     void         enter(Player& player) override;
     PlayerState* tick(Player& player, float deltaTime) override;
 };
-class Player : public GameObject
+class Player : public GameObject, public ICollisionCallback
 {
 
   public:
@@ -145,7 +146,7 @@ class Player : public GameObject
     };
 
   public:
-    Player(Level* level);
+    Player();
     ~Player() override;
 
     void tick(float deltaTime) override;
@@ -169,13 +170,11 @@ class Player : public GameObject
 
   private:
     bool initGraphicsComponent();
-    void initPhysicsComponent();
+    void initPhysicsComponent(b2World& world);
     void updatePhysics(float deltaTime);
     void updateGraphics(float deltaTime);
     void updateLogic(float deltaTime);
     void synchronizeBodyTransform();
-    void onBeginContact(b2Contact* contact, b2Fixture* fixture) override;
-    void onEndContact(b2Contact* contact, b2Fixture* fixture) override;
 
     /// asserts
     SpriteSheet* m_spriteSheet;
@@ -193,6 +192,7 @@ class Player : public GameObject
     PlayerSkill* m_skillB;
     bool         m_prevGroundState;
     bool         m_isGrounded;
+    Identifier   m_identifier;
 
   public:
     Direction m_direction;
@@ -222,5 +222,14 @@ class Player : public GameObject
     static PlayerHurtState       hurtState;
     static PlayerDieState        dieState;
     static PlayerAirJumpState    airJumpState;
+
+    // ICollisionCallback interface
+  public:
+    virtual void onBeginContact(const ContactInfo& info) override;
+    virtual void onEndContact(const ContactInfo& info) override;
+    virtual void onPreSolve(const ContactInfo& info,
+                            const b2Manifold&  oldManiflod) override;
+    virtual void onPostSolve(const ContactInfo&      info,
+                             const b2ContactImpulse& impluse) override;
 };
 #endif // PLAYER_H

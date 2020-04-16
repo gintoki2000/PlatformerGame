@@ -43,7 +43,8 @@ void Animator::tick(float deltaTime)
 void Animator::paint()
 {
     const Sprite* sprite = getCurrentAnimation()->getCurrentSprite(getElapsedTime());
-    const SDL_Rect& viewport = m_owner->m_level->getViewport();
+    Camera& camera = m_owner->getLayerManager()->getCamera();
+    const SDL_Rect& viewport = camera.getViewport();
     SDL_Renderer* renderer = Locator::getRenderer();
     SDL_Rect dstrect;
     dstrect.x = m_owner->m_positionX - m_origin.x;

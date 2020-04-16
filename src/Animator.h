@@ -1,7 +1,7 @@
 #ifndef ANIMATOR_H
 #define ANIMATOR_H
 #include "Animation.h"
-#include "NTTextureRegion.h"
+#include "TextureRegion.h"
 #include "SDL_render.h"
 class GameObject;
 struct AnimatorState

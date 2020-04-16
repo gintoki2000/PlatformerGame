@@ -9,7 +9,10 @@ bool PlayerCutSkill::activate(Player& player)
     if (player.m_ableToUseSkill &&
         Input::isButtonAJustPressed())
     {
-        player.m_horiziontalAcceleration = 0.f;
+        if (player.isGrounded())
+        {
+            player.m_horiziontalAcceleration = 0.f;
+        }
         player.getAnimator()->pushState(AnimatorState(Player::ANIM_ATK_2));
         return true;
     }
@@ -18,6 +21,14 @@ bool PlayerCutSkill::activate(Player& player)
 
 bool PlayerCutSkill::tick(Player& player, float)
 {
+	if (!player.isGrounded())
+	{
+		int inputDirection = Input::getHorizontalInputDirection();
+		player.m_horiziontalAcceleration = inputDirection * player.m_runAcceleration * 2.f;
+	}
+    else {
+        player.m_horiziontalAcceleration = 0.f;
+    }
     if (player.getAnimator()->isCurrentAnimationFinshed())
     {
         player.getAnimator()->popState();

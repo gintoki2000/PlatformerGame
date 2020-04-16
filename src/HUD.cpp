@@ -3,10 +3,10 @@
 #include "Player.h"
 #include "Locator.h"
 
-HUD::HUD(Level *level):
-    m_level(level)
+HUD::HUD()
 {
-    SDL_Texture* potionsTexture = level->getTextureManager()->get("asserts/spritesheets/potions-sheet.png");
+    SDL_Texture* potionsTexture = Locator::getTextureManager()
+            .get("asserts/spritesheets/potions-sheet.png");
     m_potionsSheet = new SpriteSheet(potionsTexture, 16, 16);
     m_animatedPotions[ANIM_RED_POTION] = new Animation(m_potionsSheet, 0, 4, Animation::PLAY_MODE_LOOP);
     m_animatedPotions[ANIM_PURPLE_POTION] = new Animation(m_potionsSheet, 4, 4, Animation::PLAY_MODE_LOOP);

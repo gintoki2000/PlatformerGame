@@ -1,19 +1,31 @@
 #ifndef CAMERA_H
 #define CAMERA_H
-#include "NTRect.h"
-class Camera 
+#include "Vec.h"
+#include "Rect.h"
+
+class Camera
 {
-	public:
-		Camera(int width, int height);
+public:
+    Camera();
+    Camera(const Vec2& center, const Vec2& size);
 
-		void setTarget(float x, float y);
-		void tick();
+    void update();
+    void setCenter(const Vec2& center);
+    Vec2 getCenter() const;
+    Vec2 getTarget() const;
+    void setTarget(const Vec2 &target);
 
-		const NTRect& getViewport() const;
-	private:
-		float m_centerX;
-		float m_centerY;
+    Vec2 getSize() const;
+    void setSize(const Vec2 &size);
 
-		NTRect& m_viewport;
+    Rect getViewport() const;
+
+private:
+    Vec2 m_center;
+    Vec2 m_size;
+    Vec2 m_target;
+    mutable Rect m_viewport;
+    mutable bool m_needToUpdateViewport;
 };
-#endif //CAMERA_H
+
+#endif // CAMERA_H

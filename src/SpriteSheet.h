@@ -1,8 +1,7 @@
 #ifndef SPRITE_SHEET_H
 #define SPRITE_SHEET_H
-#include "NTTextureRegion.h"
+#include "TextureRegion.h"
 #include "SDL_render.h"
-#include <vector>
 typedef TextureRegion Sprite;
 class SpriteSheet
 {

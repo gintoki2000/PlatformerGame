@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "Animation.h"
 #include "Animator.h"
-#include "Audio.h"
+#include "AssertManager.h"
 #include "Constances.h"
 #include "Enums.h"
 #include "GameObject.h"
@@ -14,6 +14,7 @@
 #include "PlayerSkill.h"
 #include "SDL_image.h"
 #include "SDL_render.h"
+#include "Utils.h"
 #include "box2d/b2_body.h"
 const float           Player::MAX_RUN_SPEED   = 8.f;
 PlayerIdle1State      Player::idle1State      = PlayerIdle1State();
@@ -26,16 +27,17 @@ PlayerCrouchState     Player::crouchState     = PlayerCrouchState();
 PlayerHurtState       Player::hurtState       = PlayerHurtState();
 PlayerDieState        Player::dieState        = PlayerDieState();
 PlayerAirJumpState    Player::airJumpState    = PlayerAirJumpState();
-Player::Player(Level* level) : GameObject(level)
+Player::Player()
 {
     m_body        = nullptr;
     m_spriteSheet = nullptr;
     m_animator    = nullptr;
     m_state       = nullptr;
     m_activeSkill = nullptr;
+    m_identifier  = Identifier(TAG_PLAYER, this);
 
     initGraphicsComponent();
-    initPhysicsComponent();
+    initPhysicsComponent(*Locator::getWorld());
     resetMembers();
 
     setSkillA(new PlayerFireballSkill());
@@ -58,8 +60,8 @@ Player::~Player()
 
 bool Player::initGraphicsComponent()
 {
-    auto texture =
-        m_level->getTextureManager()->get("asserts/spritesheets/player.png");
+    TextureManager& tmgr    = Locator::getTextureManager();
+    SDL_Texture*    texture = tmgr.get("asserts/spritesheets/player.png");
     SDL_assert(texture != nullptr);
     m_spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
     Animation* anims[NUM_ANIMS];
@@ -108,14 +110,14 @@ bool Player::initGraphicsComponent()
     return true;
 }
 
-void Player::initPhysicsComponent()
+void Player::initPhysicsComponent(b2World& world)
 {
     b2BodyDef bdef;
-    bdef.userData      = this;
+    bdef.userData      = &m_identifier;
     bdef.type          = b2_dynamicBody;
     bdef.fixedRotation = true;
 
-    m_body = m_level->getWorld()->CreateBody(&bdef);
+    m_body = world.CreateBody(&bdef);
 
     b2PolygonShape box;
     box.SetAsBox(WIDTH / 2.f / Constances::PPM, HEIGHT_IN_METER / 2.f * 0.75f,
@@ -138,6 +140,7 @@ void Player::initPhysicsComponent()
     gfdef.shape               = &circle;
     gfdef.restitution         = 0.f;
     gfdef.friction            = 0.f;
+    gfdef.density             = 10000;
     gfdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
     gfdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
 
@@ -160,9 +163,9 @@ void Player::resetMembers()
     m_groundedRememberTime         = 1.5f;
     m_horiziontalAcceleration      = 0.f;
     m_horizontalDampingWhenStoping = 1.f;
-    m_horizontalDampingBasic       = 0.4f;
+    m_horizontalDampingBasic       = 0.85f;
     m_horizontalDampingWhenTurning = 0.4f;
-    m_totalExtrasJump              = 1;
+    m_totalExtrasJump              = 0;
     m_extrasJumpCount              = 0;
     m_cutJumpHeight                = DEFAULT_CUT_JUMP_HEIGHT;
     m_runAcceleration              = DEFAULT_RUN_ACCELERATION;
@@ -227,8 +230,9 @@ void Player::updatePhysics(float deltaTime)
     groundBox.upperBound.y =
         m_body->GetPosition().y + HEIGHT_IN_METER / 2.f + 1.f / Constances::PPM;
 
+    Level* level = (Level*)getLayerManager();
     m_isGrounded =
-        testOverlap(m_level->getWorld(), groundBox, CATEGORY_BIT_BLOCK);
+        testOverlap(Locator::getWorld(), groundBox, CATEGORY_BIT_BLOCK);
 
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x += m_horiziontalAcceleration;
@@ -291,22 +295,16 @@ void Player::updateLogic(float deltaTime)
         }
         return;
     }
-    if (m_skillA->activate(*this))
+    if (m_ableToUseSkill && m_skillA->activate(*this))
     {
         m_activeSkill = m_skillA;
         m_activeSkill->enter(*this);
     }
-    else if (m_skillB->activate(*this))
+    else if (m_ableToUseSkill && m_skillB->activate(*this))
     {
         m_activeSkill = m_skillB;
         m_activeSkill->enter(*this);
     }
-    /*
-    if (m_skillA->activate(*this))
-    {
-        m_activeSkill = m_skillA;
-        m_activeSkill->enter(*this);
-    }*/
     PlayerState* newState = m_state->tick(*this, deltaTime);
     if (newState != nullptr)
     {
@@ -328,14 +326,6 @@ void Player::resetGroundedRemember()
 void Player::resetJumpPressedRemember()
 {
     m_jumpPressedRemember = m_jumpPressedRememberTime;
-}
-
-void Player::onBeginContact(b2Contact* contact, b2Fixture* other)
-{
-}
-
-void Player::onEndContact(b2Contact* contact, b2Fixture* other)
-{
 }
 
 //**************************************************************************//
@@ -389,7 +379,7 @@ void PlayerIdle2State::enter(Player& player)
 
 PlayerState* PlayerIdle2State::tick(Player& player, float deltaTime)
 {
-    auto newState = PlayerOnGroundState::tick(player, deltaTime);
+    PlayerState* newState = PlayerOnGroundState::tick(player, deltaTime);
     m_timer += deltaTime;
     if (newState != nullptr)
     {
@@ -409,7 +399,7 @@ void PlayerRunState::enter(Player& player)
 
 PlayerState* PlayerRunState::tick(Player& player, float)
 {
-    auto inputDirection = Input::getHorizontalInputDirection();
+    int inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
         player.setDirection(DIRECTION_LEFT);
@@ -503,7 +493,7 @@ void PlayerSomersaultState::enter(Player& player)
 PlayerState* PlayerSomersaultState::tick(Player& player, float deltaTime)
 {
 
-    auto inputDirection = Input::getHorizontalInputDirection();
+    int inputDirection = Input::getHorizontalInputDirection();
     if (inputDirection < 0)
     {
         player.m_direction = DIRECTION_LEFT;
@@ -520,7 +510,17 @@ PlayerState* PlayerSomersaultState::tick(Player& player, float deltaTime)
     {
         return &Player::fallState;
     }
-    else if (inputDirection != 0)
+
+    if (Input::isButtonBReleased())
+    {
+        b2Vec2 vel = player.getBody()->GetLinearVelocity();
+        if (vel.y < 0.f)
+        {
+            vel.y *= player.m_cutJumpHeight;
+            player.getBody()->SetLinearVelocity(vel);
+        }
+    }
+    if (inputDirection != 0)
     {
         player.m_horiziontalAcceleration =
             player.m_runAcceleration * inputDirection;
@@ -559,7 +559,6 @@ PlayerState* PlayerFallState::tick(Player& player, float)
     }
     else if (player.isGrounded())
     {
-        Locator::getAudio().play(Audio::LANDING);
         if (inputDirection == 0)
         {
             return &Player::idle1State;
@@ -674,5 +673,49 @@ PlayerState* PlayerAirJumpState::tick(Player& player, float)
     {
         return &Player::somersaultState;
     }
+    if (Input::isButtonBReleased())
+    {
+        b2Vec2 vel = player.getBody()->GetLinearVelocity();
+        if (vel.y < 0.f)
+        {
+            vel.y *= player.m_cutJumpHeight;
+            player.getBody()->SetLinearVelocity(vel);
+        }
+    }
+
+    if (inputDirection != 0)
+    {
+        player.m_horiziontalAcceleration =
+            player.m_runAcceleration * inputDirection;
+    }
+    else
+    {
+        player.m_horiziontalAcceleration = 0.f;
+    }
     return nullptr;
+}
+
+void Player::onBeginContact(const ContactInfo& info)
+{
+	if (info.getOtherIdentifier()->tag == TAG_BLOCK)
+	{
+	}
+}
+
+void Player::onEndContact(const ContactInfo&)
+{
+
+}
+
+void Player::onPreSolve(const ContactInfo& info, const b2Manifold&)
+{
+	if (info.getOtherIdentifier()->tag == TAG_BLOCK)
+	{
+        info.setIsEnabled(false);
+    }
+}
+
+void Player::onPostSolve(const ContactInfo&,
+                         const b2ContactImpulse&)
+{
 }

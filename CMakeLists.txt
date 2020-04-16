@@ -7,13 +7,13 @@ project(my-game LANGUAGES CXX)
 
 set(SOURCE_FILES 
 	#base type 
-	src/NTTextureRegion.cpp
-    src/NTVec.cpp
-    src/NTLayer.cpp
-	src/NTTileLayer.cpp
-	src/NTTileLayerCell.cpp
-	src/NTTileLayerAnimatedTile.cpp
-	src/NTTileLayerStaticTile.cpp
+	src/TextureRegion.cpp
+    src/Vec.cpp
+    src/Layer.cpp
+	src/TileLayer.cpp
+	src/TileLayerCell.cpp
+	src/TileLayerAnimatedTile.cpp
+	src/TileLayerStaticTile.cpp
 
 	src/Constances.cpp
 	src/Main.cpp
@@ -24,12 +24,11 @@ set(SOURCE_FILES
 	src/StateManager.cpp
 	src/Tileset.cpp
 	src/Tile.cpp
-	src/TiledMap.cpp
 	src/Tilesets.cpp
+	src/Cell.cpp
 	src/WorldRenderer.cpp
 	src/Animator.cpp
 	src/Animation.cpp
-	src/ObjectList.cpp
 	src/Level.cpp
 	src/SpriteSheet.cpp
 	src/Input.cpp
@@ -42,12 +41,18 @@ set(SOURCE_FILES
 	src/AssertManager.cpp
 	src/PlayerSkill.cpp
 	src/PlayerCutSkill.cpp
-	src/PlayerDashSkill.cpp
 	src/PlayerFireBallSkill.cpp
 	src/Math.cpp
-	src/Fireball.cpp
     src/HUD.cpp
-	src/Audio.cpp
+	src/Background.cpp
+	src/LevelParser.cpp
+    src/LayerManager.cpp
+    src/ObjectLayer.cpp
+    src/Camera.cpp
+    src/CollisionCallback.cpp
+    src/Destroyable.cpp;
+	src/PositionalLayer.cpp
+	src/ImageLayer.cpp
 )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)

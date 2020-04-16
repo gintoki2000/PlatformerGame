@@ -1,23 +1,20 @@
 #include "TileLayer.h"
+#include "Level.h"
+#include "Locator.h"
+#include "Math.h"
 #include "Rect.h"
+#include "SDL_render.h"
 #include "TextureRegion.h"
 #include "TileLayerCell.h"
 #include "TileLayerTile.h"
-#include "SDL_render.h"
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include "Math.h"
 TileLayer::TileLayer(int width, int height, int tileWidth, int tileHeight)
 {
-    m_width = width;
-    m_height = height;
-    m_tileWidth = tileWidth;
+    m_width      = width;
+    m_height     = height;
+    m_tileWidth  = tileWidth;
     m_tileHeight = tileHeight;
-    m_positionX = 0;
-    m_positionY = 0;
-    int count = m_width * m_height;
-    m_cells = new TileLayerCell*[(unsigned)count];
+    int count    = m_width * m_height;
+    m_cells      = new TileLayerCell*[(unsigned)count];
     for (int i = 0; i < count; ++i)
     {
         m_cells[i] = nullptr;
@@ -34,24 +31,25 @@ TileLayer::~TileLayer()
     delete[] m_cells;
 }
 
+void TileLayer::update(float) {}
 
-void TileLayer::render(SDL_Renderer* renderer, const Rect& viewport)
+void TileLayer::render()
 {
-    if (!isVisible())
-        return;
-    int startX = viewport.left() / m_tileWidth - 1;
-    int startY = viewport.top() / m_tileHeight - 1;
-    int endX = viewport.right() / m_tileWidth + 1;
-    int endY = viewport.bottom() / m_tileHeight + 1;
+    const Rect&   viewport = getManager()->getCamera().getViewport();
+    SDL_Renderer* renderer = Locator::getRenderer();
+    int           startX   = viewport.left() / m_tileWidth - 1;
+    int           startY   = viewport.top() / m_tileHeight - 1;
+    int           endX     = viewport.right() / m_tileWidth + 1;
+    int           endY     = viewport.bottom() / m_tileHeight + 1;
 
     startX = Math::max(0, startX);
     startY = Math::max(0, startY);
-    endX = Math::min(m_width - 1, endX);
-    endY = Math::min(m_height - 1, endY);
+    endX   = Math::min(m_width - 1, endX);
+    endY   = Math::min(m_height - 1, endY);
 
     Rect dstrect;
-    dstrect.x = startX * m_tileWidth + (int)getPositionX();
-    dstrect.y = startY * m_tileHeight + (int)getPositionY();
+    dstrect.x = startX * m_tileWidth + getPositionX();
+    dstrect.y = startY * m_tileHeight + getPositionY();
     dstrect.w = m_tileWidth;
     dstrect.h = m_tileHeight;
     for (int y = startY; y <= endY; ++y)

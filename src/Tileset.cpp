@@ -44,7 +44,7 @@ Tileset::~Tileset()
     SDL_DestroyTexture(m_texture);
 }
 
-Tile* Tileset::getTile(int ID)
+Tile* Tileset::getTile(int ID) const
 {
     if (!hasTile(ID))
         return nullptr;

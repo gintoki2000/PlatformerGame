@@ -9,7 +9,7 @@ class Tileset
 
     ~Tileset();
 
-    Tile* getTile(int ID);
+    Tile* getTile(int ID) const;
 
     int getFirstGID() const { return m_firstGID; }
 

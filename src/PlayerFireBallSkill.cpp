@@ -2,7 +2,6 @@
 #include "Animator.h"
 #include "Constances.h"
 #include "Enums.h"
-#include "Fireball.h"
 #include "Input.h"
 #include "Level.h"
 #include "Player.h"
@@ -45,6 +44,15 @@ bool PlayerFireballSkill::tick(Player& player, float deltaTime)
             player.getAnimator()->popState();
             return true;
         }
+    }
+    int inputDirection = Input::getHorizontalInputDirection();
+    if (inputDirection != 0 && !player.isGrounded())
+    {
+        player.m_horiziontalAcceleration = player.m_runAcceleration;
+    }
+    else
+    {
+        player.m_horiziontalAcceleration = 0.f;
     }
     return false;
 }

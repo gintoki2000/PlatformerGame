@@ -10,8 +10,8 @@ class Tilesets
     Tilesets(const std::vector<tmx::Tileset>& tilesets, SDL_Renderer* renderer);
     ~Tilesets();
 
-    Tile* getTile(int tileID);
-    bool  hasTile(int tileID);
+    Tile* getTile(int tileID) const;
+    bool  hasTile(int tileID) const;
 
   private:
     Tileset** m_items;
