@@ -1,15 +1,7 @@
 #ifndef GAME_OBJECT_H
 #define GAME_OBJECT_H
-#include "Enums.h"
-#include "SDL.h"
-#include "box2d/b2_body.h"
 class ObjectLayer;
 class LayerManager;
-struct LoaderParams
-{
-    float positionX;
-    float positionY;
-};
 class GameObject
 {
 
@@ -34,11 +26,10 @@ class GameObject
     double       getRotation() const;
     virtual void setRotation(double rotation);
 
-
     bool needToRemove() const;
     void scheduleRemove();
 
-    bool         isVisible() const;
+    bool isVisible() const;
     void setIsVisible(bool isVisible);
 
     bool isActive() const;
@@ -46,22 +37,21 @@ class GameObject
 
     void setNeedToRemove(bool needToRemove);
 
-    ObjectLayer *getObjectLayer() const;
-    void setObjectLayer(ObjectLayer *objectLayer);
+    ObjectLayer* getObjectLayer() const;
+    void         setObjectLayer(ObjectLayer* objectLayer);
 
-    LayerManager *getLayerManager() const;
-    void setLayerManager(LayerManager *layerManager);
+    LayerManager* getLayerManager() const;
+    void          setLayerManager(LayerManager* layerManager);
 
-protected:
+  protected:
     friend class Animator;
-    friend class Body;
-    ObjectLayer* m_objectLayer;
+    ObjectLayer*  m_objectLayer;
     LayerManager* m_layerManager;
-    float  m_positionX;
-    float  m_positionY;
-    double m_rotation;
-    bool   m_isVisible;
-    bool   m_isActive;
-    bool   m_needToRemove;
+    float         m_positionX;
+    float         m_positionY;
+    double        m_rotation;
+    bool          m_isVisible;
+    bool          m_isActive;
+    bool          m_needToRemove;
 };
 #endif // GAME_OBJECT_H

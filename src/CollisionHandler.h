@@ -5,33 +5,35 @@
 
 class ContactInfo
 {
-public:
-    ContactInfo(b2Contact* contact, b2Fixture* collider, b2Fixture* otherCollider, Identifier*  indentifier);
+  public:
+    ContactInfo(b2Contact* contact, b2Fixture* collider,
+                b2Fixture* otherCollider, Identifier* indentifier);
 
-    b2Fixture &getCollider() const;
-    b2Fixture &getOtherCollider() const;
-    void setIsEnabled(bool flag) const;
-    bool isEnabled() const;
-	const Identifier* getOtherIdentifier() const;
+    b2Fixture&        getCollider() const;
+    b2Fixture&        getOtherCollider() const;
+    void              setIsEnabled(bool flag) const;
+    bool              isEnabled() const;
+    const Identifier* getOtherIdentifier() const;
 
-
-private:
-    b2Contact* m_contact;
-    b2Fixture* m_collider;
-    b2Fixture* m_otherCollider;
-	Identifier* m_identifier;
+  private:
+    b2Contact*  m_contact;
+    b2Fixture*  m_collider;
+    b2Fixture*  m_otherCollider;
+    Identifier* m_identifier;
 };
 
 class ICollisionHandler
 {
-public:
+  public:
     ICollisionHandler();
     virtual ~ICollisionHandler();
 
-    virtual void onPreSolve(const ContactInfo& info, const b2Manifold& oldManiflod) {};
-    virtual void onBeginContact(const ContactInfo& info) {};
-    virtual void onEndContact(const ContactInfo& info) {};
-    virtual void onPostSolve(const ContactInfo& info, const b2ContactImpulse& impluse) {};
+    virtual void onPreSolve(const ContactInfo& info,
+                            const b2Manifold&  oldManiflod)    = 0;
+    virtual void onBeginContact(const ContactInfo& info)      = 0;
+    virtual void onEndContact(const ContactInfo& info)        = 0;
+    virtual void onPostSolve(const ContactInfo&      info,
+                             const b2ContactImpulse& impluse) = 0;
 };
 
 #endif // COLLISION_HANDLER_H
