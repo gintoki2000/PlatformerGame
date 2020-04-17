@@ -12,9 +12,10 @@
 #include "PlayerCutSkill.h"
 #include "PlayerFireBallSkill.h"
 #include "PlayerSkill.h"
-#include "SDL_image.h"
-#include "SDL_render.h"
+#include "Rect.h"
+#include "SDL_assert.h"
 #include "Utils.h"
+#include "WorldManager.h"
 #include "box2d/b2_body.h"
 const float           Player::MAX_RUN_SPEED   = 8.f;
 PlayerIdle1State      Player::idle1State      = PlayerIdle1State();
@@ -37,7 +38,7 @@ Player::Player()
     m_identifier  = Identifier(TAG_PLAYER, this);
 
     initGraphicsComponent();
-    initPhysicsComponent(*Locator::getWorld());
+    initPhysicsComponent();
     resetMembers();
 
     setSkillA(new PlayerFireballSkill());
@@ -110,8 +111,9 @@ bool Player::initGraphicsComponent()
     return true;
 }
 
-void Player::initPhysicsComponent(b2World& world)
+void Player::initPhysicsComponent()
 {
+    b2World&  world = *WorldManager::getWorld();
     b2BodyDef bdef;
     bdef.userData      = &m_identifier;
     bdef.type          = b2_dynamicBody;
@@ -184,35 +186,6 @@ void Player::updateGraphics(float deltaTime)
                                                       : SDL_FLIP_NONE);
 }
 
-struct OverlapTestCallback : public b2QueryCallback
-{
-    uint16     bitMasks;
-    b2Fixture* fixture;
-    OverlapTestCallback()
-    {
-        bitMasks = 0;
-        fixture  = nullptr;
-    }
-
-    bool ReportFixture(b2Fixture* f) override
-    {
-        if (f->GetFilterData().categoryBits & bitMasks)
-        {
-            this->fixture = f;
-            return false;
-        }
-        return true;
-    }
-};
-
-static bool testOverlap(b2World* world, const b2AABB& box, uint16 bitMasks)
-{
-    OverlapTestCallback callback;
-    callback.bitMasks = bitMasks;
-    world->QueryAABB(&callback, box);
-    return callback.fixture != nullptr;
-}
-
 void Player::updatePhysics(float deltaTime)
 {
     m_positionX       = m_body->GetPosition().x * Constances::PPM;
@@ -220,19 +193,15 @@ void Player::updatePhysics(float deltaTime)
     m_rotation        = m_body->GetAngle();
     m_prevGroundState = m_isGrounded;
 
-    b2AABB groundBox;
-    groundBox.lowerBound.x =
-        m_body->GetPosition().x - WIDTH_IN_METER / 2.f + 5.f / Constances::PPM;
-    groundBox.lowerBound.y =
-        m_body->GetPosition().y + HEIGHT_IN_METER / 2.f - 1.f / Constances::PPM;
-    groundBox.upperBound.x =
-        m_body->GetPosition().x + WIDTH_IN_METER / 2.f - 5.f / Constances::PPM;
-    groundBox.upperBound.y =
-        m_body->GetPosition().y + HEIGHT_IN_METER / 2.f + 1.f / Constances::PPM;
+    const int checkBoxHeight = 6;
+    Rect      groundCheckBox;
+    groundCheckBox.x = getPositionX() - WIDTH / 2;
+    groundCheckBox.y = getPositionY() + HEIGHT / 2 - checkBoxHeight / 2;
+    groundCheckBox.w = WIDTH;
+    groundCheckBox.h = checkBoxHeight;
 
     Level* level = (Level*)getLayerManager();
-    m_isGrounded =
-        testOverlap(Locator::getWorld(), groundBox, CATEGORY_BIT_BLOCK);
+    m_isGrounded = boxCast(groundCheckBox, CATEGORY_BIT_BLOCK);
 
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x += m_horiziontalAcceleration;
@@ -590,6 +559,7 @@ void PlayerHurtState::enter(Player& player)
     player.m_horiziontalAcceleration = 0.f;
     player.getAnimator()->play(Player::ANIM_HURT, 0.f);
     player.m_ableToUseSkill = false;
+	player.m_status = Player::STATUS_HURT;
 }
 
 PlayerState* PlayerHurtState::tick(Player& player, float)
@@ -608,12 +578,17 @@ PlayerState* PlayerHurtState::tick(Player& player, float)
     return nullptr;
 }
 
-void PlayerHurtState::exit(Player& player) { player.m_ableToUseSkill = true; }
+void PlayerHurtState::exit(Player& player)
+{
+    player.m_ableToUseSkill = true;
+    player.m_status         = Player::STATUS_NORMAL;
+}
 
 void PlayerDieState::enter(Player& player)
 {
     player.getAnimator()->play(Player::ANIM_DIE, 0.f);
     player.m_ableToUseSkill = false;
+    player.m_status         = Player::STATTUS_DIE;
 }
 
 PlayerState* PlayerDieState::tick(Player& player, float)
@@ -697,25 +672,45 @@ PlayerState* PlayerAirJumpState::tick(Player& player, float)
 
 void Player::onBeginContact(const ContactInfo& info)
 {
-	if (info.getOtherIdentifier()->tag == TAG_BLOCK)
-	{
-	}
-}
-
-void Player::onEndContact(const ContactInfo&)
-{
-
-}
-
-void Player::onPreSolve(const ContactInfo& info, const b2Manifold&)
-{
-	if (info.getOtherIdentifier()->tag == TAG_BLOCK)
-	{
-        info.setIsEnabled(false);
+    if (info.getOtherIdentifier()->tag == TAG_BLOCK)
+    {
     }
 }
 
-void Player::onPostSolve(const ContactInfo&,
-                         const b2ContactImpulse&)
+void Player::onEndContact(const ContactInfo&) {}
+
+void Player::onPreSolve(const ContactInfo& info, const b2Manifold&)
 {
+    if (info.getOtherIdentifier()->tag == TAG_BLOCK)
+    {
+    }
 }
+
+void Player::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
+
+void Player::takeDamge(int damage) {
+	if (m_status == STATUS_NORMAL)
+	{
+		SDL_assert(m_hitPoints > 0);
+		m_hitPoints -= damage;
+		if (m_hitPoints <= 0)
+		{
+			m_hitPoints = 0; 
+			m_state->exit(*this);
+			m_state = &dieState;
+			m_state->enter(*this);
+		}
+		else 
+		{
+			m_state->exit(*this);
+			m_state = &hurtState;
+			m_state->enter(*this);
+		}
+	}
+}
+
+int Player::getHitPoints() { return m_hitPoints; }
+
+int Player::getMaxHitPoints() { return m_maxHitPoints; }
+
+bool Player::isDead() { return m_hitPoints == 0; }

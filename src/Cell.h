@@ -5,7 +5,7 @@
 #include "TileLayerCell.h"
 #include "Utils.h"
 #include "Vec.h"
-class Cell : public TileLayerCell, public ICollisionCallback
+class Cell : public TileLayerCell, public ICollisionHandler
 {
   public:
     Cell();

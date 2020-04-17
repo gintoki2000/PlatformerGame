@@ -1,7 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
-#include "CollisionCallback.h"
+#include "CollisionHandler.h"
 #include "Constances.h"
+#include "Destroyable.h"
 #include "Enums.h"
 #include "GameObject.h"
 #include "SpriteSheet.h"
@@ -89,7 +90,7 @@ class PlayerAirJumpState : public PlayerState
     void         enter(Player& player) override;
     PlayerState* tick(Player& player, float deltaTime) override;
 };
-class Player : public GameObject, public ICollisionCallback
+class Player : public GameObject, public ICollisionHandler, public IDestroyable
 {
 
   public:
@@ -170,7 +171,7 @@ class Player : public GameObject, public ICollisionCallback
 
   private:
     bool initGraphicsComponent();
-    void initPhysicsComponent(b2World& world);
+    void initPhysicsComponent();
     void updatePhysics(float deltaTime);
     void updateGraphics(float deltaTime);
     void updateLogic(float deltaTime);
@@ -182,11 +183,6 @@ class Player : public GameObject, public ICollisionCallback
     b2Body*      m_body;
     Animator*    m_animator;
     PlayerState* m_state;
-    int          m_hitPoints;
-    int          m_manaPoints;
-    int          m_maxHitPoints;
-    int          m_maxManaPoints;
-    Status       m_status;
     PlayerSkill* m_activeSkill;
     PlayerSkill* m_skillA;
     PlayerSkill* m_skillB;
@@ -200,17 +196,21 @@ class Player : public GameObject, public ICollisionCallback
     float     m_horizontalDampingWhenStoping;
     float     m_horizontalDampingWhenTurning;
     float     m_horizontalDampingBasic;
-
-    float m_jumpPressedRememberTime;
-    float m_groundedRememberTime;
-    float m_cutJumpHeight;
-    float m_jumpPressedRemember;
-    float m_groundedRemember;
-    float m_maxHoriontalSpeed;
-    int   m_totalExtrasJump;
-    int   m_extrasJumpCount;
-    bool  m_ableToUseSkill;
-    float m_runAcceleration;
+    int       m_hitPoints;
+    int       m_manaPoints;
+    int       m_maxHitPoints;
+    int       m_maxManaPoints;
+    float     m_jumpPressedRememberTime;
+    float     m_groundedRememberTime;
+    float     m_cutJumpHeight;
+    float     m_jumpPressedRemember;
+    float     m_groundedRemember;
+    float     m_maxHoriontalSpeed;
+    int       m_totalExtrasJump;
+    int       m_extrasJumpCount;
+    bool      m_ableToUseSkill;
+    float     m_runAcceleration;
+    Status    m_status;
 
     static PlayerIdle1State      idle1State;
     static PlayerIdle2State      idle2State;
@@ -225,11 +225,18 @@ class Player : public GameObject, public ICollisionCallback
 
     // ICollisionCallback interface
   public:
-    virtual void onBeginContact(const ContactInfo& info) override;
-    virtual void onEndContact(const ContactInfo& info) override;
-    virtual void onPreSolve(const ContactInfo& info,
-                            const b2Manifold&  oldManiflod) override;
-    virtual void onPostSolve(const ContactInfo&      info,
-                             const b2ContactImpulse& impluse) override;
+    void onBeginContact(const ContactInfo& info) override;
+    void onEndContact(const ContactInfo& info) override;
+    void onPreSolve(const ContactInfo& info,
+                    const b2Manifold&  oldManiflod) override;
+    void onPostSolve(const ContactInfo&      info,
+                     const b2ContactImpulse& impluse) override;
+
+    // IDestroyable interface
+  public:
+    void takeDamge(int damage) override;
+    int  getHitPoints() override;
+    int  getMaxHitPoints() override;
+    bool isDead() override;
 };
 #endif // PLAYER_H

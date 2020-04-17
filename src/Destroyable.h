@@ -9,9 +9,9 @@ public:
     virtual ~IDestroyable();
 
     virtual void takeDamge(int damage) = 0;
-    virtual void getHitPoints() = 0;
-    virtual void getMaxHitPoints() = 0;
-    virtual void isDead() = 0;
+    virtual int getHitPoints() = 0;
+    virtual int getMaxHitPoints() = 0;
+    virtual bool isDead() = 0;
 };
 
 #endif // DESTROYABLE_H

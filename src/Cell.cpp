@@ -4,10 +4,9 @@
 #include "Locator.h"
 #include "Player.h"
 #include "SDL_assert.h"
-#include "Tile.h"
-#include "TileLayerCell.h"
 #include "Utils.h"
 #include "Vec.h"
+#include "WorldManager.h"
 #include "box2d/b2_fixture.h"
 
 Cell::Cell() : m_identifier(TAG_BLOCK, this), m_body(nullptr) {}
@@ -24,7 +23,7 @@ bool Cell::init(Tile* tile, const Vec2& center)
         bdef.position.y = center.y / Constances::PPM;
         bdef.userData   = &m_identifier;
 
-        m_body = Locator::getWorld()->CreateBody(&bdef);
+        m_body = WorldManager::getWorld()->CreateBody(&bdef);
 
         b2FixtureDef fdef;
         fdef.filter.categoryBits = CATEGORY_BIT_BLOCK;

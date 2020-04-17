@@ -58,17 +58,7 @@ bool LevelParser::parseLevel(Level& level, const tmx::Map& levelData)
         }
     }
 
-	b2World* currentWorld = Locator::getWorld();
-	if (currentWorld != nullptr) 
-	{
-		delete currentWorld;
-		Locator::setWorld(nullptr);
-	}
 
-	Locator::setWorld(new b2World(Constances::GRAVITY));
-
-    Locator::getWorld()->SetDebugDraw(level.m_worldRenderer);
-    Locator::getWorld()->SetContactListener(&level);
 
 
     level.m_tileSets = new Tilesets(levelData.getTilesets(), Locator::getRenderer());

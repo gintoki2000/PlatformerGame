@@ -10,7 +10,6 @@ class Locator
     static SDL_Renderer*   renderer;
     static SDL_Window*     window;
     static TextureManager* textureManager;
-    static b2World* world;
 
   public:
     static void terminate();
@@ -21,7 +20,5 @@ class Locator
     static void            setWindow(SDL_Window* _window);
     static TextureManager& getTextureManager();
     static void            setTextureManager(TextureManager* _textureManager);
-    static b2World*        getWorld();
-    static void            setWorld(b2World *value);
 };
 #endif // LOCATOR_H

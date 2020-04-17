@@ -1,9 +1,5 @@
 #ifndef LEVEL_H
 #define LEVEL_H
-#include "AssertManager.h"
-#include "Layer.h"
-#include "Rect.h"
-#include "SDL_mixer.h"
 #include "WorldRenderer.h"
 #include "box2d/box2d.h"
 #include "LayerManager.h"

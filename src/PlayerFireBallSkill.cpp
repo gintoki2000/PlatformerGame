@@ -45,14 +45,24 @@ bool PlayerFireballSkill::tick(Player& player, float deltaTime)
             return true;
         }
     }
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection != 0 && !player.isGrounded())
+    if (!player.isGrounded())
     {
-        player.m_horiziontalAcceleration = player.m_runAcceleration;
-    }
-    else
-    {
-        player.m_horiziontalAcceleration = 0.f;
+        b2Vec2 vel = player.getBody()->GetLinearVelocity();
+        if (Input::isButtonBReleased() && vel.y < 0.f)
+        {
+            vel.y *= player.m_cutJumpHeight;
+            player.getBody()->SetLinearVelocity(vel);
+        }
+
+        int inputDirection = Input::getHorizontalInputDirection();
+        if (inputDirection != 0)
+        {
+            player.m_horiziontalAcceleration = player.m_runAcceleration;
+        }
+        else
+        {
+            player.m_horiziontalAcceleration = 0.f;
+        }
     }
     return false;
 }

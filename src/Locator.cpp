@@ -5,23 +5,12 @@
 SDL_Renderer* Locator::renderer = nullptr;
 SDL_Window*   Locator::window   = nullptr;
 TextureManager* Locator::textureManager = nullptr;
-b2World* Locator::world = nullptr;
-b2World* Locator::getWorld()
-{
-    return world;
-}
-
-void Locator::setWorld(b2World *value)
-{
-    world = value;
-}
 
 void Locator::terminate()
 {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     delete textureManager;
-	delete world;
     renderer = nullptr;
     window   = nullptr;
     textureManager = nullptr;

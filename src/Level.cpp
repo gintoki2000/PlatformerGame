@@ -2,8 +2,7 @@
 #include "AssertManager.h"
 #include "Background.h"
 #include "Builder.h"
-#include "Cell.h"
-#include "CollisionCallback.h"
+#include "CollisionHandler.h"
 #include "Constances.h"
 #include "Enums.h"
 #include "Game.h"
@@ -29,9 +28,11 @@
 #include "tmxlite/ObjectGroup.hpp"
 #include "tmxlite/TileLayer.hpp"
 #include "tmxlite/Types.hpp"
+#include "WorldManager.h"
 #include <cstdlib>
 Level::Level()
 {
+    WorldManager::clearWorld();
     /*
     m_monstersToBeRemovedCount  = 0;
     m_fireballsToBeRemovedCount = 0;
@@ -46,9 +47,12 @@ Level::Level()
 
     m_worldRenderer =
         new WorldRenderer(Locator::getRenderer(), Constances::PPM);
-
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
     m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
+
+    b2World* world = WorldManager::getWorld();
+    world->SetContactListener(this);
+    world->SetDebugDraw(m_worldRenderer);
 }
 
 Level::~Level()
@@ -70,7 +74,7 @@ void Level::setIsPaused(bool paused) { m_isPaused = paused; }
 void Level::update(float deltaTime)
 {
     Input::update();
-	Locator::getWorld()->Step(deltaTime, 2, 6);
+    WorldManager::getWorld()->Step(deltaTime, 2, 6);
     Vec2 cameraTarget;
     int  sign      = m_player->getDirection() == DIRECTION_LEFT ? -1 : 1;
     cameraTarget.x = m_player->getPositionX() + sign * 16.f;
