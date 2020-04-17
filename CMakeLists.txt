@@ -4,56 +4,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wnon-virtual-dtor -Wpedantic -Wsign-conversion -std=c++14")
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 project(my-game LANGUAGES CXX)
-
-set(SOURCE_FILES 
-	#base type 
-	src/TextureRegion.cpp
-    src/Vec.cpp
-    src/Layer.cpp
-	src/TileLayer.cpp
-	src/TileLayerCell.cpp
-	src/TileLayerAnimatedTile.cpp
-	src/TileLayerStaticTile.cpp
-
-	src/Constances.cpp
-	src/Main.cpp
-	src/Game.cpp
-	src/MainState.cpp
-	src/GameState.cpp
-	src/Locator.cpp
-	src/StateManager.cpp
-	src/Tileset.cpp
-	src/Tile.cpp
-	src/Tilesets.cpp
-	src/Cell.cpp
-	src/WorldRenderer.cpp
-	src/Animator.cpp
-	src/Animation.cpp
-	src/Level.cpp
-	src/SpriteSheet.cpp
-	src/Input.cpp
-	src/Builder.cpp
-	src/GameObject.cpp
-	src/Player.cpp
-	src/Monster.cpp
-	src/Slime.cpp
-	src/Kobold.cpp
-	src/AssertManager.cpp
-	src/PlayerSkill.cpp
-	src/PlayerCutSkill.cpp
-	src/PlayerFireBallSkill.cpp
-	src/Math.cpp
-    src/HUD.cpp
-	src/Background.cpp
-	src/LevelParser.cpp
-    src/LayerManager.cpp
-    src/ObjectLayer.cpp
-    src/Camera.cpp
-    src/CollisionCallback.cpp
-    src/Destroyable.cpp;
-	src/PositionalLayer.cpp
-	src/ImageLayer.cpp
-)
+file(GLOB SOURCE_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	find_package(SDL2)
 	find_package(SDL2_image)
