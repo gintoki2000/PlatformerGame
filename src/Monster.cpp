@@ -1,30 +1,74 @@
 #include "Monster.h"
 #include "Constances.h"
-#include "Enums.h"
+#include "Player.h"
+#include "Utils.h"
 #include "WorldManager.h"
+#include "box2d/b2_fixture.h"
 #include "box2d/b2_world.h"
 
-Monster::Monster() { m_body = nullptr; }
+Monster::Monster()
+{
+    m_body              = nullptr;
+    m_hitPoints         = 0;
+    m_maxHitPoints      = 0;
+    m_identifier.tag    = TAG_MONSTER;
+    m_identifier.object = this;
+}
 
-bool Monster::init(const Rect& aabb)
+Monster::~Monster()
+{
+    m_body->GetWorld()->DestroyBody(m_body);
+    m_body = nullptr;
+}
+
+bool Monster::init(const FloatRect& aabb)
 {
     b2World&  world = *WorldManager::getWorld();
     b2BodyDef bdef;
     bdef.fixedRotation = true;
-    bdef.position.x    = aabb.left() + aabb.width() / 2;
-    bdef.position.y    = aabb.top() + aabb.height() / 2;
+    bdef.type          = b2_dynamicBody;
+    bdef.userData      = &m_identifier;
+    bdef.position.x    = aabb.x + aabb.width / 2.f;
+    bdef.position.y    = aabb.y + aabb.height / 2.f;
     bdef.position.x /= Constances::PPM;
     bdef.position.y /= Constances::PPM;
 
     m_body = world.CreateBody(&bdef);
 
     b2PolygonShape box;
-    box.SetAsBox(aabb.width() / 2, aabb.height() / 2);
+
+    float hw = aabb.width / 2.f;
+    float hh = aabb.height / 2.f;
+    hw /= Constances::PPM;
+    hh /= Constances::PPM;
+    float bhh = hh - hw;
+    float cx  = 0.f;
+    float cy  = -(hh - bhh);
+    box.SetAsBox(hw, bhh, b2Vec2(cx, cy), 0.f);
 
     b2FixtureDef fdef;
     fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
-    fdef.filter.maskBits     = CATEGORY_BIT_PLAYER | CATEGORY_BIT_BLOCK;
-    fdef.restitution         = 0;
+    fdef.filter.maskBits =
+        CATEGORY_BIT_PLAYER | CATEGORY_BIT_BLOCK | CATEGORY_BIT_SPELL;
+    fdef.restitution = 0;
+    fdef.shape       = &box;
+
+    m_body->CreateFixture(&fdef);
+
+    b2CircleShape circle;
+    circle.m_radius = hw;
+    circle.m_p.x    = 0.f;
+    circle.m_p.y    = hh - hw;
+
+    fdef.shape    = &circle;
+    fdef.friction = 0.5f;
+
+    m_body->CreateFixture(&fdef);
+
+    m_identifier.tag    = TAG_MONSTER;
+    m_identifier.object = this;
+
+    m_damageWhenTouching = 1.f;
     return true;
 }
 
@@ -52,5 +96,13 @@ bool Monster::isDead() { return m_hitPoints == 0; }
 
 void Monster::onBeginContact(const ContactInfo&) {}
 void Monster::onEndContact(const ContactInfo&) {}
-void Monster::onPreSolve(const ContactInfo&, const b2Manifold&) {}
+void Monster::onPreSolve(const ContactInfo& info, const b2Manifold&)
+{
+    if (info.getOtherIdentifier()->tag == TAG_PLAYER)
+    {
+        Player* player =
+            static_cast<Player*>(info.getOtherIdentifier()->object);
+        player->takeDamge(m_damageWhenTouching);
+    }
+}
 void Monster::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

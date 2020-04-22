@@ -1,7 +1,9 @@
 #include "Background.h"
 #include "AssertManager.h"
+#include "Game.h"
 #include "Level.h"
-#include "Locator.h"
+#include "SDL_image.h"
+#include "SDL_log.h"
 #include "TextureRegion.h"
 #include "tmxlite/ImageLayer.hpp"
 
@@ -22,14 +24,20 @@ bool Background::parse(const tmx::ImageLayer& imageLayerData)
     setPositionY(imageLayerData.getOffset().y);
     setIsVisible(imageLayerData.getVisible());
 
-    TextureManager& tmgr = Locator::getTextureManager();
-    if (!tmgr.load(imageLayerData.getImagePath()))
+    SDL_Texture* m_texture = IMG_LoadTexture(
+        Game::getInstance()->renderer(), imageLayerData.getImagePath().c_str());
+
+    if (m_texture == nullptr)
     {
-        SDL_Log("Failed to load image!");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load texture: %s",
+                     imageLayerData.getImagePath().c_str());
         return false;
     }
-    SDL_Texture* texture = tmgr.get(imageLayerData.getImagePath());
-    setImage(TextureRegion(texture));
+
+	setImage(m_texture);
+
+	m_initialPositionX = getPositionX();
+
     for (const auto& prop : imageLayerData.getProperties())
     {
         if (prop.getName() == "parallax")

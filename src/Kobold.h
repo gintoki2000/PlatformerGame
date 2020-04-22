@@ -1,7 +1,6 @@
 #ifndef KOBLOD_H
 #define KOBLOD_H
 #include "Animator.h"
-#include "Enums.h"
 #include "Monster.h"
 #include "SpriteSheet.h"
 #include "box2d/box2d.h"

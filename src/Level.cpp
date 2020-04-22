@@ -1,69 +1,135 @@
 #include "Level.h"
 #include "AssertManager.h"
 #include "Background.h"
-#include "Builder.h"
+#include "BoarWarrior.h"
+#include "Cell.h"
 #include "CollisionHandler.h"
 #include "Constances.h"
-#include "Enums.h"
 #include "Game.h"
 #include "GameObject.h"
 #include "HUD.h"
 #include "Input.h"
-#include "Kobold.h"
 #include "LayerManager.h"
-#include "Locator.h"
-#include "MainState.h"
 #include "Math.h"
+#include "ObjectFactory.h"
+#include "ObjectLayer.h"
 #include "Player.h"
 #include "Rect.h"
+#include "SDL_assert.h"
+#include "SDL_keyboard.h"
 #include "SDL_mixer.h"
 #include "SDL_mouse.h"
 #include "SDL_render.h"
 #include "StateManager.h"
+#include "TileLayer.h"
 #include "Tilesets.h"
 #include "Utils.h"
+#include "WorldManager.h"
 #include "WorldRenderer.h"
 #include "box2d/b2_fixture.h"
+#include "tmxlite/Layer.hpp"
 #include "tmxlite/Map.hpp"
 #include "tmxlite/ObjectGroup.hpp"
 #include "tmxlite/TileLayer.hpp"
 #include "tmxlite/Types.hpp"
-#include "WorldManager.h"
-#include <cstdlib>
 Level::Level()
 {
-    WorldManager::clearWorld();
-    /*
-    m_monstersToBeRemovedCount  = 0;
-    m_fireballsToBeRemovedCount = 0;
-    */
-    m_isPaused = false;
-
+    m_itemLayer  = nullptr;
+    m_enemyLayer = nullptr;
+    m_tileSets   = nullptr;
     m_player     = nullptr;
-    m_viewport.x = 0;
-    m_viewport.y = 0;
-    m_viewport.w = Constances::GAME_WIDTH;
-    m_viewport.h = Constances::GAME_HEIGHT;
+    m_particles  = nullptr;
+}
 
-    m_worldRenderer =
-        new WorldRenderer(Locator::getRenderer(), Constances::PPM);
+Level* Level::loadFromFile(const char* filename)
+{
+    Level* level = new Level;
+    if (level->init(filename))
+    {
+        return level;
+    }
+    delete level;
+    return nullptr;
+}
+
+bool Level::init(const char* filename)
+{
+    WorldManager::clearWorld();
+
+    /// load data
+    tmx::Map levelData;
+    if (!levelData.load(filename))
+    {
+        SDL_Log("Failed to load data: ", filename);
+        return false;
+    }
+
+    m_rows       = levelData.getTileCount().y;
+    m_cols       = levelData.getTileCount().x;
+    m_tileWidth  = levelData.getTileSize().x;
+    m_tileHeight = levelData.getTileSize().y;
+    Vec2 vs(Constances::GAME_WIDTH, Constances::GAME_HEIGHT);
+    Vec2 vc;
+    vc.x = vs.x / 2;
+    vc.y = m_rows * m_tileHeight - vs.y / 2.f;
+    getCamera().setSize(vs);
+    getCamera().setCenter(vc);
+
+    for (const auto& tileData : levelData.getTilesets())
+    {
+    }
+    m_tileSets = new Tilesets(levelData.getTilesets(), Game::getInstance()->renderer());
+    for (const auto& l : levelData.getLayers())
+    {
+        tmx::Layer& layerData = (tmx::Layer&)*l.get();
+        if (layerData.getType() == tmx::Layer::Type::Tile)
+        {
+            TileLayer* tileLayer =
+                new TileLayer(m_cols, m_rows, m_tileWidth, m_tileHeight);
+            addLayer(tileLayer);
+            parseTileLayer(*tileLayer, (tmx::TileLayer&)layerData);
+        }
+        else if (layerData.getType() == tmx::Layer::Type::Image)
+        {
+            Background* background = new Background();
+            addLayer(background);
+            background->parse((tmx::ImageLayer&)layerData);
+        }
+        else if (layerData.getType() == tmx::Layer::Type::Object)
+        {
+            ObjectLayer* objectLayer = new ObjectLayer();
+            addLayer(objectLayer);
+            parseObjectLayer(*objectLayer, (tmx::ObjectGroup&)layerData);
+        }
+    }
+    SDL_Renderer* renderer = Game::getInstance()->renderer();
+    m_worldRenderer        = new WorldRenderer(renderer, Constances::PPM);
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
     m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
 
     b2World* world = WorldManager::getWorld();
     world->SetContactListener(this);
     world->SetDebugDraw(m_worldRenderer);
+    m_player = new Player();
+    m_player->setLayerManager(this);
+    m_drawDebugData = true;
+    return true;
 }
 
 Level::~Level()
 {
-    delete m_worldRenderer;
-    delete m_tileSets;
-
-    m_worldRenderer = nullptr;
-    m_tileSets      = nullptr;
+    DELETE_NULL(m_worldRenderer);
+    DELETE_NULL(m_tileSets);
+    DELETE_NULL(m_player);
 }
 
+void Level::start()
+{
+    m_enemyLayer = (ObjectLayer*)getLayerByName("enemies");
+    m_itemLayer  = (ObjectLayer*)getLayerByName("items");
+    m_particles  = (ObjectLayer*)getLayerByName("particles");
+
+}
 
 Player* Level::getPlayer() const { return m_player; }
 
@@ -82,6 +148,12 @@ void Level::update(float deltaTime)
     getCamera().setTarget(cameraTarget);
     m_player->tick(deltaTime);
     LayerManager::update(deltaTime);
+
+    const Uint8* keyStates = SDL_GetKeyboardState(nullptr);
+    if (keyStates[SDL_SCANCODE_P])
+    {
+        m_drawDebugData = !m_drawDebugData;
+    }
 }
 
 void Level::render()
@@ -89,7 +161,10 @@ void Level::render()
     LayerManager::render();
     m_worldRenderer->setViewport(getCamera().getViewport());
     m_player->paint();
-    // m_world->DrawDebugData();
+    if (m_drawDebugData)
+    {
+        WorldManager::getWorld()->DrawDebugData();
+    }
 }
 void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 {
@@ -157,3 +232,43 @@ void Level::PostSolve(b2Contact* /*contact*/,
                       const b2ContactImpulse* /*impulse*/)
 {
 }
+
+bool Level::parseTileLayer(TileLayer&            tileLayer,
+                           const tmx::TileLayer& tileLayerData)
+{
+    const auto& dataOfTiles = tileLayerData.getTiles();
+    for (int y = 0; y < m_rows; ++y)
+    {
+        for (int x = 0; x < m_cols; ++x)
+        {
+            const auto& tileData = dataOfTiles[(unsigned)y * m_cols + x];
+            Tile*       tile     = m_tileSets->getTile(tileData.ID);
+            if (tile != nullptr)
+            {
+                Vec2 center(x * m_tileWidth, y * m_tileHeight);
+                tileLayer.setCellAt(x, y, Cell::create(tile, center));
+            }
+        }
+    }
+	tileLayer.setName(tileLayerData.getName());
+    return true;
+}
+
+bool Level::parseObjectLayer(ObjectLayer&            objectLayer,
+                             const tmx::ObjectGroup& objectLayerData)
+{
+    ObjectFactory& factory = *ObjectFactory::getInstance();
+    for (const auto& objectData : objectLayerData.getObjects())
+    {
+        GameObject* object =
+            factory.createObject(objectData.getType(), objectData);
+        if (object != nullptr)
+        {
+            objectLayer.addObject(object);
+        }
+    }
+    objectLayer.setName(objectLayerData.getName());
+    return true;
+}
+
+ObjectLayer* Level::getParticleLayer() const { return m_particles; }

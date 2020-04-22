@@ -1,6 +1,6 @@
 #include "TileLayer.h"
+#include "Game.h"
 #include "Level.h"
-#include "Locator.h"
 #include "Math.h"
 #include "Rect.h"
 #include "SDL_render.h"
@@ -36,7 +36,7 @@ void TileLayer::update(float) {}
 void TileLayer::render()
 {
     const Rect&   viewport = getManager()->getCamera().getViewport();
-    SDL_Renderer* renderer = Locator::getRenderer();
+    SDL_Renderer* renderer = Game::getInstance()->renderer();
     int           startX   = viewport.left() / m_tileWidth - 1;
     int           startY   = viewport.top() / m_tileHeight - 1;
     int           endX     = viewport.right() / m_tileWidth + 1;

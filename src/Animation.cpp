@@ -48,7 +48,12 @@ int Animation::getCurrentIndex(float elapsedTime) const
         {
             index = m_numSprites - 2 - (index - m_numSprites);
         }
+        break;
+    case PLAY_MODE_LOOP_REVERSE:
+        index = (m_numSprites - 1) - index % m_numSprites;
+        break;
     }
+
     m_lastIndex = index;
     m_lastTime  = elapsedTime;
     return index;

@@ -1,6 +1,5 @@
 #include "MainState.h"
 #include "Level.h"
-#include "LevelParser.h"
 
 MainState::MainState()
 {
@@ -26,12 +25,12 @@ MainState* MainState::create()
 bool MainState::init()
 {
     const char* file = "asserts/levels/deep-forest.tmx";
-	LevelParser parser;
-    if ((m_level = parser.load(file)) == nullptr)
+    if ((m_level = Level::loadFromFile(file)) == nullptr)
 	{
         SDL_Log("Failed to load level: %s", file);
 		return false;
 	}
+	m_level->start();
 	return true;
 }
 

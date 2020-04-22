@@ -2,36 +2,50 @@
 #define ASSERT_MANAGER_H
 #include "SDL.h"
 #include "SDL_mixer.h"
+#include "SDL_render.h"
 #include <map>
 #include <string>
 
 class TextureManager
 {
   public:
-    TextureManager(SDL_Renderer* renderer);
+    enum TextureID
+    {
+        TEXTURE_PLAYER,
+        TEXTURE_BOAR_WARRIOR,
+		TEXTURE_FIRE_EXPLOSION,
+		TEXTURE_FIREBALL,
+        NUM_TEXTURES
+    };
+    TextureManager();
     ~TextureManager();
 
-	bool isLoaded(const std::string& filename);
-	bool load(const std::string& filename);
-	SDL_Texture* get(const std::string& filename);
-
-	void unloadAll();
+    bool         load(SDL_Renderer* renderer);
+    SDL_Texture* getTexture(TextureID ID);
 
   private:
-	std::map<std::string, SDL_Texture*> m_textures;
-	SDL_Renderer* m_renderer;
+    SDL_Texture* m_textures[NUM_TEXTURES];
+
+  private:
 };
-class SoundManager 
+class SoundManager
 {
-	public:
-		enum SoundID 
-		{
-			SOUND_FIREBALL,
-			NUM_SOUNDS
-		};
-		SoundManager();
-		~SoundManager();
-	private:
-		Mix_Chunk* m_sounds[NUM_SOUNDS];
+  public:
+    enum SoundID
+    {
+        SOUND_FIREBALL,
+        SOUND_BOMB_EXPLOSION,
+        NUM_SOUNDS
+    };
+
+    SoundManager();
+    ~SoundManager();
+
+    bool       load();
+    Mix_Chunk* getSound(SoundID ID);
+
+  private:
+    Mix_Chunk* m_sounds[NUM_SOUNDS];
 };
+
 #endif // ASSERT_MANAGER_H

@@ -1,10 +1,9 @@
 #ifndef PLAYER_H
 #define PLAYER_H
+#include "BaseGameObject.h"
 #include "CollisionHandler.h"
-#include "Constances.h"
 #include "Destroyable.h"
-#include "Enums.h"
-#include "GameObject.h"
+#include "Constances.h"
 #include "SpriteSheet.h"
 #include "Utils.h"
 #include "box2d/box2d.h"
@@ -90,7 +89,7 @@ class PlayerAirJumpState : public PlayerState
     void         enter(Player& player) override;
     PlayerState* tick(Player& player, float deltaTime) override;
 };
-class Player : public GameObject, public ICollisionHandler, public IDestroyable
+class Player : public BaseGameObject, public ICollisionHandler, public IDestroyable
 {
 
   public:
@@ -177,9 +176,7 @@ class Player : public GameObject, public ICollisionHandler, public IDestroyable
     void updateLogic(float deltaTime);
     void synchronizeBodyTransform();
 
-    /// asserts
-    SpriteSheet* m_spriteSheet;
-
+    SpriteSheet  m_spriteSheet;
     b2Body*      m_body;
     Animator*    m_animator;
     PlayerState* m_state;

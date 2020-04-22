@@ -6,7 +6,9 @@ typedef TextureRegion Sprite;
 class SpriteSheet
 {
   public:
-    SpriteSheet(SDL_Texture* texture, int spriteWidth, int spriteHeight);
+	SpriteSheet();
+	
+    void init(SDL_Texture* texture, int spriteWidth, int spriteHeight);
 
     SpriteSheet(const SpriteSheet&) = delete;
 

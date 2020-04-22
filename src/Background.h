@@ -15,10 +15,12 @@ class Background : public ImageLayer
     void update(float deltaTime) override;
 
   private:
-    Background() {}
+    Background() { m_texture = nullptr; }
     float m_parallax;
     float m_initialPositionX;
 
-    friend class LevelParser;
+    SDL_Texture* m_texture;
+
+    friend class Level;
 };
 #endif // BACKGROUND_H

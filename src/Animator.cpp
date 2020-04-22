@@ -1,8 +1,5 @@
 #include "Animator.h"
 #include "SDL_render.h"
-#include "GameObject.h"
-#include "Level.h"
-#include "Locator.h"
 Animator::Animator(Animation* animations[], int numAnimations)
 {
     m_numAnimations = numAnimations;
@@ -12,9 +9,6 @@ Animator::Animator(Animation* animations[], int numAnimations)
         m_animations[i] = animations[i];
     }
 	m_numStates = 0;
-	setOriginX(0);
-    setOriginY(0);
-    setFlip(SDL_FLIP_NONE);
 	pushState(AnimatorState());
 }
 Animator::~Animator()
@@ -40,31 +34,15 @@ void Animator::tick(float deltaTime)
     }
 }
 
-void Animator::paint()
-{
-    const Sprite* sprite = getCurrentAnimation()->getCurrentSprite(getElapsedTime());
-    Camera& camera = m_owner->getLayerManager()->getCamera();
-    const SDL_Rect& viewport = camera.getViewport();
-    SDL_Renderer* renderer = Locator::getRenderer();
-    SDL_Rect dstrect;
-    dstrect.x = m_owner->m_positionX - m_origin.x;
-    dstrect.y = m_owner->m_positionY - m_origin.y;
-    dstrect.w = sprite->getWidth();
-    dstrect.h = sprite->getHeight();
-
-    if (SDL_HasIntersection(&dstrect, &viewport))
-    {
-        dstrect.x -= viewport.x;
-        dstrect.y -= viewport.y;
-        sprite->draw(renderer, &dstrect, m_owner->m_rotation, &m_origin, m_flip);
-    }
-
-}
-
 Animation* Animator::getCurrentAnimation() const
 {
 
     return m_animations[m_states[m_numStates - 1].index];
+}
+
+const Sprite &Animator::getCurrentSprite() const
+{
+    return *getCurrentAnimation()->getCurrentSprite(getElapsedTime());
 }
 
 bool Animator::isCurrentAnimationFinshed()

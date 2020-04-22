@@ -8,7 +8,7 @@ int main()
     const float TIME_STEP = 1.f / 70.f;
     Uint32      usedTicks;
     Uint32      startTicks;
-    if (game.initialize())
+    if (game.init())
     {
         while (game.isRunning())
         {

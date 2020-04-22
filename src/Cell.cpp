@@ -1,7 +1,5 @@
 #include "Cell.h"
 #include "Constances.h"
-#include "Enums.h"
-#include "Locator.h"
 #include "Player.h"
 #include "SDL_assert.h"
 #include "Utils.h"
@@ -11,8 +9,23 @@
 
 Cell::Cell() : m_identifier(TAG_BLOCK, this), m_body(nullptr) {}
 
+Cell* Cell::create(Tile *tile, const Vec2 &center)
+{
+	Cell* cell = new Cell;
+	if (cell->init(tile, center))
+	{
+		return cell;
+	}
+	delete cell;
+	return nullptr;
+}
+
 bool Cell::init(Tile* tile, const Vec2& center)
 {
+    if (tile == nullptr)
+    {
+        return false;
+    }
     setTile(tile);
     m_identifier.tag    = TAG_BLOCK;
     m_identifier.object = this;
@@ -27,7 +40,7 @@ bool Cell::init(Tile* tile, const Vec2& center)
 
         b2FixtureDef fdef;
         fdef.filter.categoryBits = CATEGORY_BIT_BLOCK;
-        fdef.friction            = 0.f;
+        fdef.friction            = 0.0f;
         fdef.restitution         = 0.f;
         for (int i = 0; i < tile->getNumShapes(); ++i)
         {

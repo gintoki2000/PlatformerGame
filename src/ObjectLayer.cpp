@@ -18,10 +18,11 @@ ObjectLayer::~ObjectLayer()
 
 void ObjectLayer::update(float deltaTime)
 {
+	refresh();
     int numObjects = m_numObjects;
     for (int i = 0; i < numObjects; ++i)
     {
-        if (m_objects[i]->needToRemove() == false)
+        if (m_objects[i]->isActive())
         {
             m_objects[i]->tick(deltaTime);
         }
@@ -48,7 +49,7 @@ GameObject *ObjectLayer::getObjectAt(int index) const
 
 void ObjectLayer::addObject(GameObject* obj)
 {
-    SDL_assert(obj != nullptr && obj->getObjectLayer() != nullptr);
+    SDL_assert(obj != nullptr && obj->getObjectLayer() == nullptr);
     growIfNeed();
     m_objects[m_numObjects++] = obj;
     obj->setObjectLayer(this);
@@ -93,42 +94,22 @@ void ObjectLayer::growIfNeed()
 
 void ObjectLayer::refresh()
 {
-    int newNumObjects = sortRemovedObjects();
-    for (int i = newNumObjects; i < m_numObjects; ++i)
-    {
-        m_objects[i]->cleanup();
-        m_objects[i]->setLayerManager(nullptr);
-        m_objects[i]->setObjectLayer(nullptr);
-        m_objects[i] = nullptr;
-    }
-    m_numObjects = newNumObjects;
+	int i = 0;
+	while(i < m_numObjects)
+	{
+		if (m_objects[i]->needToRemove())
+		{
+			m_objects[i]->setObjectLayer(nullptr);
+			m_objects[i]->setLayerManager(nullptr);
+			m_objects[i]->cleanup();
+
+			m_objects[i] = m_objects[m_numObjects - 1];
+		   	--m_numObjects;	
+		}
+		else 
+		{
+			++i;
+		}
+	}
 }
 
-int ObjectLayer::sortRemovedObjects()
-{
-    int iD = 0;
-    int iA = m_numObjects - 1;
-    while(iD < iA)
-    {
-        for (;true; ++iD)
-        {
-            if (m_objects[iD]->needToRemove())
-                break;
-            if (iA <= iD)
-                return iD;
-        }
-        for (;true; --iA)
-        {
-            if (iA <= iD)
-                return iD;
-            if (!m_objects[iA]->needToRemove())
-                break;
-        }
-        GameObject* tmp = m_objects[iD];
-        m_objects[iD] = m_objects[iA];
-        m_objects[iA] = tmp;
-        ++iD;
-        --iA;
-    }
-    return iD;
-}

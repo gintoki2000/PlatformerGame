@@ -3,17 +3,17 @@
 #include "Animator.h"
 #include "AssertManager.h"
 #include "Constances.h"
-#include "Enums.h"
+#include "Game.h"
 #include "GameObject.h"
 #include "Input.h"
 #include "Level.h"
-#include "Locator.h"
 #include "Math.h"
 #include "PlayerCutSkill.h"
 #include "PlayerFireBallSkill.h"
 #include "PlayerSkill.h"
 #include "Rect.h"
 #include "SDL_assert.h"
+#include "SpriteSheet.h"
 #include "Utils.h"
 #include "WorldManager.h"
 #include "box2d/b2_body.h"
@@ -31,7 +31,6 @@ PlayerAirJumpState    Player::airJumpState    = PlayerAirJumpState();
 Player::Player()
 {
     m_body        = nullptr;
-    m_spriteSheet = nullptr;
     m_animator    = nullptr;
     m_state       = nullptr;
     m_activeSkill = nullptr;
@@ -49,52 +48,51 @@ Player::~Player()
 {
     m_body->GetWorld()->DestroyBody(m_body);
     delete m_animator;
-    delete m_spriteSheet;
     delete m_skillA;
     delete m_skillB;
 
     m_body        = nullptr;
     m_animator    = nullptr;
-    m_spriteSheet = nullptr;
     m_activeSkill = nullptr;
 }
 
 bool Player::initGraphicsComponent()
 {
-    TextureManager& tmgr    = Locator::getTextureManager();
-    SDL_Texture*    texture = tmgr.get("asserts/spritesheets/player.png");
+    SDL_Texture* texture =
+        textureMGR().getTexture(TextureManager::TEXTURE_PLAYER);
     SDL_assert(texture != nullptr);
-    m_spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
+    m_spriteSheet.init(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
     Animation* anims[NUM_ANIMS];
-    anims[ANIM_IDLE_1]        = new Animation(m_spriteSheet, 0, 4, 1.f / 8.f);
-    anims[ANIM_CROUCH]        = new Animation(m_spriteSheet, 4, 4, 1.f / 8.f);
-    anims[ANIM_RUN]           = new Animation(m_spriteSheet, 8, 6, 1.f / 8.f);
-    anims[ANIM_JUMP]          = new Animation(m_spriteSheet, 14, 4, 1.f / 6.f);
-    anims[ANIM_SOMERSULT]     = new Animation(m_spriteSheet, 18, 4, 1.f / 12.f);
-    anims[ANIM_FALL]          = new Animation(m_spriteSheet, 22, 2, 1.f / 10.f);
-    anims[ANIM_SLIDE]         = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
-    anims[ANIM_STAND]         = new Animation(m_spriteSheet, 26, 3, 1.f / 8.f);
-    anims[ANIM_CORNER_GRAB]   = new Animation(m_spriteSheet, 30, 4, 1.f / 8.f);
-    anims[ANIM_IDLE_2]        = new Animation(m_spriteSheet, 38, 4, 1.f / 10.f);
-    anims[ANIM_ATK_1]         = new Animation(m_spriteSheet, 42, 5, 1.f / 12.f);
-    anims[ANIM_ATK_2]         = new Animation(m_spriteSheet, 47, 6, 1.f / 12.f);
-    anims[ANIM_ATK_3]         = new Animation(m_spriteSheet, 53, 6, 1.f / 12.f);
-    anims[ANIM_HURT]          = new Animation(m_spriteSheet, 59, 3, 1.f / 8.f);
-    anims[ANIM_DIE]           = new Animation(m_spriteSheet, 61, 7, 1.f / 8.f);
-    anims[ANIM_SWORD_DRAW]    = new Animation(m_spriteSheet, 69, 4, 1.f / 8.f);
-    anims[ANIM_SWORD_SHEATHE] = new Animation(m_spriteSheet, 73, 4, 1.f / 8.f);
-    anims[ANIM_CORNER_JUMP]   = new Animation(m_spriteSheet, 73, 2, 1.f / 8.f);
-    anims[ANIM_WALL_SLIDE]    = new Animation(m_spriteSheet, 75, 2, 1.f / 8.f);
-    anims[ANIM_WALL_CLIMB]    = new Animation(m_spriteSheet, 77, 4, 1.f / 8.f);
-    anims[ANIM_CAST_SPELL]    = new Animation(m_spriteSheet, 85, 4, 1.f / 12.f);
-    anims[ANIM_CAST_LOOP]     = new Animation(m_spriteSheet, 89, 4, 1.f / 15.f);
-    anims[ANIM_USE_ITEM]      = new Animation(m_spriteSheet, 93, 3, 1.f / 8.f);
-    anims[ANIM_AIR_ATK_1]     = new Animation(m_spriteSheet, 96, 4, 1.f / 8.f);
-    anims[ANIM_AIR_ATK_2]     = new Animation(m_spriteSheet, 100, 3, 1.f / 8.f);
+    anims[ANIM_IDLE_1]      = new Animation(&m_spriteSheet, 0, 4, 1.f / 8.f);
+    anims[ANIM_CROUCH]      = new Animation(&m_spriteSheet, 4, 4, 1.f / 8.f);
+    anims[ANIM_RUN]         = new Animation(&m_spriteSheet, 8, 6, 1.f / 8.f);
+    anims[ANIM_JUMP]        = new Animation(&m_spriteSheet, 14, 4, 1.f / 6.f);
+    anims[ANIM_SOMERSULT]   = new Animation(&m_spriteSheet, 18, 4, 1.f / 12.f);
+    anims[ANIM_FALL]        = new Animation(&m_spriteSheet, 22, 2, 1.f / 10.f);
+    anims[ANIM_SLIDE]       = new Animation(&m_spriteSheet, 25, 2, 1.f / 8.f);
+    anims[ANIM_STAND]       = new Animation(&m_spriteSheet, 26, 3, 1.f / 8.f);
+    anims[ANIM_CORNER_GRAB] = new Animation(&m_spriteSheet, 30, 4, 1.f / 8.f);
+    anims[ANIM_IDLE_2]      = new Animation(&m_spriteSheet, 38, 4, 1.f / 10.f);
+    anims[ANIM_ATK_1]       = new Animation(&m_spriteSheet, 42, 5, 1.f / 12.f);
+    anims[ANIM_ATK_2]       = new Animation(&m_spriteSheet, 47, 6, 1.f / 12.f);
+    anims[ANIM_ATK_3]       = new Animation(&m_spriteSheet, 53, 6, 1.f / 12.f);
+    anims[ANIM_HURT]        = new Animation(&m_spriteSheet, 59, 3, 1.f / 8.f);
+    anims[ANIM_DIE]         = new Animation(&m_spriteSheet, 61, 7, 1.f / 8.f);
+    anims[ANIM_SWORD_DRAW]  = new Animation(&m_spriteSheet, 69, 4, 1.f / 8.f);
+    anims[ANIM_SWORD_SHEATHE] = new Animation(&m_spriteSheet, 73, 4, 1.f / 8.f);
+    anims[ANIM_CORNER_JUMP]   = new Animation(&m_spriteSheet, 73, 2, 1.f / 8.f);
+    anims[ANIM_WALL_SLIDE]    = new Animation(&m_spriteSheet, 75, 2, 1.f / 8.f);
+    anims[ANIM_WALL_CLIMB]    = new Animation(&m_spriteSheet, 77, 4, 1.f / 8.f);
+    anims[ANIM_CAST_SPELL] = new Animation(&m_spriteSheet, 85, 4, 1.f / 12.f);
+    anims[ANIM_CAST_LOOP]  = new Animation(&m_spriteSheet, 89, 4, 1.f / 15.f);
+    anims[ANIM_USE_ITEM]   = new Animation(&m_spriteSheet, 93, 3, 1.f / 8.f);
+    anims[ANIM_AIR_ATK_1]  = new Animation(&m_spriteSheet, 96, 4, 1.f / 8.f);
+    anims[ANIM_AIR_ATK_2]  = new Animation(&m_spriteSheet, 100, 3, 1.f / 8.f);
     anims[ANIM_AIR_ATK_3_LOOP] =
-        new Animation(m_spriteSheet, 103, 2, 1.f / 8.f);
-    anims[ANIM_AIR_ATK_3_RDY] = new Animation(m_spriteSheet, 106, 1, 1.f / 8.f);
-    anims[ANIM_DASH]          = new Animation(m_spriteSheet, 77, 1, 1.f);
+        new Animation(&m_spriteSheet, 103, 2, 1.f / 8.f);
+    anims[ANIM_AIR_ATK_3_RDY] =
+        new Animation(&m_spriteSheet, 106, 1, 1.f / 8.f);
+    anims[ANIM_DASH] = new Animation(&m_spriteSheet, 77, 1, 1.f);
 
     anims[ANIM_IDLE_1]->setPlayMode(Animation::PLAY_MODE_LOOP);
     anims[ANIM_IDLE_2]->setPlayMode(Animation::PLAY_MODE_LOOP);
@@ -105,9 +103,6 @@ bool Player::initGraphicsComponent()
     anims[ANIM_CAST_LOOP]->setPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_ANIMS);
-    m_animator->setOwner(this);
-    m_animator->setOriginX(SPRITE_WIDTH / 2);
-    m_animator->setOriginY(SPRITE_HEIGHT / 2);
     return true;
 }
 
@@ -118,6 +113,7 @@ void Player::initPhysicsComponent()
     bdef.userData      = &m_identifier;
     bdef.type          = b2_dynamicBody;
     bdef.fixedRotation = true;
+    bdef.allowSleep    = false;
 
     m_body = world.CreateBody(&bdef);
 
@@ -128,10 +124,10 @@ void Player::initPhysicsComponent()
     b2FixtureDef fdef;
     fdef.shape               = &box;
     fdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
-    fdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
+    fdef.filter.maskBits     = CATEGORY_BIT_BLOCK | CATEGORY_BIT_MONSTER;
     fdef.friction            = 0.0f;
     fdef.restitution         = 0.f;
-    fdef.isSensor            = true;
+    // fdef.isSensor            = true;
     m_body->CreateFixture(&fdef);
 
     b2CircleShape circle;
@@ -142,7 +138,7 @@ void Player::initPhysicsComponent()
     gfdef.shape               = &circle;
     gfdef.restitution         = 0.f;
     gfdef.friction            = 0.f;
-    gfdef.density             = 10000;
+    gfdef.density             = 1.f;
     gfdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
     gfdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
 
@@ -164,8 +160,8 @@ void Player::resetMembers()
     m_groundedRemember             = 0.f;
     m_groundedRememberTime         = 1.5f;
     m_horiziontalAcceleration      = 0.f;
-    m_horizontalDampingWhenStoping = 1.f;
-    m_horizontalDampingBasic       = 0.85f;
+    m_horizontalDampingWhenStoping = 0.9f;
+    m_horizontalDampingBasic       = 0.8f;
     m_horizontalDampingWhenTurning = 0.4f;
     m_totalExtrasJump              = 0;
     m_extrasJumpCount              = 0;
@@ -179,12 +175,7 @@ void Player::resetMembers()
     m_body->SetTransform(b2Vec2(10, 0), (float)m_rotation);
 }
 
-void Player::updateGraphics(float deltaTime)
-{
-    m_animator->tick(deltaTime);
-    m_animator->setFlip(m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL
-                                                      : SDL_FLIP_NONE);
-}
+void Player::updateGraphics(float deltaTime) { m_animator->tick(deltaTime); }
 
 void Player::updatePhysics(float deltaTime)
 {
@@ -200,7 +191,6 @@ void Player::updatePhysics(float deltaTime)
     groundCheckBox.w = WIDTH;
     groundCheckBox.h = checkBoxHeight;
 
-    Level* level = (Level*)getLayerManager();
     m_isGrounded = boxCast(groundCheckBox, CATEGORY_BIT_BLOCK);
 
     b2Vec2 vel = m_body->GetLinearVelocity();
@@ -237,7 +227,23 @@ void Player::tick(float deltaTime)
     updateGraphics(deltaTime);
 }
 
-void Player::paint() { m_animator->paint(); }
+void Player::paint()
+{
+    SDL_Renderer*   renderer = gameMGR().renderer();
+    const SDL_Rect& viewport = getLayerManager()->getCamera().getViewport();
+    const Sprite&   sprite   = m_animator->getCurrentSprite();
+
+    SDL_Rect dstrect;
+    dstrect.x = m_positionX - SPRITE_WIDTH / 2 - viewport.x;
+    dstrect.y = m_positionY - SPRITE_HEIGHT / 2 - viewport.y;
+    dstrect.w = sprite.getWidth();
+    dstrect.h = sprite.getHeight();
+
+    SDL_RendererFlip flip =
+        m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+
+    sprite.draw(renderer, &dstrect, 0.f, nullptr, flip);
+}
 
 void Player::updateLogic(float deltaTime)
 {
@@ -459,7 +465,7 @@ void PlayerSomersaultState::enter(Player& player)
     player.m_ableToUseSkill = false;
 }
 
-PlayerState* PlayerSomersaultState::tick(Player& player, float deltaTime)
+PlayerState* PlayerSomersaultState::tick(Player& player, float)
 {
 
     int inputDirection = Input::getHorizontalInputDirection();
@@ -559,7 +565,13 @@ void PlayerHurtState::enter(Player& player)
     player.m_horiziontalAcceleration = 0.f;
     player.getAnimator()->play(Player::ANIM_HURT, 0.f);
     player.m_ableToUseSkill = false;
-	player.m_status = Player::STATUS_HURT;
+    player.m_status         = Player::STATUS_HURT;
+
+    b2Vec2 vel;
+    float  sign = player.m_direction == DIRECTION_LEFT ? -1.f : 1.f;
+    vel.x       = 30.f * (-sign);
+    vel.y       = -5.f;
+    player.getBody()->SetLinearVelocity(vel);
 }
 
 PlayerState* PlayerHurtState::tick(Player& player, float)
@@ -587,8 +599,9 @@ void PlayerHurtState::exit(Player& player)
 void PlayerDieState::enter(Player& player)
 {
     player.getAnimator()->play(Player::ANIM_DIE, 0.f);
-    player.m_ableToUseSkill = false;
-    player.m_status         = Player::STATTUS_DIE;
+    player.m_ableToUseSkill          = false;
+    player.m_status                  = Player::STATTUS_DIE;
+    player.m_horiziontalAcceleration = 0.f;
 }
 
 PlayerState* PlayerDieState::tick(Player& player, float)
@@ -688,25 +701,28 @@ void Player::onPreSolve(const ContactInfo& info, const b2Manifold&)
 
 void Player::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
 
-void Player::takeDamge(int damage) {
-	if (m_status == STATUS_NORMAL)
-	{
-		SDL_assert(m_hitPoints > 0);
-		m_hitPoints -= damage;
-		if (m_hitPoints <= 0)
-		{
-			m_hitPoints = 0; 
-			m_state->exit(*this);
-			m_state = &dieState;
-			m_state->enter(*this);
-		}
-		else 
-		{
-			m_state->exit(*this);
-			m_state = &hurtState;
-			m_state->enter(*this);
-		}
-	}
+void Player::takeDamge(int damage)
+{
+    if (damage <= 0)
+        return;
+    if (m_status == STATUS_NORMAL)
+    {
+        SDL_assert(m_hitPoints > 0);
+        m_hitPoints -= damage;
+        if (m_hitPoints <= 0)
+        {
+            m_hitPoints = 0;
+            m_state->exit(*this);
+            m_state = &dieState;
+            m_state->enter(*this);
+        }
+        else
+        {
+            m_state->exit(*this);
+            m_state = &hurtState;
+            m_state->enter(*this);
+        }
+    }
 }
 
 int Player::getHitPoints() { return m_hitPoints; }

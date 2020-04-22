@@ -1,9 +1,18 @@
 #include "SpriteSheet.h"
+#include "SDL_assert.h"
 #include "SDL_render.h"
 
-SpriteSheet::SpriteSheet(SDL_Texture* texture, int spriteWidth,
-                         int spriteHeight)
+
+SpriteSheet::SpriteSheet()
 {
+	m_sprites = nullptr;
+	m_numSprites = 0;
+}
+
+void SpriteSheet::init(SDL_Texture *texture, int spriteWidth, int spriteHeight)
+{
+	SDL_assert(texture != nullptr);
+	SDL_assert(m_sprites == nullptr);
     int textureWidth, textureHeight, cols, rows;
     SDL_QueryTexture(texture, nullptr, nullptr, &textureWidth, &textureHeight);
     rows = textureHeight / spriteHeight;

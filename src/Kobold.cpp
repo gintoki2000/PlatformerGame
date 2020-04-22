@@ -1,13 +1,4 @@
 #include "Kobold.h"
-#include "Animation.h"
-#include "Animator.h"
-#include "Constances.h"
-#include "Enums.h"
-#include "GameObject.h"
-#include "Level.h"
-#include "Monster.h"
-#include "Player.h"
-#include "SpriteSheet.h"
 /*
 Koblod::Koblod(Level* level) : Monster(level, MONSTER_TYPE_KOBLOD, 20)
 {

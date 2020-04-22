@@ -6,9 +6,9 @@ class GameState
     GameState(); 
     virtual ~GameState();
     virtual void render(float deltaTime) = 0;
-    virtual void show() = 0;
-    virtual void hidden() = 0;
-    virtual void pause() = 0;
-    virtual void resume() = 0;
+    virtual void show();
+    virtual void hidden();
+    virtual void pause();
+    virtual void resume();
 };
 #endif // GAME_STATE_H
