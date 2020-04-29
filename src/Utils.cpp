@@ -23,14 +23,14 @@ struct OverlapTestCallback : public b2QueryCallback
     }
 };
 
-bool boxCast(const Rect& rect, uint16 maskBits)
+bool boxCast(const FloatRect& rect, uint16 maskBits)
 {
     b2World&            world = *WorldManager::getWorld();
     OverlapTestCallback callback;
     callback.maskBits = maskBits;
     b2AABB box;
-    box.lowerBound.x = rect.left() / Constances::PPM;
-    box.lowerBound.y = rect.top() / Constances::PPM;
+    box.lowerBound.x = rect.x / Constances::PPM;
+    box.lowerBound.y = rect.y / Constances::PPM;
     box.upperBound.x = rect.right() / Constances::PPM;
     box.upperBound.y = rect.bottom() / Constances::PPM;
     world.QueryAABB(&callback, box);
@@ -69,15 +69,15 @@ bool QueryCallback::ReportFixture(b2Fixture* fixture)
     return n < max;
 }
 
-void boxQuery(const Rect& rect, uint16 maskBits, b2Fixture* fixtures[], int& n,
+void boxQuery(const FloatRect& rect, uint16 maskBits, b2Fixture* fixtures[], int& n,
               const int max)
 {
 
     b2World&      world = *WorldManager::getWorld();
     QueryCallback queryCallback(fixtures, max, maskBits);
     b2AABB        box;
-    box.lowerBound.x = rect.left() / Constances::PPM;
-    box.lowerBound.y = rect.top() / Constances::PPM;
+    box.lowerBound.x = rect.x / Constances::PPM;
+    box.lowerBound.y = rect.y / Constances::PPM;
     box.upperBound.x = rect.right() / Constances::PPM;
     box.upperBound.y = rect.bottom() / Constances::PPM;
     world.QueryAABB(&queryCallback, box);
@@ -91,3 +91,17 @@ int directionToSign(Direction direction)
 }
 
 
+Direction relativeDirection(float x1, float x2)
+{
+	if (x1 > x2)
+		return DIRECTION_LEFT;
+	if (x1 < x2)
+		return DIRECTION_RIGHT;
+	return DIRECTION_NONE;
+}
+
+int randomRange(int a, int b)
+{
+	int d = b - a + 1;
+	return rand() % d + a + 1; 
+}

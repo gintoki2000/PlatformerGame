@@ -13,7 +13,7 @@ void FireCastParticle::init(const Vec2 &position)
 
 FireCastParticle::FireCastParticle()
 {
-    SDL_Texture* texture = Game::getInstance()->textureMGR().getTexture(TextureManager::TEXTURE_FIRE_EXPLOSION);
+    SDL_Texture* texture = Game::getInstance()->textureMGR().getTexture(TextureManager::FIRE_EXPLOSION);
     m_spriteSheet.init(texture, 96, 96);
     m_animation = new Animation(&m_spriteSheet, 1.f / 40.f);
 }
@@ -23,12 +23,12 @@ void FireCastParticle::tick(float deltaTime)
 	m_timer += deltaTime;
 	if (m_animation->isFinished(m_timer))
 	{
-		setNeedToRemove(true);
+        remove();
 		return;
 	}
 }
 
-void FireCastParticle::cleanup() { setNeedToRemove(false); }
+void FireCastParticle::cleanup() {}
 
 
 void FireCastParticle::paint()

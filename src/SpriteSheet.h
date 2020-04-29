@@ -1,18 +1,21 @@
 #ifndef SPRITE_SHEET_H
 #define SPRITE_SHEET_H
-#include "TextureRegion.h"
 #include "SDL_render.h"
+#include "TextureRegion.h"
 typedef TextureRegion Sprite;
 class SpriteSheet
 {
   public:
-	SpriteSheet();
-	
+    SpriteSheet();
+
     void init(SDL_Texture* texture, int spriteWidth, int spriteHeight);
 
-    SpriteSheet(const SpriteSheet&) = delete;
+    void init(SDL_Texture* texture, int startX, int startY, int rows, int cols,
+              int spriteWidth, int spriteHeight);
 
-    SpriteSheet& operator=(const SpriteSheet&) = delete;
+    SpriteSheet(const SpriteSheet&);
+
+    SpriteSheet& operator=(const SpriteSheet&);
 
     ~SpriteSheet();
 
@@ -33,6 +36,6 @@ class SpriteSheet
 
   private:
     Sprite* m_sprites;
-    int m_numSprites;
+    int     m_numSprites;
 };
 #endif // SPRITE_SHEET_H

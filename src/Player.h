@@ -1,11 +1,12 @@
 #ifndef PLAYER_H
 #define PLAYER_H
-#include "BaseGameObject.h"
 #include "CollisionHandler.h"
-#include "Destroyable.h"
 #include "Constances.h"
+#include "Destroyable.h"
+#include "GameObject.h"
 #include "SpriteSheet.h"
 #include "Utils.h"
+#include "Vec.h"
 #include "box2d/box2d.h"
 class Level;
 class Animator;
@@ -89,7 +90,7 @@ class PlayerAirJumpState : public PlayerState
     void         enter(Player& player) override;
     PlayerState* tick(Player& player, float deltaTime) override;
 };
-class Player : public BaseGameObject, public ICollisionHandler, public IDestroyable
+class Player : public GameObject, public ICollisionHandler, public IDestroyable
 {
 
   public:
@@ -98,12 +99,11 @@ class Player : public BaseGameObject, public ICollisionHandler, public IDestroya
     static constexpr int   SPRITE_WIDTH             = 50;
     static constexpr int   SPRITE_HEIGHT            = 37;
     static constexpr float JUMP_VEL                 = 16.f;
-    static constexpr float DEFAULT_RUN_ACCELERATION = 2.f;
+    static constexpr float DEFAULT_RUN_ACCELERATION = 1.f;
     static constexpr float WIDTH_IN_METER           = WIDTH / Constances::PPM;
     static constexpr float HEIGHT_IN_METER          = HEIGHT / Constances::PPM;
     static constexpr float SLIDE_SPEED              = 8.f;
     static const float     MAX_RUN_SPEED;
-    static constexpr int   NUM_SKILLS              = 3;
     static constexpr float DEFAULT_CUT_JUMP_HEIGHT = 0.5f;
     enum
     {
@@ -146,9 +146,11 @@ class Player : public BaseGameObject, public ICollisionHandler, public IDestroya
     };
 
   public:
-    Player();
+    static Player* create(const Vec2& center);
     ~Player() override;
 
+    /// GameObject interface
+  public:
     void tick(float deltaTime) override;
     void paint() override;
 
@@ -167,10 +169,15 @@ class Player : public BaseGameObject, public ICollisionHandler, public IDestroya
     bool         justGrounded() const;
     void         resetGroundedRemember();
     void         setUnGrounded() { m_isGrounded = false; }
+    int          getManaPoints() const;
+    int          getMaxManaPoints() const;
+    bool         consumeMana(int amount);
 
   private:
+    Player();
+    bool init(const Vec2& center);
     bool initGraphicsComponent();
-    void initPhysicsComponent();
+    void initPhysicsComponent(const Vec2& center);
     void updatePhysics(float deltaTime);
     void updateGraphics(float deltaTime);
     void updateLogic(float deltaTime);
@@ -183,9 +190,14 @@ class Player : public BaseGameObject, public ICollisionHandler, public IDestroya
     PlayerSkill* m_activeSkill;
     PlayerSkill* m_skillA;
     PlayerSkill* m_skillB;
+    PlayerSkill* m_passiveSkill;
     bool         m_prevGroundState;
     bool         m_isGrounded;
     Identifier   m_identifier;
+
+    static constexpr int NUM_SKILLS = 3;
+    PlayerSkill*         m_testSkill[NUM_SKILLS];
+    int                  m_currentSkill;
 
   public:
     Direction m_direction;
@@ -231,9 +243,13 @@ class Player : public BaseGameObject, public ICollisionHandler, public IDestroya
 
     // IDestroyable interface
   public:
-    void takeDamge(int damage) override;
+    bool takeDamge(int damage, Direction direction) override;
     int  getHitPoints() override;
     int  getMaxHitPoints() override;
     bool isDead() override;
+
+    // GameObject interface
+  protected:
+    void onPositionChanged() override;
 };
 #endif // PLAYER_H

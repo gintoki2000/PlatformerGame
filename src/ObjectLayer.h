@@ -13,8 +13,6 @@ class ObjectLayer : public Layer
 
     GameObject* getObjectAt(int index) const;
     void addObject(GameObject* obj);
-    void removeObject(GameObject* obj);
-    void removeObjectAt(int index);
     int  indexOf(GameObject* obj) const;
     int  getNumObjects() const;
 

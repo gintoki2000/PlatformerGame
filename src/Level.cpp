@@ -1,19 +1,25 @@
 #include "Level.h"
-#include "AssertManager.h"
+#include "AnimatedParticle.h"
 #include "Background.h"
-#include "BoarWarrior.h"
-#include "Cell.h"
+#include "BloodStainParticle.h"
+#include "CameraShaker.h"
 #include "CollisionHandler.h"
 #include "Constances.h"
+#include "FireBustParticle.h"
+#include "FireExplosionParticle.h"
 #include "Game.h"
 #include "GameObject.h"
 #include "HUD.h"
 #include "Input.h"
 #include "LayerManager.h"
 #include "Math.h"
+#include "MyObjectLayer.h"
+#include "MyTileLayer.h"
 #include "ObjectFactory.h"
 #include "ObjectLayer.h"
+#include "ParticleSystem.h"
 #include "Player.h"
+#include "Pool.h"
 #include "Rect.h"
 #include "SDL_assert.h"
 #include "SDL_keyboard.h"
@@ -27,18 +33,22 @@
 #include "WorldManager.h"
 #include "WorldRenderer.h"
 #include "box2d/b2_fixture.h"
+#include "tmxlite/ImageLayer.hpp"
 #include "tmxlite/Layer.hpp"
 #include "tmxlite/Map.hpp"
 #include "tmxlite/ObjectGroup.hpp"
 #include "tmxlite/TileLayer.hpp"
 #include "tmxlite/Types.hpp"
+#include <cstdlib>
+#include <ctime>
 Level::Level()
 {
-    m_itemLayer  = nullptr;
-    m_enemyLayer = nullptr;
-    m_tileSets   = nullptr;
-    m_player     = nullptr;
-    m_particles  = nullptr;
+    m_spriteLayer   = nullptr;
+    m_tilesets      = nullptr;
+    m_player        = nullptr;
+    m_particleLayer = nullptr;
+    m_music         = nullptr;
+    m_cameraShaker  = nullptr;
 }
 
 Level* Level::loadFromFile(const char* filename)
@@ -55,105 +65,112 @@ Level* Level::loadFromFile(const char* filename)
 bool Level::init(const char* filename)
 {
     WorldManager::clearWorld();
+    srand(time(nullptr));
 
     /// load data
-    tmx::Map levelData;
-    if (!levelData.load(filename))
+    tmx::Map map;
+    if (!map.load(filename))
     {
-        SDL_Log("Failed to load data: ", filename);
+        SDL_Log("Failed to load data: %s", filename);
         return false;
     }
 
-    m_rows       = levelData.getTileCount().y;
-    m_cols       = levelData.getTileCount().x;
-    m_tileWidth  = levelData.getTileSize().x;
-    m_tileHeight = levelData.getTileSize().y;
-    Vec2 vs(Constances::GAME_WIDTH, Constances::GAME_HEIGHT);
-    Vec2 vc;
+    unsigned rows       = map.getTileCount().y;
+    unsigned tileHeight = map.getTileSize().y;
+    Vec2     vs(Constances::GAME_WIDTH, Constances::GAME_HEIGHT);
+    Vec2     vc;
     vc.x = vs.x / 2;
-    vc.y = m_rows * m_tileHeight - vs.y / 2.f;
+    vc.y = rows * tileHeight - vs.y / 2.f;
     getCamera().setSize(vs);
     getCamera().setCenter(vc);
 
-    for (const auto& tileData : levelData.getTilesets())
+    m_tilesets = new Tilesets(map.getTilesets(), GAME->renderer());
+    for (const auto& l : map.getLayers())
     {
-    }
-    m_tileSets = new Tilesets(levelData.getTilesets(), Game::getInstance()->renderer());
-    for (const auto& l : levelData.getLayers())
-    {
-        tmx::Layer& layerData = (tmx::Layer&)*l.get();
+        tmx::Layer& layerData = dynamic_cast<tmx::Layer&>(*l.get());
         if (layerData.getType() == tmx::Layer::Type::Tile)
         {
-            TileLayer* tileLayer =
-                new TileLayer(m_cols, m_rows, m_tileWidth, m_tileHeight);
-            addLayer(tileLayer);
-            parseTileLayer(*tileLayer, (tmx::TileLayer&)layerData);
+            auto& data = dynamic_cast<tmx::TileLayer&>(layerData);
+            addLayer(MyTileLayer::create(map, data, m_tilesets));
         }
         else if (layerData.getType() == tmx::Layer::Type::Image)
         {
-            Background* background = new Background();
-            addLayer(background);
-            background->parse((tmx::ImageLayer&)layerData);
+            auto& data = dynamic_cast<tmx::ImageLayer&>(layerData);
+            addLayer(Background::create(data));
         }
         else if (layerData.getType() == tmx::Layer::Type::Object)
         {
-            ObjectLayer* objectLayer = new ObjectLayer();
-            addLayer(objectLayer);
-            parseObjectLayer(*objectLayer, (tmx::ObjectGroup&)layerData);
+            auto& data = dynamic_cast<tmx::ObjectGroup&>(layerData);
+
+            addLayer(MyObjectLayer::create(data));
         }
     }
-    SDL_Renderer* renderer = Game::getInstance()->renderer();
-    m_worldRenderer        = new WorldRenderer(renderer, Constances::PPM);
-    m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
-    m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
 
-    b2World* world = WorldManager::getWorld();
+    m_music = Mix_LoadMUS("asserts/musics/Next to You.mp3");
+
+    SDL_Renderer* renderer = GAME->renderer();
+    b2World*      world    = WorldManager::getWorld();
+
+    m_worldRenderer  = new WorldRenderer(renderer, Constances::PPM);
+    m_player         = Player::create(getCamera().getCenter());
+    m_hud            = HUD::create();
+    m_particleSystem = new ParticleSystem(this);
+    m_cameraShaker   = CameraShaker::create(&getCamera());
+    m_spriteLayer    = static_cast<ObjectLayer*>(getLayerByName("sprites"));
+    m_particleLayer  = static_cast<ObjectLayer*>(getLayerByName("particles"));
+    m_drawDebugData  = false;
+
+    m_spriteLayer->addObject(m_player);
     world->SetContactListener(this);
     world->SetDebugDraw(m_worldRenderer);
-    m_player = new Player();
-    m_player->setLayerManager(this);
-    m_drawDebugData = true;
+    m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
+    m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
+    m_particleSystem
+        ->resgiter<FireBustParticle, AnimatedParticlePool<FireBustParticle>>(
+            20);
+    m_particleSystem
+        ->resgiter<BloodStainParticle, BasePool<BloodStainParticle>>(20);
+    m_particleSystem->resgiter<FireExplosionParticle,
+                               AnimatedParticlePool<FireExplosionParticle>>(20);
     return true;
 }
 
 Level::~Level()
 {
     DELETE_NULL(m_worldRenderer);
-    DELETE_NULL(m_tileSets);
-    DELETE_NULL(m_player);
+    DELETE_NULL(m_tilesets);
+    DELETE_NULL(m_particleSystem);
+    DELETE_NULL(m_cameraShaker);
+    DELETE_NULL(m_hud);
+    Mix_FreeMusic(m_music);
+    m_music = nullptr;
 }
 
-void Level::start()
-{
-    m_enemyLayer = (ObjectLayer*)getLayerByName("enemies");
-    m_itemLayer  = (ObjectLayer*)getLayerByName("items");
-    m_particles  = (ObjectLayer*)getLayerByName("particles");
-
-}
+void Level::start() { Mix_PlayMusic(m_music, -1); }
 
 Player* Level::getPlayer() const { return m_player; }
 
-Tilesets* Level::getTilesets() const { return m_tileSets; }
+Tilesets* Level::getTilesets() const { return m_tilesets; }
 
 void Level::setIsPaused(bool paused) { m_isPaused = paused; }
 
 void Level::update(float deltaTime)
 {
-    Input::update();
     WorldManager::getWorld()->Step(deltaTime, 2, 6);
-    Vec2 cameraTarget;
-    int  sign      = m_player->getDirection() == DIRECTION_LEFT ? -1 : 1;
-    cameraTarget.x = m_player->getPositionX() + sign * 16.f;
-    cameraTarget.y = getCamera().getCenter().y;
-    getCamera().setTarget(cameraTarget);
-    m_player->tick(deltaTime);
     LayerManager::update(deltaTime);
 
-    const Uint8* keyStates = SDL_GetKeyboardState(nullptr);
-    if (keyStates[SDL_SCANCODE_P])
+    Vec2 cameraTarget;
+    int  sign      = directionToSign(m_player->getDirection());
+    cameraTarget.x = m_player->getPositionX() + sign * 16.f;
+    cameraTarget.y = getCamera().getCenter().y;
+
+    int leftBound = Constances::GAME_WIDTH / 2;
+    if (cameraTarget.x < leftBound)
     {
-        m_drawDebugData = !m_drawDebugData;
+        cameraTarget.x = leftBound;
     }
+    getCamera().setTarget(cameraTarget);
+    m_cameraShaker->tick(deltaTime);
 }
 
 void Level::render()
@@ -165,6 +182,7 @@ void Level::render()
     {
         WorldManager::getWorld()->DrawDebugData();
     }
+    m_hud->paint(*this);
 }
 void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 {
@@ -233,42 +251,10 @@ void Level::PostSolve(b2Contact* /*contact*/,
 {
 }
 
-bool Level::parseTileLayer(TileLayer&            tileLayer,
-                           const tmx::TileLayer& tileLayerData)
-{
-    const auto& dataOfTiles = tileLayerData.getTiles();
-    for (int y = 0; y < m_rows; ++y)
-    {
-        for (int x = 0; x < m_cols; ++x)
-        {
-            const auto& tileData = dataOfTiles[(unsigned)y * m_cols + x];
-            Tile*       tile     = m_tileSets->getTile(tileData.ID);
-            if (tile != nullptr)
-            {
-                Vec2 center(x * m_tileWidth, y * m_tileHeight);
-                tileLayer.setCellAt(x, y, Cell::create(tile, center));
-            }
-        }
-    }
-	tileLayer.setName(tileLayerData.getName());
-    return true;
-}
+ObjectLayer* Level::getParticleLayer() const { return m_particleLayer; }
 
-bool Level::parseObjectLayer(ObjectLayer&            objectLayer,
-                             const tmx::ObjectGroup& objectLayerData)
-{
-    ObjectFactory& factory = *ObjectFactory::getInstance();
-    for (const auto& objectData : objectLayerData.getObjects())
-    {
-        GameObject* object =
-            factory.createObject(objectData.getType(), objectData);
-        if (object != nullptr)
-        {
-            objectLayer.addObject(object);
-        }
-    }
-    objectLayer.setName(objectLayerData.getName());
-    return true;
-}
+ObjectLayer* Level::getSpriteLayer() const { return m_spriteLayer; }
 
-ObjectLayer* Level::getParticleLayer() const { return m_particles; }
+CameraShaker* Level::getCameraShaker() { return m_cameraShaker; }
+
+ParticleSystem* Level::getParticleSystem() const { return m_particleSystem; }

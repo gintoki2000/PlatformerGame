@@ -40,7 +40,7 @@ bool Cell::init(Tile* tile, const Vec2& center)
 
         b2FixtureDef fdef;
         fdef.filter.categoryBits = CATEGORY_BIT_BLOCK;
-        fdef.friction            = 0.0f;
+        fdef.friction            = 0.1f;
         fdef.restitution         = 0.f;
         for (int i = 0; i < tile->getNumShapes(); ++i)
         {

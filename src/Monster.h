@@ -1,28 +1,28 @@
 #ifndef MONSTER_H
 #define MONSTER_H
 #include "Animator.h"
-#include "BaseGameObject.h"
 #include "CollisionHandler.h"
 #include "Destroyable.h"
+#include "GameObject.h"
 #include "Rect.h"
 #include "Utils.h"
 #include "box2d/b2_body.h"
 #include "box2d/box2d.h"
 class Level;
-class Monster : public BaseGameObject, public ICollisionHandler, public IDestroyable
+class Monster : public GameObject, public ICollisionHandler, public IDestroyable
 {
   public:
     ~Monster();
 
-    virtual bool init(const FloatRect& bounding);
-    virtual void tick(float deltaTime) override;
+    bool init(const FloatRect& bounding);
+    void tick(float deltaTime) override;
 
     // IDestroyable interface
   public:
-    virtual void takeDamge(int damage) override;
-    virtual int  getHitPoints() override;
-    virtual int  getMaxHitPoints() override;
-    virtual bool isDead() override;
+    bool takeDamge(int damage, Direction direction) override;
+    int  getHitPoints() override;
+    int  getMaxHitPoints() override;
+    bool isDead() override;
 
     // ICollisionHandler interface
   public:

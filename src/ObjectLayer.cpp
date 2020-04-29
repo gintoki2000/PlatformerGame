@@ -11,7 +11,7 @@ ObjectLayer::~ObjectLayer()
 {
     for (int i = 0; i < m_numObjects; ++i)
     {
-        delete m_objects[i];
+        m_objects[i]->cleanup();
     }
     delete[] m_objects;
 }
@@ -53,17 +53,7 @@ void ObjectLayer::addObject(GameObject* obj)
     growIfNeed();
     m_objects[m_numObjects++] = obj;
     obj->setObjectLayer(this);
-    obj->setLayerManager(getManager());
-}
-
-void ObjectLayer::removeObject(GameObject* obj)
-{
-    obj->scheduleRemove();
-}
-
-void ObjectLayer::removeObjectAt(int index)
-{
-    getObjectAt(index)->scheduleRemove();
+	obj->start();
 }
 
 int ObjectLayer::indexOf(GameObject* obj) const
@@ -97,10 +87,10 @@ void ObjectLayer::refresh()
 	int i = 0;
 	while(i < m_numObjects)
 	{
-		if (m_objects[i]->needToRemove())
+        if (m_objects[i]->m_needToRemove)
 		{
 			m_objects[i]->setObjectLayer(nullptr);
-			m_objects[i]->setLayerManager(nullptr);
+            m_objects[i]->m_needToRemove = false;
 			m_objects[i]->cleanup();
 
 			m_objects[i] = m_objects[m_numObjects - 1];

@@ -1,11 +1,11 @@
 #include "Game.h"
+#include "SDL_log.h"
 #include "SDL_timer.h"
-
 int main()
 {
     Game        game;
     const int   TICKS_PER_FRAME = 15;
-    const float TIME_STEP = 1.f / 70.f;
+    const float TIME_STEP       = 1.f / 60.f;
     Uint32      usedTicks;
     Uint32      startTicks;
     if (game.init())

@@ -17,7 +17,6 @@ class FireCastParticle : public GameObject
     void paint() override;
     void cleanup() override;
 
-    bool isInUse() const { return needToRemove(); }
 
   private:
     Animation*  m_animation;

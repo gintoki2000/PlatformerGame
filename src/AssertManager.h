@@ -3,18 +3,21 @@
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_render.h"
-#include <map>
-#include <string>
 
 class TextureManager
 {
   public:
     enum TextureID
     {
-        TEXTURE_PLAYER,
-        TEXTURE_BOAR_WARRIOR,
-		TEXTURE_FIRE_EXPLOSION,
-		TEXTURE_FIREBALL,
+        PLAYER,
+        BOAR_WARRIOR,
+        FIRE_EXPLOSION,
+        FIREBALL,
+        FIRE_BUST,
+        THROWING_AXE,
+        GRENADE,
+        STATUS_BAR,
+		BLOOD_STAIN,
         NUM_TEXTURES
     };
     TextureManager();
@@ -25,16 +28,15 @@ class TextureManager
 
   private:
     SDL_Texture* m_textures[NUM_TEXTURES];
-
-  private:
 };
 class SoundManager
 {
   public:
     enum SoundID
     {
-        SOUND_FIREBALL,
-        SOUND_BOMB_EXPLOSION,
+        FIREBALL,
+        IMPACT,
+        BOMB_EXPLOSION,
         NUM_SOUNDS
     };
 

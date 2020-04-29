@@ -4,28 +4,36 @@
 #include "Level.h"
 #include "SDL_image.h"
 #include "SDL_log.h"
+#include "SDL_render.h"
 #include "TextureRegion.h"
 #include "tmxlite/ImageLayer.hpp"
 
-Background::Background(SDL_Texture* texture, float parallax) :
-    ImageLayer(texture), m_parallax(parallax)
+Background::Background() :
+    m_parallax(0.f), m_initialPositionX(0.f), m_texture(nullptr)
 {
 }
 
-void Background::update(float)
+Background* Background::create(const tmx::ImageLayer& data)
 {
-    float cameraPositionX = getManager()->getCamera().getViewport().left();
-    setPositionX(m_initialPositionX + cameraPositionX * m_parallax);
+    Background* ret = new Background;
+    if (ret->init(data))
+    {
+        return ret;
+    }
+    delete ret;
+    return nullptr;
 }
 
-bool Background::parse(const tmx::ImageLayer& imageLayerData)
+Background::~Background() { SDL_DestroyTexture(m_texture); }
+
+bool Background::init(const tmx::ImageLayer& imageLayerData)
 {
     setPositionX(imageLayerData.getOffset().x);
     setPositionY(imageLayerData.getOffset().y);
     setIsVisible(imageLayerData.getVisible());
 
-    SDL_Texture* m_texture = IMG_LoadTexture(
-        Game::getInstance()->renderer(), imageLayerData.getImagePath().c_str());
+    const char*  path      = imageLayerData.getImagePath().c_str();
+    SDL_Texture* m_texture = IMG_LoadTexture(GAME->renderer(), path);
 
     if (m_texture == nullptr)
     {
@@ -34,9 +42,9 @@ bool Background::parse(const tmx::ImageLayer& imageLayerData)
         return false;
     }
 
-	setImage(m_texture);
+    setImage(m_texture);
 
-	m_initialPositionX = getPositionX();
+    m_initialPositionX = getPositionX();
 
     for (const auto& prop : imageLayerData.getProperties())
     {
@@ -46,4 +54,9 @@ bool Background::parse(const tmx::ImageLayer& imageLayerData)
         }
     }
     return true;
+}
+void Background::update(float)
+{
+    float cameraPositionX = getManager()->getCamera().getViewport().left();
+    setPositionX(m_initialPositionX + cameraPositionX * m_parallax);
 }

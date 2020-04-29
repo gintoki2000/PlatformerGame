@@ -17,8 +17,12 @@ Monster::Monster()
 
 Monster::~Monster()
 {
-    m_body->GetWorld()->DestroyBody(m_body);
-    m_body = nullptr;
+    if (m_body != nullptr)
+    {
+        m_body->SetUserData(nullptr);
+        m_body->GetWorld()->DestroyBody(m_body);
+        m_body = nullptr;
+    }
 }
 
 bool Monster::init(const FloatRect& aabb)
@@ -68,7 +72,7 @@ bool Monster::init(const FloatRect& aabb)
     m_identifier.tag    = TAG_MONSTER;
     m_identifier.object = this;
 
-    m_damageWhenTouching = 1.f;
+    m_damageWhenTouching = 1;
     return true;
 }
 
@@ -78,17 +82,7 @@ void Monster::tick(float)
     m_positionY = m_body->GetPosition().y * Constances::PPM;
 }
 
-void Monster::takeDamge(int damage)
-{
-    if (!isDead())
-    {
-        m_hitPoints -= damage;
-        if (m_hitPoints < 0)
-        {
-            m_hitPoints = 0;
-        }
-    }
-}
+bool Monster::takeDamge(int, Direction) {}
 
 int  Monster::getHitPoints() { return m_hitPoints; }
 int  Monster::getMaxHitPoints() { return m_maxHitPoints; }
@@ -98,11 +92,15 @@ void Monster::onBeginContact(const ContactInfo&) {}
 void Monster::onEndContact(const ContactInfo&) {}
 void Monster::onPreSolve(const ContactInfo& info, const b2Manifold&)
 {
+    if (isDead())
+        return;
     if (info.getOtherIdentifier()->tag == TAG_PLAYER)
     {
         Player* player =
             static_cast<Player*>(info.getOtherIdentifier()->object);
-        player->takeDamge(m_damageWhenTouching);
+        player->takeDamge(
+            m_damageWhenTouching,
+            relativeDirection(player->getPositionX(), getPositionX()));
     }
 }
 void Monster::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

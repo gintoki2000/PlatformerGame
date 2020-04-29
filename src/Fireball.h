@@ -3,22 +3,23 @@
 #include "Animation.h"
 #include "CollisionHandler.h"
 #include "GameObject.h"
-#include "SDL_render.h"
-#include "SpriteSheet.h"
+#include "Spell.h"
 #include "Utils.h"
 #include "Vec.h"
 #include "box2d/box2d.h"
-class FireBall : public GameObject, public ICollisionHandler
+class Fireball : public Spell, public ICollisionHandler
 {
   public:
-    static FireBall* create(const Vec2& position, Direction direction,
+    static Fireball* create(const Vec2& position, Direction direction,
                             float speed);
-    ~FireBall();
+	static Fireball* create(const Vec2& position, Direction direction);
+    ~Fireball();
 
   public:
     // GameObject interface
     void tick(float deltaTime) override;
     void paint() override;
+	void start() override;
     void cleanup() override;
 
     // ICollisionHandler interface
@@ -31,7 +32,7 @@ class FireBall : public GameObject, public ICollisionHandler
                     const b2Manifold&  oldManiflod) override;
 
   private:
-    FireBall();
+    Fireball();
     bool        init(const Vec2& position, Direction direction, float speed);
     SpriteSheet m_spriteSheet;
     Animation*  m_animation;

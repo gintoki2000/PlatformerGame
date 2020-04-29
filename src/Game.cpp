@@ -3,6 +3,7 @@
 #include "BoarWarrior.h"
 #include "Constances.h"
 #include "GameState.h"
+#include "Input.h"
 #include "MainState.h"
 #include "ObjectFactory.h"
 #include "SDL.h"
@@ -10,8 +11,10 @@
 #include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "SDL_render.h"
+#include "SDL_ttf.h"
 #include "SDL_video.h"
 #include "StateManager.h"
+#include "TitleState.h"
 #include "Utils.h"
 #include "WorldManager.h"
 
@@ -84,9 +87,15 @@ bool Game::init()
 
     if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to open audio!");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to open SDL_mixer!");
         return false;
     }
+
+	if (TTF_Init() == -1)
+	{
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to init SDL_ttf!");
+        return false;
+	}
 
     m_textureMGR = new TextureManager();
     m_soundMGR   = new SoundManager();
@@ -105,7 +114,7 @@ bool Game::init()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load sounds!");
         return false;
     }
-    GameState* state = MainState::create();
+    GameState* state = TitleState::create();
     if (state == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -140,6 +149,7 @@ void Game::render(float deltaTime)
 			break;
         }
     }
+	Input::update();
     state->render(deltaTime);
     SDL_RenderPresent(m_renderer);
 }

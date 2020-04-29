@@ -26,12 +26,18 @@ bool TextureManager::load(SDL_Renderer* renderer)
     };
 
     Pair pairs[] = {
-        {"asserts/spritesheets/player.png", TEXTURE_PLAYER},
-        {"asserts/spritesheets/fire-ball.png", TEXTURE_FIREBALL},
-        {"asserts/spritesheets/fire-explosion.png", TEXTURE_FIRE_EXPLOSION},
-        {"asserts/spritesheets/boar-warrior.png", TEXTURE_BOAR_WARRIOR}};
+        {"asserts/spritesheets/player.png", PLAYER},
+        {"asserts/spritesheets/fire-ball.png", FIREBALL},
+        {"asserts/spritesheets/fire-explosion.png", FIRE_EXPLOSION},
+        {"asserts/spritesheets/throwing-axe.png", THROWING_AXE},
+        {"asserts/spritesheets/ffire-bust.png", FIRE_BUST},
+        {"asserts/spritesheets/grenade.png", GRENADE},
+        {"asserts/spritesheets/blood-stain.png", BLOOD_STAIN},
+        {"asserts/spritesheets/status-bar-2.png", STATUS_BAR},
+        {"asserts/spritesheets/boar-warrior.png", BOAR_WARRIOR}};
 
-    for (int i = 0; i < NUM_TEXTURES; ++i)
+    int num = sizeof (pairs) / sizeof (Pair);
+    for (int i = 0; i < num; ++i)
     {
         m_textures[pairs[i].id] = IMG_LoadTexture(renderer, pairs[i].file);
         if (m_textures[pairs[i].id] == nullptr)
@@ -43,10 +49,7 @@ bool TextureManager::load(SDL_Renderer* renderer)
     return true;
 }
 
-SDL_Texture* TextureManager::getTexture(TextureID ID)
-{
-	return m_textures[ID];
-}
+SDL_Texture* TextureManager::getTexture(TextureID ID) { return m_textures[ID]; }
 
 bool SoundManager::load()
 {
@@ -57,8 +60,9 @@ bool SoundManager::load()
     };
 
     Pair pairs[] = {
-        {"asserts/sounds/fireball.wav", SOUND_FIREBALL},
-        {"asserts/sounds/bomb-explosion.wav", SOUND_BOMB_EXPLOSION}};
+        {"asserts/sounds/fireball.wav", FIREBALL},
+        {"asserts/sounds/impact.wav", IMPACT},
+        {"asserts/sounds/bomb-explosion.wav", BOMB_EXPLOSION}};
     Mix_Chunk* sound;
     for (int i = 0; i < NUM_SOUNDS; ++i)
     {

@@ -7,7 +7,35 @@
 #include "TextureRegion.h"
 #include "TileLayerCell.h"
 #include "TileLayerTile.h"
-TileLayer::TileLayer(int width, int height, int tileWidth, int tileHeight)
+TileLayer::TileLayer() : m_cells(nullptr) {}
+
+TileLayer::~TileLayer()
+{
+    if (m_cells != nullptr)
+    {
+        int count = m_width * m_height;
+        for (int i = 0; i < count; ++i)
+        {
+            delete m_cells[i];
+        }
+        delete[] m_cells;
+        m_cells = nullptr;
+    }
+}
+
+TileLayer* TileLayer::create(int width, int height, int tileWidth,
+                             int tileHeight)
+{
+    TileLayer* ret = new TileLayer;
+    if (ret->init(width, height, tileWidth, tileHeight))
+    {
+        return ret;
+    }
+    delete ret;
+    return nullptr;
+}
+
+bool TileLayer::init(int width, int height, int tileWidth, int tileHeight)
 {
     m_width      = width;
     m_height     = height;
@@ -19,16 +47,7 @@ TileLayer::TileLayer(int width, int height, int tileWidth, int tileHeight)
     {
         m_cells[i] = nullptr;
     }
-}
-
-TileLayer::~TileLayer()
-{
-    int count = m_width * m_height;
-    for (int i = 0; i < count; ++i)
-    {
-        delete m_cells[i];
-    }
-    delete[] m_cells;
+	return true;
 }
 
 void TileLayer::update(float) {}
@@ -36,7 +55,7 @@ void TileLayer::update(float) {}
 void TileLayer::render()
 {
     const Rect&   viewport = getManager()->getCamera().getViewport();
-    SDL_Renderer* renderer = Game::getInstance()->renderer();
+    SDL_Renderer* renderer = GAME->renderer();
     int           startX   = viewport.left() / m_tileWidth - 1;
     int           startY   = viewport.top() / m_tileHeight - 1;
     int           endX     = viewport.right() / m_tileWidth + 1;

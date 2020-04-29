@@ -2,21 +2,29 @@
 #include "Animation.h"
 #include "Animator.h"
 #include "AssertManager.h"
+#include "Axe.h"
+#include "BloodStainParticle.h"
 #include "Constances.h"
+#include "DirectionalCast.h"
+#include "Fireball.h"
 #include "Game.h"
 #include "GameObject.h"
+#include "Grenade.h"
 #include "Input.h"
 #include "Level.h"
 #include "Math.h"
-#include "PlayerCutSkill.h"
-#include "PlayerFireBallSkill.h"
 #include "PlayerSkill.h"
 #include "Rect.h"
 #include "SDL_assert.h"
+#include "SDL_keyboard.h"
+#include "SDL_scancode.h"
+#include "Slash.h"
 #include "SpriteSheet.h"
 #include "Utils.h"
+#include "Vec.h"
 #include "WorldManager.h"
 #include "box2d/b2_body.h"
+#include "ParticleSystem.h"
 const float           Player::MAX_RUN_SPEED   = 8.f;
 PlayerIdle1State      Player::idle1State      = PlayerIdle1State();
 PlayerIdle2State      Player::idle2State      = PlayerIdle2State();
@@ -34,33 +42,66 @@ Player::Player()
     m_animator    = nullptr;
     m_state       = nullptr;
     m_activeSkill = nullptr;
+    m_skillA      = nullptr;
+    m_skillB      = nullptr;
     m_identifier  = Identifier(TAG_PLAYER, this);
-
-    initGraphicsComponent();
-    initPhysicsComponent();
-    resetMembers();
-
-    setSkillA(new PlayerFireballSkill());
-    setSkillB(new PlayerCutSkill());
 }
 
 Player::~Player()
 {
-    m_body->GetWorld()->DestroyBody(m_body);
-    delete m_animator;
-    delete m_skillA;
-    delete m_skillB;
+    if (m_body != nullptr)
+    {
+        m_body->SetUserData(nullptr);
+        m_body->GetWorld()->DestroyBody(m_body);
+        m_body = nullptr;
+    }
+    for (int i = 0; i < NUM_SKILLS; ++i)
+    {
+        DELETE_NULL(m_testSkill[i]);
+    }
+    m_skillA = nullptr;
+    DELETE_NULL(m_animator);
+    DELETE_NULL(m_skillA);
+    DELETE_NULL(m_skillB);
+}
 
-    m_body        = nullptr;
-    m_animator    = nullptr;
-    m_activeSkill = nullptr;
+Player* Player::create(const Vec2& center)
+{
+    Player* ret = new Player;
+    if (ret->init(center))
+    {
+        return ret;
+    }
+    DELETE_NULL(ret);
+    return nullptr;
+}
+
+bool Player::init(const Vec2& center)
+{
+    if (!initGraphicsComponent())
+    {
+        return false;
+    }
+    initPhysicsComponent(center);
+    m_testSkill[0] = DirectionalCast<Grenade>::create();
+    m_testSkill[1] = DirectionalCast<Axe>::create();
+    m_testSkill[2] = DirectionalCast<Fireball>::create();
+
+    m_skillA = m_testSkill[0];
+	m_skillB = Slash::create();
+
+    resetMembers();
+    return true;
 }
 
 bool Player::initGraphicsComponent()
 {
     SDL_Texture* texture =
-        textureMGR().getTexture(TextureManager::TEXTURE_PLAYER);
-    SDL_assert(texture != nullptr);
+        GAME->textureMGR().getTexture(TextureManager::PLAYER);
+    if (texture == nullptr)
+    {
+        return false;
+    }
     m_spriteSheet.init(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
     Animation* anims[NUM_ANIMS];
     anims[ANIM_IDLE_1]      = new Animation(&m_spriteSheet, 0, 4, 1.f / 8.f);
@@ -106,7 +147,7 @@ bool Player::initGraphicsComponent()
     return true;
 }
 
-void Player::initPhysicsComponent()
+void Player::initPhysicsComponent(const Vec2& center)
 {
     b2World&  world = *WorldManager::getWorld();
     b2BodyDef bdef;
@@ -114,6 +155,8 @@ void Player::initPhysicsComponent()
     bdef.type          = b2_dynamicBody;
     bdef.fixedRotation = true;
     bdef.allowSleep    = false;
+    bdef.position.x    = center.x / Constances::PPM;
+    bdef.position.y    = center.y / Constances::PPM;
 
     m_body = world.CreateBody(&bdef);
 
@@ -127,7 +170,6 @@ void Player::initPhysicsComponent()
     fdef.filter.maskBits     = CATEGORY_BIT_BLOCK | CATEGORY_BIT_MONSTER;
     fdef.friction            = 0.0f;
     fdef.restitution         = 0.f;
-    // fdef.isSensor            = true;
     m_body->CreateFixture(&fdef);
 
     b2CircleShape circle;
@@ -148,20 +190,20 @@ void Player::initPhysicsComponent()
 void Player::resetMembers()
 {
     m_direction                    = DIRECTION_RIGHT;
-    m_maxHitPoints                 = 5;
+    m_maxHitPoints                 = 22;
     m_hitPoints                    = m_maxHitPoints;
-    m_maxManaPoints                = 50;
+    m_maxManaPoints                = 21;
     m_manaPoints                   = m_maxManaPoints;
     m_status                       = STATUS_NORMAL;
     m_isGrounded                   = false;
     m_prevGroundState              = false;
     m_jumpPressedRemember          = 0.f;
-    m_jumpPressedRememberTime      = 0.3f;
+    m_jumpPressedRememberTime      = 0.05f;
     m_groundedRemember             = 0.f;
-    m_groundedRememberTime         = 1.5f;
+    m_groundedRememberTime         = 0.5f;
     m_horiziontalAcceleration      = 0.f;
     m_horizontalDampingWhenStoping = 0.9f;
-    m_horizontalDampingBasic       = 0.8f;
+    m_horizontalDampingBasic       = 0.7f;
     m_horizontalDampingWhenTurning = 0.4f;
     m_totalExtrasJump              = 0;
     m_extrasJumpCount              = 0;
@@ -170,9 +212,7 @@ void Player::resetMembers()
     m_ableToUseSkill               = true;
     m_state                        = &idle1State;
     m_state->enter(*this);
-    // setPosition(100.f, 0.f);
-    m_body->SetAwake(true);
-    m_body->SetTransform(b2Vec2(10, 0), (float)m_rotation);
+    m_body->SetTransform(b2Vec2(10, 10), (float)m_rotation);
 }
 
 void Player::updateGraphics(float deltaTime) { m_animator->tick(deltaTime); }
@@ -184,12 +224,12 @@ void Player::updatePhysics(float deltaTime)
     m_rotation        = m_body->GetAngle();
     m_prevGroundState = m_isGrounded;
 
-    const int checkBoxHeight = 6;
-    Rect      groundCheckBox;
-    groundCheckBox.x = getPositionX() - WIDTH / 2;
-    groundCheckBox.y = getPositionY() + HEIGHT / 2 - checkBoxHeight / 2;
-    groundCheckBox.w = WIDTH;
-    groundCheckBox.h = checkBoxHeight;
+    const int checkBoxHeight = 4;
+    FloatRect groundCheckBox;
+    groundCheckBox.x      = getPositionX() - WIDTH / 2 + 2;
+    groundCheckBox.y      = getPositionY() + HEIGHT / 2 - checkBoxHeight / 2;
+    groundCheckBox.width  = WIDTH - 4;
+    groundCheckBox.height = checkBoxHeight;
 
     m_isGrounded = boxCast(groundCheckBox, CATEGORY_BIT_BLOCK);
 
@@ -229,7 +269,7 @@ void Player::tick(float deltaTime)
 
 void Player::paint()
 {
-    SDL_Renderer*   renderer = gameMGR().renderer();
+    SDL_Renderer*   renderer = GAME->renderer();
     const SDL_Rect& viewport = getLayerManager()->getCamera().getViewport();
     const Sprite&   sprite   = m_animator->getCurrentSprite();
 
@@ -247,6 +287,27 @@ void Player::paint()
 
 void Player::updateLogic(float deltaTime)
 {
+
+    const Uint8* ks = SDL_GetKeyboardState(nullptr);
+    if (ks[SDL_SCANCODE_I])
+    {
+        --m_currentSkill;
+        if (m_currentSkill < 0)
+        {
+            m_currentSkill = NUM_SKILLS - 1;
+        }
+        m_skillA = m_testSkill[m_currentSkill];
+    }
+    else if (ks[SDL_SCANCODE_O])
+    {
+        ++m_currentSkill;
+        if (m_currentSkill > NUM_SKILLS - 1)
+        {
+            m_currentSkill = 0;
+        }
+        m_skillA = m_testSkill[m_currentSkill];
+    }
+
     if (!m_isGrounded)
     {
         m_groundedRemember -= deltaTime;
@@ -270,12 +331,13 @@ void Player::updateLogic(float deltaTime)
         }
         return;
     }
-    if (m_ableToUseSkill && m_skillA->activate(*this))
+    if (m_ableToUseSkill && m_skillA != nullptr && m_skillA->activate(*this))
     {
         m_activeSkill = m_skillA;
         m_activeSkill->enter(*this);
     }
-    else if (m_ableToUseSkill && m_skillB->activate(*this))
+    else if (m_ableToUseSkill && m_skillB != nullptr &&
+             m_skillB->activate(*this))
     {
         m_activeSkill = m_skillB;
         m_activeSkill->enter(*this);
@@ -566,26 +628,21 @@ void PlayerHurtState::enter(Player& player)
     player.getAnimator()->play(Player::ANIM_HURT, 0.f);
     player.m_ableToUseSkill = false;
     player.m_status         = Player::STATUS_HURT;
-
-    b2Vec2 vel;
-    float  sign = player.m_direction == DIRECTION_LEFT ? -1.f : 1.f;
-    vel.x       = 30.f * (-sign);
-    vel.y       = -5.f;
-    player.getBody()->SetLinearVelocity(vel);
+    /*
+b2Vec2 vel;
+float  sign = player.m_direction == DIRECTION_LEFT ? -1.f : 1.f;
+vel.x       = 30.f * (-sign);
+vel.y       = -5.f;
+player.getBody()->SetLinearVelocity(vel);
+    */
 }
 
 PlayerState* PlayerHurtState::tick(Player& player, float)
 {
-    if (player.getAnimator()->isCurrentAnimationFinshed())
+    if (player.getAnimator()->isCurrentAnimationFinshed() &&
+        player.isGrounded())
     {
-        if (player.isGrounded())
-        {
-            return &Player::idle1State;
-        }
-        else
-        {
-            return &Player::fallState;
-        }
+        return &Player::idle1State;
     }
     return nullptr;
 }
@@ -598,7 +655,7 @@ void PlayerHurtState::exit(Player& player)
 
 void PlayerDieState::enter(Player& player)
 {
-    player.getAnimator()->play(Player::ANIM_DIE, 0.f);
+    player.getAnimator()->play(Player::ANIM_DIE);
     player.m_ableToUseSkill          = false;
     player.m_status                  = Player::STATTUS_DIE;
     player.m_horiziontalAcceleration = 0.f;
@@ -617,7 +674,7 @@ void PlayerDieState::exit(Player& player) { player.m_ableToUseSkill = true; }
 
 void PlayerCrouchState::enter(Player& player)
 {
-    player.getAnimator()->play(Player::ANIM_CROUCH, 0.f);
+    player.getAnimator()->play(Player::ANIM_CROUCH);
 }
 
 PlayerState* PlayerCrouchState::tick(Player& player, float)
@@ -640,7 +697,7 @@ PlayerState* PlayerCrouchState::tick(Player& player, float)
 
 void PlayerAirJumpState::enter(Player& player)
 {
-    player.getAnimator()->play(Player::ANIM_JUMP, 0.f);
+    player.getAnimator()->play(Player::ANIM_JUMP);
     b2Vec2 vel = player.getBody()->GetLinearVelocity();
     vel.y      = -Player::JUMP_VEL;
     player.getBody()->SetLinearVelocity(vel);
@@ -701,13 +758,18 @@ void Player::onPreSolve(const ContactInfo& info, const b2Manifold&)
 
 void Player::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
 
-void Player::takeDamge(int damage)
+bool Player::takeDamge(int damage, Direction direction)
 {
     if (damage <= 0)
-        return;
+        return false;
     if (m_status == STATUS_NORMAL)
     {
-        SDL_assert(m_hitPoints > 0);
+        Level* level = static_cast<Level*>(getLayerManager());
+        level->getParticleSystem()->create<BloodStainParticle>(getPosition());
+        if (direction != DIRECTION_NONE)
+        {
+            m_direction = direction;
+        }
         m_hitPoints -= damage;
         if (m_hitPoints <= 0)
         {
@@ -722,7 +784,9 @@ void Player::takeDamge(int damage)
             m_state = &hurtState;
             m_state->enter(*this);
         }
+        return true;
     }
+    return false;
 }
 
 int Player::getHitPoints() { return m_hitPoints; }
@@ -730,3 +794,17 @@ int Player::getHitPoints() { return m_hitPoints; }
 int Player::getMaxHitPoints() { return m_maxHitPoints; }
 
 bool Player::isDead() { return m_hitPoints == 0; }
+
+int  Player::getManaPoints() const { return m_manaPoints; }
+int  Player::getMaxManaPoints() const { return m_maxManaPoints; }
+bool Player::consumeMana(int amount)
+{
+    if (m_manaPoints >= amount)
+    {
+        m_manaPoints -= amount;
+        return true;
+    }
+    return false;
+}
+
+void Player::onPositionChanged() { synchronizeBodyTransform(); }

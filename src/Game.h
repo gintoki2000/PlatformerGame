@@ -37,4 +37,6 @@ class Game
     static Game* instance;
 };
 
+#define GAME Game::getInstance()
+
 #endif // GAME_H

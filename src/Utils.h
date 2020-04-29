@@ -32,7 +32,17 @@ enum Tag
     TAG_UNDEFIED,
     TAG_BLOCK,
     TAG_PLAYER,
-    TAG_MONSTER
+    TAG_MONSTER,
+    TAG_SPELL
+};
+
+enum AttackType
+{
+    ATK_TYPE_SLASH,
+    ATK_TYPE_STAB,
+    ATK_TYPE_FIRE,
+    ATK_TYPE_WATER,
+    ATK_TYPE_ELECTRIC
 };
 struct Identifier
 {
@@ -45,9 +55,11 @@ struct Identifier
     ICollisionHandler* object;
 };
 
-bool  boxCast(const Rect& box, uint16 maskBits);
-void  boxQuery(const Rect& box, uint16 maskBits, b2Fixture* fixtures[], int& n,
-               const int max);
-int   directionToSign(Direction direction);
-float distance(const Vec2& a, const Vec2& b);
+bool      boxCast(const FloatRect& box, uint16 maskBits);
+void      boxQuery(const FloatRect& box, uint16 maskBits, b2Fixture* fixtures[],
+                   int& n, const int max);
+int       directionToSign(Direction direction);
+float     distance(const Vec2& a, const Vec2& b);
+Direction relativeDirection(float x1, float x2);
+int       randomRange(int a, int b);
 #endif // UTILS_H

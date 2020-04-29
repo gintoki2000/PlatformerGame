@@ -20,5 +20,8 @@ const T& clamp(const T& a, const T& b, float x)
 }
 float lerp(float current, float target, float step);
 float sign(float v);
+int rand(int a, int b);
 }
+
+
 #endif //MATH_H

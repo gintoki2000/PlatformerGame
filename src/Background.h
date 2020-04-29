@@ -9,18 +9,18 @@ class ImageLayer;
 class Background : public ImageLayer
 {
   public:
-    Background(SDL_Texture* texture, float parallax);
+    static Background* create(const tmx::ImageLayer& data);
 
-    bool parse(const tmx::ImageLayer& imageLayerData);
+	~Background();
+
+    bool init(const tmx::ImageLayer& imageLayerData);
     void update(float deltaTime) override;
 
   private:
-    Background() { m_texture = nullptr; }
+    Background(); 
     float m_parallax;
     float m_initialPositionX;
 
     SDL_Texture* m_texture;
-
-    friend class Level;
 };
 #endif // BACKGROUND_H

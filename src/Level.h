@@ -1,6 +1,8 @@
 #ifndef LEVEL_H
 #define LEVEL_H
+#include "CameraShaker.h"
 #include "LayerManager.h"
+#include "SDL_mixer.h"
 #include "WorldRenderer.h"
 #include "box2d/box2d.h"
 #include "tmxlite/ObjectGroup.hpp"
@@ -11,6 +13,7 @@ class HUD;
 class Tilesets;
 class Background;
 class ObjectLayer;
+class ParticleSystem;
 class Level : public LayerManager, public b2ContactListener
 {
   public:
@@ -19,9 +22,12 @@ class Level : public LayerManager, public b2ContactListener
     static Level* loadFromFile(const char* filename);
 
     /// getters
-    Player*      getPlayer() const;
-    Tilesets*    getTilesets() const;
-    ObjectLayer* getParticleLayer() const;
+    Player*       getPlayer() const;
+    Tilesets*     getTilesets() const;
+    ObjectLayer*  getParticleLayer() const;
+    ObjectLayer*  getSpriteLayer() const;
+    CameraShaker* getCameraShaker();
+	ParticleSystem* getParticleSystem() const;
 
     // stuff
     void setIsPaused(bool paused);
@@ -44,29 +50,19 @@ class Level : public LayerManager, public b2ContactListener
   private:
     Level();
     bool init(const char* filename);
-    bool parseTileLayer(TileLayer&            tileLayer,
-                        const tmx::TileLayer& tileLayerData);
-    bool parseObjectLayer(ObjectLayer&            objectLayer,
-                          const tmx::ObjectGroup& objectLayerData);
 
     /// data fields
-    bool           m_isPaused;
-    Player*        m_player;
-    Tilesets*      m_tileSets;
-    Rect           m_viewport;
-    WorldRenderer* m_worldRenderer;
-    float          m_viewportX;
-
-    bool m_drawDebugData;
-
-    ObjectLayer* m_enemyLayer;
-    ObjectLayer* m_itemLayer;
-	ObjectLayer* m_particles;
-
-    int m_rows;
-    int m_cols;
-    int m_tileWidth;
-    int m_tileHeight;
+    bool            m_isPaused;
+    Player*         m_player;
+    Tilesets*       m_tilesets;
+    WorldRenderer*  m_worldRenderer;
+    bool            m_drawDebugData;
+    ObjectLayer*    m_spriteLayer;
+    ObjectLayer*    m_particleLayer;
+    Mix_Music*      m_music;
+    HUD*            m_hud;
+    CameraShaker*   m_cameraShaker;
+    ParticleSystem* m_particleSystem;
 
     friend class LevelParser;
 };
