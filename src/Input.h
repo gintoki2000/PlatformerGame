@@ -1,47 +1,41 @@
 #ifndef INPUT_H
 #define INPUT_H
 #include "SDL.h"
+#include "SDL_scancode.h"
+enum Button
+{
+    BUTTON_A,
+    BUTTON_B,
+    BUTTON_X,
+    BUTTON_Y,
+    BUTTON_START,
+    BUTTON_SELECT,
+    BUTTON_PAD_LEFT,
+    BUTTON_PAD_RIGHT,
+    BUTTON_PAD_UP,
+    BUTTON_PAD_DOWN,
+    BUTTON_L,
+    BUTTON_R,
+    NUM_BUTTONS,
+};
 class Input
 {
   public:
-    static bool isButtonAPressed();
-    static bool isButtonBPressed();
-    static bool isButtonUpPressed();
-    static bool isButtonDownPressed();
-    static bool isButtonLeftPressed();
-    static bool isButtonRightPressed();
-    static bool isButtonAJustPressed();
-    static bool isButtonBJustPressed();
-    static bool isButtonUpJustPressed();
-    static bool isButtonDownJustPressed();
-    static bool isButtonLeftJustPressed();
-    static bool isButtonRightJustPressed();
-    static bool isButtonAReleased();
-    static bool isButtonBReleased();
-    static bool isButtonUpReleased();
-    static bool isButtonDownReleased();
-    static bool isButtonLeftReleased();
-    static bool isButtonRightReleased();
-    static bool isButtonAJustReleased();
-    static bool isButtonBJustReleased();
-    static bool isButtonUpJustReleased();
-    static bool isButtonDownJustReleased();
-    static bool isButtonLeftJustReleased();
-    static bool isButtonRightJustReleased();
-    static int getHorizontalInputDirection();
-    static int getVerticalInputDirection();
+    static int  getHorizontalInputDirection();
+    //static int  getVerticalInputDirection();
+
+    static bool isPressed(Button button);
+    static bool isReleased(Button button);
+    static bool isJustPressed(Button button);
+    static bool isJustReleased(Button button);
+
+	static void init();
 
     static void update();
 
   private:
-    static struct ButtonState
-    {
-        bool buttonA = false;
-        bool buttonB = false;
-        bool buttonUp = false;
-        bool buttonDown = false;
-        bool buttonLeft = false;
-        bool buttonRight = false;
-    } prevButtonState, currentButtonState;
+    static int  mappingToScancode[NUM_BUTTONS];
+    static bool pButtonState[NUM_BUTTONS];
+    static bool cButtonState[NUM_BUTTONS];
 };
 #endif // INPUT_H

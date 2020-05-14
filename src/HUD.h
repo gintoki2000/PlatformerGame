@@ -1,13 +1,14 @@
 #ifndef HUD_H
 #define HUD_H
+#include "Layer.h"
 #include "SpriteSheet.h"
 class Level;
-class HUD
+class HUD : public Layer
 {
   public:
     static HUD* create();
-    void        tick(Level& level, float deltaTime);
-    void        paint(Level& level);
+    void        update(float deltaTime) override;
+    void        render() override;
 
   private:
     HUD();
@@ -15,9 +16,11 @@ class HUD
     Sprite m_circle;
     Sprite m_mpBorder;
     Sprite m_hpBorder;
-    
-	SpriteSheet m_hp;
-	SpriteSheet m_mp;
+
+    SpriteSheet m_hp;
+    SpriteSheet m_mp;
+
+    Level* m_level;
 };
 
 #endif // HUD_H

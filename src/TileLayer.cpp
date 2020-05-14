@@ -54,7 +54,7 @@ void TileLayer::update(float) {}
 
 void TileLayer::render()
 {
-    const Rect&   viewport = getManager()->getCamera().getViewport();
+    const Rect&   viewport = getScene()->getCamera().getViewport();
     SDL_Renderer* renderer = GAME->renderer();
     int           startX   = viewport.left() / m_tileWidth - 1;
     int           startY   = viewport.top() / m_tileHeight - 1;

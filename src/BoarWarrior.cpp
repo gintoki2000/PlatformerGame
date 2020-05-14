@@ -2,19 +2,20 @@
 #include "Animation.h"
 #include "ParticleSystem.h"
 #include "Animator.h"
-#include "AssertManager.h"
+
 #include "Camera.h"
 #include "Constances.h"
 #include "FireBustParticle.h"
 #include "Game.h"
 #include "Level.h"
 #include "ObjectLayer.h"
-#include "Player.h"
+#include "Adventurer.h"
 #include "Rect.h"
 #include "SDL_blendmode.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SDL_stdinc.h"
+#include "TextureManager.h"
 #include "Utils.h"
 #include "Vec.h"
 #include "box2d/b2_collision.h"
@@ -60,7 +61,7 @@ bool BoarWarrior::init(const tmx::Object& data)
 bool BoarWarrior::init(const Vec2& leftTop)
 {
     Monster::init(FloatRect(leftTop, SIZE));
-    m_texture = GAME->textureMGR().getTexture(TextureManager::BOAR_WARRIOR);
+    m_texture = TextureManager::get(TEX_BOAR_WARRIOR);
     m_spriteSheet.init(m_texture, 120, 100);
     Animation* anims[NUM_ANIMS];
 
@@ -116,15 +117,15 @@ void BoarWarrior::onPreSolve(const ContactInfo& info, const b2Manifold&)
     {
         if (!isDead())
         {
-            Player*   player = static_cast<Player*>(otherIDR->object);
+            Adventurer*   adventurer = static_cast<Adventurer*>(otherIDR->object);
             Direction direction =
-                relativeDirection(player->getPositionX(), getPositionX());
-            if (player->takeDamge(1, direction))
+                relativeDirection(adventurer->getPositionX(), getPositionX());
+            if (adventurer->takeDamge(1, direction) && adventurer->isGrounded())
             {
                 b2Vec2 f;
-                f.x = -directionToSign(direction) * 1000.f;
-                f.y = -200.f;
-                player->getBody()->ApplyForceToCenter(f, true);
+                f.x = -directionToSign(direction) * 20.f;
+                f.y = -10.f;
+                adventurer->getBody()->ApplyLinearImpulseToCenter(f, true);
             }
         }
         info.setIsEnabled(false);
@@ -137,7 +138,7 @@ void BoarWarrior::tick(float deltaTime)
     m_timer += deltaTime;
     ++m_counter;
     m_animator->tick(deltaTime);
-    m_isFacingToPlayer = rayCast(8);
+    m_isFacingToAdventurer = rayCast(8);
 
     if (m_hurtTimer > 0)
     {
@@ -158,8 +159,8 @@ void BoarWarrior::tick(float deltaTime)
     {
     case STATE_IDLE:
     {
-        followPlayerDir();
-        if (m_isFacingToPlayer)
+        followAdventurerDir();
+        if (m_isFacingToAdventurer)
         {
             moveForward();
         }
@@ -167,8 +168,8 @@ void BoarWarrior::tick(float deltaTime)
     break;
     case STATE_TRIGGER_MOVE_FORWARD:
     {
-        followPlayerDir();
-        if (!m_isFacingToPlayer)
+        followAdventurerDir();
+        if (!m_isFacingToAdventurer)
         {
             idle();
         }
@@ -211,13 +212,13 @@ void BoarWarrior::tick(float deltaTime)
 
                 if (boxCast(rect, CATEGORY_BIT_PLAYER))
                 {
-                    Level*  level  = static_cast<Level*>(getLayerManager());
-                    Player* player = level->getPlayer();
-                    if (player->takeDamge(
-                            2, relativeDirection(player->getPositionX(),
+                    Level*  level  = static_cast<Level*>(getScene());
+                    Adventurer* adventurer = level->getAdventurer();
+                    if (adventurer->takeDamge(
+                            2, relativeDirection(adventurer->getPositionX(),
                                                  getPositionX())))
                     {
-                        player->getBody()->ApplyForceToCenter(
+                        adventurer->getBody()->ApplyForceToCenter(
                             b2Vec2(sign * 1000.f, 0.f), true);
                     }
                 }
@@ -248,8 +249,8 @@ void BoarWarrior::tick(float deltaTime)
     break;
     case STATE_TRIGGER_MOVE_BACKWARD:
     {
-        followPlayerDir();
-        if (!m_isFacingToPlayer)
+        followAdventurerDir();
+        if (!m_isFacingToAdventurer)
         {
             idle();
         }
@@ -283,7 +284,7 @@ void BoarWarrior::tick(float deltaTime)
             if (m_timer >= 0.6f)
             {
                 heavyAttack();
-                Level* level = static_cast<Level*>(getLayerManager());
+                Level* level = static_cast<Level*>(getScene());
 
                 FloatRect rect;
                 int       sign = directionToSign(m_direction);
@@ -295,12 +296,12 @@ void BoarWarrior::tick(float deltaTime)
 
                 if (boxCast(rect, CATEGORY_BIT_PLAYER))
                 {
-                    Player*   player    = level->getPlayer();
+                    Adventurer*   adventurer    = level->getAdventurer();
                     Direction direction = relativeDirection(
-                        player->getPositionX(), getPositionX());
-                    if (player->takeDamge(2, direction))
+                        adventurer->getPositionX(), getPositionX());
+                    if (adventurer->takeDamge(2, direction))
                     {
-                        player->getBody()->ApplyForceToCenter(
+                        adventurer->getBody()->ApplyForceToCenter(
                             b2Vec2(0.f, -500.f), true);
                     }
                 }
@@ -347,7 +348,7 @@ void BoarWarrior::tick(float deltaTime)
 
                 Level*            level;
                 FireBustParticle* particle;
-                level = (Level*)getLayerManager();
+                level = (Level*)getScene();
                 level->getParticleSystem()->create<FireBustParticle>(Vec2(x, y));
             }
             if (m_alpha > 0)
@@ -375,7 +376,7 @@ void BoarWarrior::tick(float deltaTime)
 
 void BoarWarrior::paint()
 {
-    const Camera&   camera   = getLayerManager()->getCamera();
+    const Camera&   camera   = getScene()->getCamera();
     const SDL_Rect& viewport = camera.getViewport();
     SDL_Renderer*   renderer = Game::getInstance()->renderer();
     const Sprite&   sprite   = m_animator->getCurrentSprite();
@@ -498,8 +499,8 @@ void BoarWarrior::wait() { m_state = STATE_WAIT; }
 
 bool BoarWarrior::rayCast(int dis)
 {
-    Player* player     = ((Level*)getLayerManager())->getPlayer();
-    b2Body* playerBody = player->getBody();
+    Adventurer* adventurer     = ((Level*)getScene())->getAdventurer();
+    b2Body* adventurerBody = adventurer->getBody();
 
     float sign = directionToSign(m_direction);
 
@@ -512,7 +513,7 @@ bool BoarWarrior::rayCast(int dis)
 
     b2RayCastOutput output;
 
-    for (b2Fixture* f = playerBody->GetFixtureList(); f != nullptr;
+    for (b2Fixture* f = adventurerBody->GetFixtureList(); f != nullptr;
          f            = f->GetNext())
     {
         if (f->RayCast(&output, input, 0))
@@ -523,17 +524,17 @@ bool BoarWarrior::rayCast(int dis)
     return false;
 }
 
-void BoarWarrior::followPlayerDir()
+void BoarWarrior::followAdventurerDir()
 {
 
-    Player* player     = ((Level*)getLayerManager())->getPlayer();
-    float   playerPosX = player->getPositionX();
+    Adventurer* adventurer     = ((Level*)getScene())->getAdventurer();
+    float   adventurerPosX = adventurer->getPositionX();
 
-    if (playerPosX < m_positionX)
+    if (adventurerPosX < m_positionX)
     {
         m_direction = DIRECTION_LEFT;
     }
-    if (playerPosX > m_positionX)
+    if (adventurerPosX > m_positionX)
     {
         m_direction = DIRECTION_RIGHT;
     }

@@ -1,20 +1,21 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 #include "CameraShaker.h"
-#include "LayerManager.h"
 #include "SDL_mixer.h"
+#include "Scene.h"
 #include "WorldRenderer.h"
 #include "box2d/box2d.h"
 #include "tmxlite/ObjectGroup.hpp"
 #include "tmxlite/TileLayer.hpp"
-class Player;
+class Adventurer;
 class TileLayer;
 class HUD;
 class Tilesets;
 class Background;
 class ObjectLayer;
 class ParticleSystem;
-class Level : public LayerManager, public b2ContactListener
+class PauseMenu;
+class Level : public Scene, public b2ContactListener
 {
   public:
     ~Level();
@@ -22,30 +23,31 @@ class Level : public LayerManager, public b2ContactListener
     static Level* loadFromFile(const char* filename);
 
     /// getters
-    Player*       getPlayer() const;
-    Tilesets*     getTilesets() const;
-    ObjectLayer*  getParticleLayer() const;
-    ObjectLayer*  getSpriteLayer() const;
-    CameraShaker* getCameraShaker();
-	ParticleSystem* getParticleSystem() const;
+    Adventurer*     getAdventurer() const;
+    Tilesets*       getTilesets() const;
+    ObjectLayer*    getParticleLayer() const;
+    ObjectLayer*    getSpriteLayer() const;
+    CameraShaker*   getCameraShaker();
+    ParticleSystem* getParticleSystem() const;
 
     // stuff
     void setIsPaused(bool paused);
-    void start();
+    void displayPauseMenu();
+    void hidePauseMenu();
 
-    // LayerManager interface
+    // Scene interface
   public:
-    virtual void update(float deltaTime) override;
-    virtual void render() override;
+    void update(float deltaTime) override;
+    void render() override;
+    void start() override;
 
     // b2ContactListener interface
   public:
-    virtual void BeginContact(b2Contact* contact) override;
-    virtual void EndContact(b2Contact* contact) override;
-    virtual void PreSolve(b2Contact*        contact,
-                          const b2Manifold* oldManifold) override;
-    virtual void PostSolve(b2Contact*              contact,
-                           const b2ContactImpulse* impulse) override;
+    void BeginContact(b2Contact* contact) override;
+    void EndContact(b2Contact* contact) override;
+    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override;
+    void PostSolve(b2Contact*              contact,
+                   const b2ContactImpulse* impulse) override;
 
   private:
     Level();
@@ -53,7 +55,7 @@ class Level : public LayerManager, public b2ContactListener
 
     /// data fields
     bool            m_isPaused;
-    Player*         m_player;
+    Adventurer*     m_adventurer;
     Tilesets*       m_tilesets;
     WorldRenderer*  m_worldRenderer;
     bool            m_drawDebugData;
@@ -63,6 +65,7 @@ class Level : public LayerManager, public b2ContactListener
     HUD*            m_hud;
     CameraShaker*   m_cameraShaker;
     ParticleSystem* m_particleSystem;
+    PauseMenu*      m_pauseMenu;
 
     friend class LevelParser;
 };

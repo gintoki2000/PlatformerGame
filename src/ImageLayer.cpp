@@ -1,6 +1,6 @@
 #include "ImageLayer.h"
 #include "Game.h"
-#include "LayerManager.h"
+#include "Scene.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
 
@@ -14,7 +14,7 @@ void ImageLayer::setImage(const TextureRegion& image) { m_image = image; }
 void ImageLayer::render()
 {
     SDL_Renderer*   renderer = Game::getInstance()->renderer();
-    const SDL_Rect& viewport = getManager()->getCamera().getViewport();
+    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
     SDL_Rect        dstrect;
     dstrect.x = getPositionX() - viewport.x;
     dstrect.y = getPositionY() - viewport.y;

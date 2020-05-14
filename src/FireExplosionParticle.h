@@ -5,12 +5,16 @@
 class FireExplosionParticle : public AnimatedParticle,
                               public PoolableObject<FireExplosionParticle>
 {
-	// GameObject interface
-	public:
-		void cleanup() override;
-	private:
-		bool preinit();
+    // GameObject interface
+  public:
+    typedef AnimatedParticlePool<FireExplosionParticle> Pool;
+    void cleanup() override;
 
-		friend class AnimatedParticlePool<FireExplosionParticle>;
+  private:
+    friend Pool;
+
+    static constexpr int   SPRITE_WIDTH   = 96;
+    static constexpr int   SPRITE_HEIGHT  = 96;
+    static constexpr float FRAME_DURATION = 0.02f;
 };
 #endif // FIRE_EXPLOSIVE_PRATICLE_H

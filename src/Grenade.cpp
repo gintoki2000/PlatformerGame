@@ -1,16 +1,19 @@
 #include "Grenade.h"
 #include "Animation.h"
-#include "AssertManager.h"
+
+#include "Audio.h"
 #include "Constances.h"
 #include "FireBustParticle.h"
 #include "Game.h"
-#include "LayerManager.h"
 #include "Level.h"
 #include "Monster.h"
 #include "ObjectLayer.h"
 #include "ParticleSystem.h"
 #include "SDL_mixer.h"
 #include "SDL_render.h"
+#include "Scene.h"
+#include "Sprite.h"
+#include "TextureManager.h"
 #include "Utils.h"
 #include "WorldManager.h"
 #include "box2d/b2_circle_shape.h"
@@ -40,9 +43,7 @@ Grenade* Grenade::create(const Vec2& pos, Direction dir)
 
 bool Grenade::init(const Vec2& pos, Direction dir)
 {
-    TextureManager& textureMGR = Game::getInstance()->textureMGR();
-    SDL_Texture*    texture    = textureMGR.getTexture(TextureManager::GRENADE);
-    m_sprite                   = Sprite(texture);
+    m_sprite = makeSprite(TEX_GRENADE);
 
     b2BodyDef bdef;
     bdef.position.x    = pos.x / Constances::PPM;
@@ -88,7 +89,7 @@ void Grenade::tick(float deltaTime)
     if (m_timer >= 1.f)
     {
         remove();
-        Level* level = static_cast<Level*>(getLayerManager());
+        Level* level = static_cast<Level*>(getScene());
 
         Vec2 position = getPosition() + Vec2(0.f, -20.f);
         level->getParticleSystem()->create<FireBustParticle>(position);
@@ -100,7 +101,6 @@ void Grenade::tick(float deltaTime)
         FloatRect  rect(getPosition() - Vec2(25.f, 25.f), Vec2(50.f, 50.f));
         boxQuery(rect, CATEGORY_BIT_MONSTER, fixtures, n, MAX);
 
-        SoundManager& soundMGR = Game::getInstance()->soundMGR();
         for (int i = 0; i < n; ++i)
         {
             const Identifier* idr = static_cast<const Identifier*>(
@@ -108,16 +108,15 @@ void Grenade::tick(float deltaTime)
             Monster* monster = static_cast<Monster*>(idr->object);
             monster->takeDamge(5, DIRECTION_NONE);
         }
-        Mix_Chunk* explosion =
-            GAME->soundMGR().getSound(SoundManager::BOMB_EXPLOSION);
-        Mix_PlayChannel(-1, explosion, 0);
+
+        Audio::play(SOUND_EXPLOSION);
     }
 }
 
 void Grenade::paint()
 {
     SDL_Renderer*   renderer = Game::getInstance()->renderer();
-    const SDL_Rect& viewport = getLayerManager()->getCamera().getViewport();
+    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
 
     SDL_Rect dstrect;
     dstrect.x = m_positionX - 6 - viewport.x;

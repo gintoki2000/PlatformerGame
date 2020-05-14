@@ -1,5 +1,5 @@
 #include "Game.h"
-#include "AssertManager.h"
+#include "Audio.h"
 #include "BoarWarrior.h"
 #include "Constances.h"
 #include "GameState.h"
@@ -14,6 +14,7 @@
 #include "SDL_ttf.h"
 #include "SDL_video.h"
 #include "StateManager.h"
+#include "TextureManager.h"
 #include "TitleState.h"
 #include "Utils.h"
 #include "WorldManager.h"
@@ -25,24 +26,19 @@ Game::Game()
     SDL_assert(instance == nullptr);
     instance    = this;
     m_isRunning = false;
-
-    m_renderer   = nullptr;
-    m_window     = nullptr;
-    m_soundMGR   = nullptr;
-    m_textureMGR = nullptr;
-    m_stateMGR   = nullptr;
+    m_renderer  = nullptr;
+    m_window    = nullptr;
+    m_stateMGR  = nullptr;
 }
 
 Game::~Game()
 {
     DELETE_NULL(m_stateMGR);
-	DELETE_NULL(m_soundMGR);
-	DELETE_NULL(m_textureMGR);
-	WorldManager::end();
-	SDL_DestroyRenderer(m_renderer);
-	m_renderer = nullptr;
-	SDL_DestroyWindow(m_window);
-	m_window = nullptr;
+    WorldManager::terminate();
+    Audio::terminate();
+    TextureManager::unload();
+    SDL_DestroyRenderer(m_renderer);
+    SDL_DestroyWindow(m_window);
     Mix_CloseAudio();
     IMG_Quit();
     SDL_Quit();
@@ -91,29 +87,22 @@ bool Game::init()
         return false;
     }
 
-	if (TTF_Init() == -1)
-	{
+    if (TTF_Init() == -1)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to init SDL_ttf!");
         return false;
-	}
+    }
 
-    m_textureMGR = new TextureManager();
-    m_soundMGR   = new SoundManager();
-    m_stateMGR   = new StateManager();
+    m_stateMGR = new StateManager();
 
     ObjectFactory& factory = *ObjectFactory::getInstance();
     factory.resigter("BoarWarrior", BoarWarrior::create);
 
-    if (!m_textureMGR->load(m_renderer))
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load textures!");
-        return false;
-    }
-    if (!m_soundMGR->load())
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load sounds!");
-        return false;
-    }
+    Input::init();
+    Audio::init();
+    TextureManager::load(m_renderer);
+    Audio::volumeSound(SOUND_STAB, MIX_MAX_VOLUME / 4);
+
     GameState* state = TitleState::create();
     if (state == nullptr)
     {
@@ -146,10 +135,10 @@ void Game::render(float deltaTime)
             case SDL_WINDOWEVENT_FOCUS_LOST: state->pause(); break;
             case SDL_WINDOWEVENT_TAKE_FOCUS: state->resume(); break;
             }
-			break;
+            break;
         }
     }
-	Input::update();
+    Input::update();
     state->render(deltaTime);
     SDL_RenderPresent(m_renderer);
 }

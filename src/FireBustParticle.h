@@ -6,20 +6,21 @@
 #include "GameObject.h"
 #include "Pool.h"
 #include "SpriteSheet.h"
+#include "TextureManager.h"
+
 class FireBustParticle : public AnimatedParticle,
                          public PoolableObject<FireBustParticle>
 {
-    /// GameObject interface
+    // GameObject interface
   public:
-    void cleanup() override;
+    typedef AnimatedParticlePool<FireBustParticle> Pool;
+    void cleanup() override { getPool()->free(this); }
 
-  private:
-    bool preinit();
-
-    static constexpr int SPRITE_WIDTH  = 64;
-    static constexpr int SPRITE_HEIGHT = 64;
-
-    friend class AnimatedParticlePool<FireBustParticle>;
+  public:
+    static constexpr int   SPRITE_WIDTH   = 64;
+    static constexpr int   SPRITE_HEIGHT  = 64;
+    static constexpr float FRAME_DURATION = 1.f / 20.f;
+    static constexpr int   TEXTURE_ID     = TEX_FIRE_BUST;
 };
 
 #endif // FIRE_BUST_PARTICLE_H

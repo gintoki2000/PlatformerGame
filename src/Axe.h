@@ -8,7 +8,7 @@
 class Axe : public Spell, public ICollisionHandler
 {
   public:
-    static Axe* create(const Vec2& playerPos, Direction playerDir);
+    static Axe* create(const Vec2& adventurerPos, Direction adventurerDir);
     ~Axe();
 
     /// GameObject interface

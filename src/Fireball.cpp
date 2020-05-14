@@ -1,17 +1,19 @@
 #include "Fireball.h"
+#include "Audio.h"
 #include "FireExplosionParticle.h"
 #include "ParticleSystem.h"
 #include "Animation.h"
-#include "AssertManager.h"
+
 #include "Camera.h"
 #include "Constances.h"
 #include "Game.h"
-#include "LayerManager.h"
+#include "Scene.h"
 #include "Level.h"
 #include "Monster.h"
 #include "SDL_mixer.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
+#include "TextureManager.h"
 #include "Utils.h"
 #include "Vec.h"
 #include "WorldManager.h"
@@ -54,17 +56,14 @@ Fireball* Fireball::create(const Vec2& position, Direction direction)
 
 void Fireball::start()
 {
-    auto&      soundMGR = Game::getInstance()->soundMGR();
-    Mix_Chunk* sound    = soundMGR.getSound(SoundManager::FIREBALL);
-    Mix_PlayChannel(-1, sound, 0);
+	Audio::play(SOUND_FIREBALL);
 }
 
 void Fireball::cleanup() { delete this; }
 
 bool Fireball::init(const Vec2& position, Direction direction, float speed)
 {
-    SDL_Texture* texture =
-        Game::getInstance()->textureMGR().getTexture(TextureManager::FIREBALL);
+    SDL_Texture* texture = TextureManager::get(TEX_FIREBALL);
     m_spriteSheet.init(texture, 64, 64);
     m_animation =
         new Animation(&m_spriteSheet, 0.06f, Animation::PLAY_MODE_LOOP);
@@ -108,7 +107,7 @@ void Fireball::tick(float deltaTime)
     m_timer += deltaTime;
     boundingBox.x            = m_positionX - 8;
     boundingBox.y            = m_positionY - 8;
-    const Camera&   camera   = getLayerManager()->getCamera();
+    const Camera&   camera   = getScene()->getCamera();
     const SDL_Rect& viewport = camera.getViewport();
 
     if (!SDL_HasIntersection(&boundingBox, &viewport))
@@ -122,7 +121,7 @@ void Fireball::paint()
 
     const Sprite& sprite = *(m_animation->getCurrentSprite(m_timer));
 
-    const Camera& camera = getLayerManager()->getCamera();
+    const Camera& camera = getScene()->getCamera();
 
     const SDL_Rect& viewport = camera.getViewport();
 
@@ -145,7 +144,7 @@ void Fireball::onBeginContact(const ContactInfo& info)
         if (monster->takeDamge(1, DIRECTION_NONE))
         {
             remove();
-			Level* level = static_cast<Level*>(getLayerManager());
+			Level* level = static_cast<Level*>(getScene());
 			level->getParticleSystem()->create<FireExplosionParticle>(getPosition());
         }
     }

@@ -1,10 +1,11 @@
 #include "HUD.h"
-#include "AssertManager.h"
+#include "Adventurer.h"
+
 #include "Game.h"
 #include "Level.h"
-#include "Player.h"
 #include "SDL_render.h"
 #include "SpriteSheet.h"
+#include "TextureManager.h"
 #include "Utils.h"
 
 HUD::HUD() {}
@@ -22,8 +23,7 @@ HUD* HUD::create()
 
 bool HUD::init()
 {
-    TextureManager& textureMGR = Game::getInstance()->textureMGR();
-    SDL_Texture*    texture = textureMGR.getTexture(TextureManager::STATUS_BAR);
+    SDL_Texture*    texture =TextureManager::get(TEX_STATUS_BAR);
 
     m_circle   = Sprite(texture, {0, 0, 65, 61});
     m_mpBorder = Sprite(texture, {0, 89, 132, 23});
@@ -35,27 +35,27 @@ bool HUD::init()
     return true;
 }
 
-void HUD::tick(Level&, float) {}
+void HUD::update(float) {}
 
-void HUD::paint(Level& level)
+void HUD::render()
 {
-
     SDL_Renderer* renderer;
     SDL_Rect      dstrect;
     SDL_Rect      srcrect;
-    Player*       player;
+    Adventurer*   adventurer;
+    Level*        level = static_cast<Level*>(getScene());
 
-    renderer = Game::getInstance()->renderer();
-    player   = level.getPlayer();
+    renderer   = Game::getInstance()->renderer();
+    adventurer = level->getAdventurer();
 
     int drawPosX = 5;
     int drawPosY = 3;
 
-    float hpPercent = static_cast<float>(player->getHitPoints()) /
-                      static_cast<float>(player->getMaxHitPoints());
+    float hpPercent = static_cast<float>(adventurer->getHitPoints()) /
+                      static_cast<float>(adventurer->getMaxHitPoints());
 
-    float mpPercent = static_cast<float>(player->getManaPoints()) /
-                      static_cast<float>(player->getMaxManaPoints());
+    float mpPercent = static_cast<float>(adventurer->getManaPoints()) /
+                      static_cast<float>(adventurer->getMaxManaPoints());
 
     // draw hitPointBar
     dstrect.x = drawPosX + 57;

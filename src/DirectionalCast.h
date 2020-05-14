@@ -1,61 +1,42 @@
 #ifndef DIRECTIONAL_CAST_H
 #define DIRECTIONAL_CAST_H
+#include "Adventurer.h"
 #include "Animator.h"
 #include "Input.h"
 #include "Level.h"
 #include "ObjectLayer.h"
-#include "Player.h"
-#include "PlayerSkill.h"
 #include "Spell.h"
+#include "Technique.h"
 #include "Utils.h"
 #include "Vec.h"
-template <class TSpell> class DirectionalCast : public PlayerSkill
+template <class TSpell> class DirectionalCast : public Technique
 {
   public:
-    static DirectionalCast* create() { return new DirectionalCast; }
-    ~DirectionalCast() { DELETE_NULL(m_spell); }
+    DirectionalCast(int mpCost, const Sprite& icon) : Technique(mpCost, icon) {}
 
-    bool activate(Player& player) override
+    void enter(Adventurer& adventurer) override
     {
-        if (Input::isButtonAJustPressed() && Input::isButtonUpPressed())
+        adventurer.getAnimator()->pushState(Adventurer::ANIM_CAST_SPELL);
+        if (adventurer.isGrounded())
         {
-            Level* level;
-            m_spell = TSpell::create(player.getPosition(), player.m_direction);
-
-            if (player.consumeMana(m_spell->getManaCost()))
-            {
-                player.getAnimator()->pushState(Player::ANIM_CAST_SPELL);
-                if (player.isGrounded())
-                {
-                    player.m_horiziontalAcceleration = 0.f;
-                    m_isInAir                        = true;
-                }
-
-                level = static_cast<Level*>(player.getLayerManager());
-                level->getSpriteLayer()->addObject(m_spell);
-                m_spell  = nullptr;
-                m_phrase = 0;
-                m_timer  = 0.f;
-
-                return true;
-            }
-            else
-            {
-                DELETE_NULL(m_spell);
-            }
+            adventurer.m_horizontalAcceleration = 0.f;
+            m_isInAir                           = false;
         }
-        return false;
+
+        m_phrase = 0;
+        m_timer  = 0.f;
     }
-    bool tick(Player& player, float deltaTime) override
+
+    bool tick(Adventurer& adventurer, float deltaTime) override
     {
         m_timer += deltaTime;
         switch (m_phrase)
         {
         case 0:
         {
-            if (player.getAnimator()->isCurrentAnimationFinshed())
+            if (adventurer.getAnimator()->isCurrentAnimationFinshed())
             {
-                player.getAnimator()->play(Player::ANIM_CAST_LOOP);
+                adventurer.getAnimator()->play(Adventurer::ANIM_CAST_LOOP);
                 m_timer  = 0.f;
                 m_phrase = 1;
             }
@@ -65,8 +46,11 @@ template <class TSpell> class DirectionalCast : public PlayerSkill
         {
             if (m_timer >= 0.1f)
             {
-                player.getAnimator()->popState();
-                Level* level;
+                TSpell* spell = TSpell::create(adventurer.getPosition(),
+                                               adventurer.getDirection());
+                SDL_assert(spell != nullptr);
+                Level* level = static_cast<Level*>(adventurer.getScene());
+                level->getSpriteLayer()->addObject(spell);
                 return true;
             }
         }
@@ -74,30 +58,32 @@ template <class TSpell> class DirectionalCast : public PlayerSkill
         }
         if (m_isInAir)
         {
-            if (!player.isGrounded())
+            if (!adventurer.isGrounded())
             {
                 int inputDirection = Input::getHorizontalInputDirection();
-                player.m_horiziontalAcceleration =
-                    inputDirection * player.m_runAcceleration;
+                adventurer.m_horizontalAcceleration =
+                    inputDirection * adventurer.m_runAcceleration;
             }
             else
             {
                 // just grounded
-                if (!player.wasGrounded())
+                if (!adventurer.wasGrounded())
                 {
-                    player.m_horiziontalAcceleration = 0.f;
+                    adventurer.m_horizontalAcceleration = 0.f;
                 }
             }
         }
         return false;
     }
 
-  private:
-    DirectionalCast() : m_spell(nullptr) {}
+    void exit(Adventurer& adventurer) override
+    {
+        adventurer.getAnimator()->popState();
+    }
 
-    int    m_phrase;
-    float  m_timer;
-    bool   m_isInAir;
-    Spell* m_spell;
+  private:
+    int   m_phrase;
+    float m_timer;
+    bool  m_isInAir;
 };
 #endif // DIRECTIONAL_CAST_H

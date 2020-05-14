@@ -64,8 +64,8 @@ class KoblodAttackCallback : public b2QueryCallback
             ((GameObject*)userData)->getGameObjectType() ==
                 GAME_OBJECT_TYPE_PLAYER)
         {
-            auto player = (Player*)userData;
-            player->getHit(2);
+            auto adventurer = (Adventurer*)userData;
+            adventurer->getHit(2);
         }
         return true;
     }
@@ -73,12 +73,12 @@ class KoblodAttackCallback : public b2QueryCallback
 void Koblod::updateLogic(float deltaTime)
 {
     m_timer += deltaTime;
-    m_direction = (Direction)getFacingPlayerDirection();
+    m_direction = (Direction)getFacingAdventurerDirection();
     switch (m_state)
     {
     case STATE_IDLE:
     {
-        if (getDistanceToPlayer() <= ACTIVATE_RUN_DIS)
+        if (getDistanceToAdventurer() <= ACTIVATE_RUN_DIS)
         {
             run();
         }
@@ -86,12 +86,12 @@ void Koblod::updateLogic(float deltaTime)
     break;
     case STATE_RUN:
     {
-        auto distanceToPlayer = getDistanceToPlayer();
-        if (distanceToPlayer > ACTIVATE_RUN_DIS)
+        auto distanceToAdventurer = getDistanceToAdventurer();
+        if (distanceToAdventurer > ACTIVATE_RUN_DIS)
         {
             idle();
         }
-        else if (distanceToPlayer <= ACTIVATE_ATK_DIS)
+        else if (distanceToAdventurer <= ACTIVATE_ATK_DIS)
         {
             waitToAttack();
         }

@@ -16,7 +16,7 @@ class TitleState : public GameState
     bool init();
     void handle(int op);
     void drawToCenter(SDL_Texture* text, int startY, int index, int margin);
-    static constexpr int NUM_OPTIONS = 3;
+    static constexpr int NUM_OPTIONS = 1;
     SDL_Texture*         m_unselectedTexts[NUM_OPTIONS];
     SDL_Texture*         m_selectedTexts[NUM_OPTIONS];
     int                  m_selected;

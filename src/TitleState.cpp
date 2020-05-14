@@ -42,7 +42,7 @@ TitleState* TitleState::create()
 
 bool TitleState::init()
 {
-    const char*     text[NUM_OPTIONS] = {"Start", "About", "Exit"};
+    const char*     text[NUM_OPTIONS] = {"Game Start"};
     const char*     ffile             = "asserts/fonts/BitPap.ttf";
     const SDL_Color white{255, 255, 255, 255};
     const SDL_Color red{255, 0, 0, 255};
@@ -75,11 +75,11 @@ bool TitleState::init()
 
 void TitleState::render(float)
 {
-    if (Input::isButtonAJustPressed())
+    if (Input::isJustPressed(BUTTON_A))
     {
         handle(m_selected);
     }
-    else if (Input::isButtonUpJustPressed())
+    else if (Input::isJustPressed(BUTTON_PAD_UP))
     {
         --m_selected;
         if (m_selected < 0)
@@ -87,7 +87,7 @@ void TitleState::render(float)
             m_selected = NUM_OPTIONS - 1;
         }
     }
-    else if (Input::isButtonDownJustPressed())
+    else if (Input::isJustPressed(BUTTON_PAD_DOWN))
     {
         ++m_selected;
         if (m_selected > NUM_OPTIONS - 1)
@@ -129,7 +129,5 @@ void TitleState::handle(int op)
     case 0:
         Game::getInstance()->stateMGR().setState(MainState::create());
         break;
-    case 1: SDL_Log("About"); break;
-    case 2: Game::getInstance()->stop(); break;
     }
 }

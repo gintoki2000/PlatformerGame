@@ -17,4 +17,4 @@ void WorldManager::clearWorld()
     world = new b2World(Constances::GRAVITY);
 }
 
-void WorldManager::end() { DELETE_NULL(world); }
+void WorldManager::terminate() { DELETE_NULL(world); }

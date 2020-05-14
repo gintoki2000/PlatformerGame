@@ -1,4 +1,5 @@
 #include "Level.h"
+#include "Adventurer.h"
 #include "AnimatedParticle.h"
 #include "Background.h"
 #include "BloodStainParticle.h"
@@ -11,14 +12,13 @@
 #include "GameObject.h"
 #include "HUD.h"
 #include "Input.h"
-#include "LayerManager.h"
 #include "Math.h"
 #include "MyObjectLayer.h"
 #include "MyTileLayer.h"
 #include "ObjectFactory.h"
 #include "ObjectLayer.h"
 #include "ParticleSystem.h"
-#include "Player.h"
+#include "PauseMenu.h"
 #include "Pool.h"
 #include "Rect.h"
 #include "SDL_assert.h"
@@ -26,7 +26,9 @@
 #include "SDL_mixer.h"
 #include "SDL_mouse.h"
 #include "SDL_render.h"
+#include "Scene.h"
 #include "StateManager.h"
+#include "TextureManager.h"
 #include "TileLayer.h"
 #include "Tilesets.h"
 #include "Utils.h"
@@ -45,7 +47,7 @@ Level::Level()
 {
     m_spriteLayer   = nullptr;
     m_tilesets      = nullptr;
-    m_player        = nullptr;
+    m_adventurer    = nullptr;
     m_particleLayer = nullptr;
     m_music         = nullptr;
     m_cameraShaker  = nullptr;
@@ -101,7 +103,6 @@ bool Level::init(const char* filename)
         else if (layerData.getType() == tmx::Layer::Type::Object)
         {
             auto& data = dynamic_cast<tmx::ObjectGroup&>(layerData);
-
             addLayer(MyObjectLayer::create(data));
         }
     }
@@ -112,26 +113,28 @@ bool Level::init(const char* filename)
     b2World*      world    = WorldManager::getWorld();
 
     m_worldRenderer  = new WorldRenderer(renderer, Constances::PPM);
-    m_player         = Player::create(getCamera().getCenter());
+    m_adventurer     = new Adventurer(getCamera().getCenter());
     m_hud            = HUD::create();
     m_particleSystem = new ParticleSystem(this);
     m_cameraShaker   = CameraShaker::create(&getCamera());
     m_spriteLayer    = static_cast<ObjectLayer*>(getLayerByName("sprites"));
     m_particleLayer  = static_cast<ObjectLayer*>(getLayerByName("particles"));
+    m_pauseMenu      = PauseMenu::create();
     m_drawDebugData  = false;
 
-    m_spriteLayer->addObject(m_player);
+    m_spriteLayer->addObject(m_adventurer);
     world->SetContactListener(this);
     world->SetDebugDraw(m_worldRenderer);
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
     m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
-    m_particleSystem
-        ->resgiter<FireBustParticle, AnimatedParticlePool<FireBustParticle>>(
-            20);
-    m_particleSystem
-        ->resgiter<BloodStainParticle, BasePool<BloodStainParticle>>(20);
-    m_particleSystem->resgiter<FireExplosionParticle,
-                               AnimatedParticlePool<FireExplosionParticle>>(20);
+
+    m_particleSystem->resgiter<FireBustParticle, FireBustParticle::Pool>(20);
+    m_particleSystem->resgiter<BloodStainParticle, BloodStainParticle::Pool>(
+        20);
+    addLayer(m_pauseMenu);
+    addLayer(m_hud);
+
+    m_pauseMenu->hide();
     return true;
 }
 
@@ -141,14 +144,17 @@ Level::~Level()
     DELETE_NULL(m_tilesets);
     DELETE_NULL(m_particleSystem);
     DELETE_NULL(m_cameraShaker);
-    DELETE_NULL(m_hud);
     Mix_FreeMusic(m_music);
     m_music = nullptr;
 }
 
-void Level::start() { Mix_PlayMusic(m_music, -1); }
+void Level::start()
+{
+    Mix_PlayMusic(m_music, -1);
+    Scene::start();
+}
 
-Player* Level::getPlayer() const { return m_player; }
+Adventurer* Level::getAdventurer() const { return m_adventurer; }
 
 Tilesets* Level::getTilesets() const { return m_tilesets; }
 
@@ -157,11 +163,15 @@ void Level::setIsPaused(bool paused) { m_isPaused = paused; }
 void Level::update(float deltaTime)
 {
     WorldManager::getWorld()->Step(deltaTime, 2, 6);
-    LayerManager::update(deltaTime);
+    if (Input::isPressed(BUTTON_START))
+    {
+        displayPauseMenu();
+    }
+    Scene::update(deltaTime);
 
     Vec2 cameraTarget;
-    int  sign      = directionToSign(m_player->getDirection());
-    cameraTarget.x = m_player->getPositionX() + sign * 16.f;
+    int  sign      = directionToSign(m_adventurer->getDirection());
+    cameraTarget.x = m_adventurer->getPositionX() + sign * 16.f;
     cameraTarget.y = getCamera().getCenter().y;
 
     int leftBound = Constances::GAME_WIDTH / 2;
@@ -175,14 +185,12 @@ void Level::update(float deltaTime)
 
 void Level::render()
 {
-    LayerManager::render();
+    Scene::render();
     m_worldRenderer->setViewport(getCamera().getViewport());
-    m_player->paint();
     if (m_drawDebugData)
     {
         WorldManager::getWorld()->DrawDebugData();
     }
-    m_hud->paint(*this);
 }
 void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 {
@@ -258,3 +266,33 @@ ObjectLayer* Level::getSpriteLayer() const { return m_spriteLayer; }
 CameraShaker* Level::getCameraShaker() { return m_cameraShaker; }
 
 ParticleSystem* Level::getParticleSystem() const { return m_particleSystem; }
+
+void Level::displayPauseMenu()
+{
+    m_pauseMenu->show();
+    m_pauseMenu->activate();
+    for (int i = 0; i < getNumLayers(); ++i)
+    {
+        Layer* layer = getLayerAt(i);
+        if (layer != m_pauseMenu)
+        {
+            layer->deactivate();
+            layer->hide();
+        }
+    }
+}
+
+void Level::hidePauseMenu()
+{
+    m_pauseMenu->hide();
+    m_pauseMenu->deactivate();
+    for (int i = 0; i < getNumLayers(); ++i)
+    {
+        Layer* layer = getLayerAt(i);
+        if (layer != m_pauseMenu)
+        {
+            layer->activate();
+            layer->show();
+        }
+    }
+}

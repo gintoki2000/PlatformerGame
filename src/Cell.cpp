@@ -1,6 +1,6 @@
 #include "Cell.h"
 #include "Constances.h"
-#include "Player.h"
+#include "Adventurer.h"
 #include "SDL_assert.h"
 #include "Utils.h"
 #include "Vec.h"

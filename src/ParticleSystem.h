@@ -20,7 +20,7 @@ class ParticleSystem
         auto            findResult = m_pools.find(tidx);
         if (findResult == std::end(m_pools))
         {
-            IPool* pool = TPool::create(args...);
+            IPool* pool = new TPool(args...);
             m_pools.insert(std::make_pair(tidx, pool));
         }
     }

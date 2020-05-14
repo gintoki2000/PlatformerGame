@@ -4,9 +4,6 @@
 #include "SDL_render.h"
 class GameState;
 class StateManager;
-class TextureManager;
-class SoundManager;
-class WorldManager;
 class Game
 {
   public:
@@ -19,8 +16,6 @@ class Game
     bool isRunning() const { return m_isRunning; }
 
     StateManager&   stateMGR() const { return *m_stateMGR; }
-    TextureManager& textureMGR() const { return *m_textureMGR; }
-    SoundManager&   soundMGR() const { return *m_soundMGR; }
     SDL_Renderer*   renderer() const { return m_renderer; }
     SDL_Window*     window() const { return m_window; }
 
@@ -29,8 +24,6 @@ class Game
   private:
     bool            m_isRunning;
     StateManager*   m_stateMGR;
-    TextureManager* m_textureMGR;
-    SoundManager*   m_soundMGR;
     SDL_Renderer*   m_renderer;
     SDL_Window*     m_window;
 

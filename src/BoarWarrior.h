@@ -44,7 +44,7 @@ class BoarWarrior : public Monster
     void die();
     void wait();
 
-    void followPlayerDir();
+    void followAdventurerDir();
     bool rayCast(int dis);
     enum State
     {
@@ -76,7 +76,7 @@ class BoarWarrior : public Monster
     State             m_state;
     int               m_hurtTimer;
     float             m_timer;
-    bool              m_isFacingToPlayer;
+    bool              m_isFacingToAdventurer;
     int               m_phrase;
     float             m_waitTimer;
     int               m_counter;

@@ -1,6 +1,6 @@
 #include "Monster.h"
 #include "Constances.h"
-#include "Player.h"
+#include "Adventurer.h"
 #include "Utils.h"
 #include "WorldManager.h"
 #include "box2d/b2_fixture.h"
@@ -96,11 +96,11 @@ void Monster::onPreSolve(const ContactInfo& info, const b2Manifold&)
         return;
     if (info.getOtherIdentifier()->tag == TAG_PLAYER)
     {
-        Player* player =
-            static_cast<Player*>(info.getOtherIdentifier()->object);
-        player->takeDamge(
+        Adventurer* adventurer =
+            static_cast<Adventurer*>(info.getOtherIdentifier()->object);
+        adventurer->takeDamge(
             m_damageWhenTouching,
-            relativeDirection(player->getPositionX(), getPositionX()));
+            relativeDirection(adventurer->getPositionX(), getPositionX()));
     }
 }
 void Monster::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

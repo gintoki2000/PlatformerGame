@@ -1,6 +1,13 @@
 #ifndef POOL_H
 #define POOL_H
 
+struct IPool
+{
+    virtual ~IPool() {}
+    virtual void* alloc()         = 0;
+    virtual void  free(void* obj) = 0;
+};
+
 template <class TObject> class BasePool;
 
 template <class TObject> class PoolableObject
@@ -16,51 +23,10 @@ template <class TObject> class PoolableObject
     friend class BasePool<TObject>;
 };
 
-struct IPool
-{
-    virtual ~IPool() {}
-    virtual void* alloc()         = 0;
-    virtual void  free(void* obj) = 0;
-};
-
 template <class TObject> class BasePool : public IPool
 {
   public:
-    ~BasePool() { delete[] m_objects; }
-    static BasePool* create(int numObjects)
-    {
-        BasePool* ret = new BasePool;
-        if (ret->init(numObjects))
-        {
-            return ret;
-        }
-        delete ret;
-        return nullptr;
-    }
-
-    void* alloc() override
-    {
-        SDL_assert(m_freeList != nullptr && "No object available");
-        TObject* newObject = m_freeList;
-        m_freeList         = m_freeList->m_next;
-        --m_numFreeObjects;
-        return newObject;
-    }
-    void free(void* object) override
-    {
-        SDL_assert(object >= m_objects && object < m_objects + m_numObjects);
-        TObject* _object = static_cast<TObject*>(object);
-        _object->m_next  = m_freeList;
-        m_freeList       = _object;
-        ++m_numFreeObjects;
-    }
-
-    int getNumObjects() const { return m_numObjects; }
-    int getNumFreeObjects() const { return m_numFreeObjects; }
-
-  protected:
-    BasePool() { m_objects = nullptr; }
-    virtual bool init(int numObjects)
+    BasePool(int numObjects)
     {
         m_objects = new TObject[(unsigned)numObjects];
         for (int i = 0; i < numObjects - 1; ++i)
@@ -75,9 +41,33 @@ template <class TObject> class BasePool : public IPool
         m_numObjects     = numObjects;
         m_freeList       = &m_objects[0];
         m_numFreeObjects = numObjects;
-        return true;
     }
 
+    ~BasePool() { delete[] m_objects; }
+
+    void* alloc() override
+    {
+        SDL_assert(m_freeList != nullptr && "No object available");
+        TObject* newObject = m_freeList;
+        m_freeList         = m_freeList->m_next;
+        --m_numFreeObjects;
+        return newObject;
+    }
+
+    void free(void* object) override
+    {
+        SDL_assert(object >= m_objects && object < m_objects + m_numObjects);
+        TObject* _object = static_cast<TObject*>(object);
+        _object->m_next  = m_freeList;
+        m_freeList       = _object;
+        ++m_numFreeObjects;
+    }
+
+    int getNumObjects() const { return m_numObjects; }
+
+    int getNumFreeObjects() const { return m_numFreeObjects; }
+
+  protected:
     TObject* m_objects;
     TObject* m_freeList;
     int      m_numObjects;

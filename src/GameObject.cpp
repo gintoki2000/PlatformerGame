@@ -109,9 +109,9 @@ void GameObject::setObjectLayer(ObjectLayer* objectLayer)
     m_objectLayer = objectLayer;
 }
 
-LayerManager* GameObject::getLayerManager() const
+Scene* GameObject::getScene() const
 {
-    return m_objectLayer->getManager();
+    return m_objectLayer->getScene();
 }
 
 void GameObject::onPositionChanged() {}

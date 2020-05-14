@@ -7,13 +7,13 @@
 #include "Locator.h"
 #include "Monster.h"
 #include "NTRect.h"
-#include "Player.h"
+#include "Adventurer.h"
 #include "SDL_image.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SpriteSheet.h"
 #include <memory>
-class Player;
+class Adventurer;
 
 Slime::Slime(Level* level) :
     Monster(level, MONSTER_TYPE_SLIME, 10)
@@ -79,12 +79,12 @@ void Slime::updateLogic(float deltaTime)
     {
     case STATE_IDLE:
     {
-        auto distanceToPlayer = getDistanceToPlayer();
-        if (distanceToPlayer < ACTIVATE_DISTANCE)
+        auto distanceToAdventurer = getDistanceToAdventurer();
+        if (distanceToAdventurer < ACTIVATE_DISTANCE)
         {
             move();
         }
-        else if (distanceToPlayer <= ATTACK_DISTANCE)
+        else if (distanceToAdventurer <= ATTACK_DISTANCE)
         {
             attack();
         }
@@ -100,12 +100,12 @@ void Slime::updateLogic(float deltaTime)
     break;
     case STATE_MOVE:
     {
-        auto distanceToPlayer = getDistanceToPlayer();
-        if (distanceToPlayer > ACTIVATE_DISTANCE)
+        auto distanceToAdventurer = getDistanceToAdventurer();
+        if (distanceToAdventurer > ACTIVATE_DISTANCE)
         {
             idle();
         }
-        else if (distanceToPlayer <= ATTACK_DISTANCE)
+        else if (distanceToAdventurer <= ATTACK_DISTANCE)
         {
             attack();
         }
@@ -150,7 +150,7 @@ void Slime::checkDirection()
     if (m_changingDirTimer > 1.5f)
     {
         m_changingDirTimer = 0.f;
-        m_direction        = getFacingPlayerDirection();
+        m_direction        = getFacingAdventurerDirection();
     }
 }
 
@@ -175,21 +175,21 @@ void Slime::getHit(int damage)
 class SlimeAttackingCallBack : public b2QueryCallback
 {
   public:
-    SlimeAttackingCallBack(Player* player) : m_player(player) {}
+    SlimeAttackingCallBack(Adventurer* adventurer) : m_adventurer(adventurer) {}
 
     bool ReportFixture(b2Fixture* fixture) override
     {
         void* obj = fixture->GetBody()->GetUserData();
-        if (obj == m_player)
+        if (obj == m_adventurer)
         {
-            m_player->getHit(1);
+            m_adventurer->getHit(1);
             return false;
         }
         return true;
     }
 
   private:
-    Player* m_player;
+    Adventurer* m_adventurer;
 };
 void Slime::checkAttackCollision()
 {
@@ -199,7 +199,7 @@ void Slime::checkAttackCollision()
     area.upperBound.x = (m_positionX + WIDTH / 2.f) / Constances::PPM;
     area.upperBound.y = (m_positionY + HEIGHT / 2.f) / Constances::PPM;
 
-    SlimeAttackingCallBack callback(m_level->getPlayer());
+    SlimeAttackingCallBack callback(m_level->getAdventurer());
     m_body->GetWorld()->QueryAABB(&callback, area);
 }
 void Slime::setState(State newState, float initialTime)

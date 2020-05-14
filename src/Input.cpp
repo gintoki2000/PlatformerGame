@@ -1,137 +1,63 @@
 #include "Input.h"
+#include "SDL_scancode.h"
+#include "SDL_stdinc.h"
 
-Input::ButtonState Input::currentButtonState = {};
-Input::ButtonState Input::prevButtonState = {};
+bool Input::pButtonState[NUM_BUTTONS] = {};
+bool Input::cButtonState[NUM_BUTTONS] = {};
+int Input::mappingToScancode[NUM_BUTTONS] = {};
 
-bool Input::isButtonAPressed() { return currentButtonState.buttonA; }
-
-bool Input::isButtonBPressed() { return currentButtonState.buttonB; }
-
-bool Input::isButtonUpPressed() { return currentButtonState.buttonUp; }
-
-bool Input::isButtonDownPressed() { return currentButtonState.buttonDown; }
-
-bool Input::isButtonLeftPressed() { return currentButtonState.buttonLeft; }
-
-bool Input::isButtonRightPressed()
+void Input::init()
 {
-    return currentButtonState.buttonRight;
-}
-
-bool Input::isButtonAJustPressed()
-{
-    return currentButtonState.buttonA && !prevButtonState.buttonA;
-}
-
-bool Input::isButtonBJustPressed()
-{
-    return currentButtonState.buttonB && !prevButtonState.buttonB;
-}
-
-bool Input::isButtonUpJustPressed()
-{
-    return currentButtonState.buttonUp && !prevButtonState.buttonUp;
-}
-
-bool Input::isButtonDownJustPressed()
-{
-    return currentButtonState.buttonDown && !prevButtonState.buttonDown;
-}
-
-bool Input::isButtonLeftJustPressed()
-{
-    return currentButtonState.buttonLeft && !prevButtonState.buttonLeft;
-}
-
-bool Input::isButtonRightJustPressed()
-{
-    return currentButtonState.buttonRight && !prevButtonState.buttonRight;
-}
-
-bool Input::isButtonAReleased()
-{
-    return !currentButtonState.buttonA;
-}
-
-bool Input::isButtonBReleased()
-{
-    return !currentButtonState.buttonB;
-}
-
-bool Input::isButtonUpReleased()
-{
-    return !currentButtonState.buttonUp;
-}
-bool Input::isButtonDownReleased()
-{
-    return !currentButtonState.buttonDown;
-}
-bool Input::isButtonRightReleased()
-{
-    return !currentButtonState.buttonRight;
-}
-bool Input::isButtonLeftReleased()
-{
-    return !currentButtonState.buttonLeft;
-}
-
-bool Input::isButtonAJustReleased()
-{
-    return !currentButtonState.buttonA && prevButtonState.buttonA;
-}
-
-bool Input::isButtonBJustReleased()
-{
-    return !currentButtonState.buttonB && prevButtonState.buttonB;
-}
-
-bool Input::isButtonUpJustReleased()
-{
-    return !currentButtonState.buttonUp && prevButtonState.buttonUp;
-}
-bool Input::isButtonDownJustReleased()
-{
-    return !currentButtonState.buttonDown && prevButtonState.buttonDown;
-}
-bool Input::isButtonRightJustReleased()
-{
-    return !currentButtonState.buttonRight && prevButtonState.buttonRight;
-}
-bool Input::isButtonLeftJustReleased()
-{
-    return !currentButtonState.buttonLeft && prevButtonState.buttonLeft;
-}
-
-
-int Input::getHorizontalInputDirection()
-{
-    int horizontalDirection = 0;
-    if (isButtonLeftPressed())
-        horizontalDirection -= 1;
-    if (isButtonRightPressed())
-        horizontalDirection += 1;
-    return horizontalDirection;
-}
-
-int Input::getVerticalInputDirection()
-{
-    int verticalDirection = 0;
-    if (isButtonUpPressed())
-        verticalDirection -= 1;
-    if (isButtonDownPressed())
-        verticalDirection += 1;
-    return verticalDirection;
+    mappingToScancode[BUTTON_A]         = SDL_SCANCODE_X;
+    mappingToScancode[BUTTON_B]         = SDL_SCANCODE_Z;
+    mappingToScancode[BUTTON_X]         = SDL_SCANCODE_A;
+    mappingToScancode[BUTTON_Y]         = SDL_SCANCODE_S;
+    mappingToScancode[BUTTON_SELECT]    = SDL_SCANCODE_SPACE;
+    mappingToScancode[BUTTON_START]     = SDL_SCANCODE_RETURN;
+    mappingToScancode[BUTTON_L]         = SDL_SCANCODE_Q;
+    mappingToScancode[BUTTON_R]         = SDL_SCANCODE_W;
+    mappingToScancode[BUTTON_PAD_UP]    = SDL_SCANCODE_UP;
+    mappingToScancode[BUTTON_PAD_DOWN]  = SDL_SCANCODE_DOWN;
+    mappingToScancode[BUTTON_PAD_LEFT]  = SDL_SCANCODE_LEFT;
+    mappingToScancode[BUTTON_PAD_RIGHT] = SDL_SCANCODE_RIGHT;
 }
 
 void Input::update()
 {
-
     const Uint8* keyState = SDL_GetKeyboardState(nullptr);
-    prevButtonState = currentButtonState;
-    currentButtonState.buttonA = keyState[SDL_SCANCODE_Z];
-    currentButtonState.buttonB = keyState[SDL_SCANCODE_X];
-    currentButtonState.buttonUp = keyState[SDL_SCANCODE_UP];
-    currentButtonState.buttonDown = keyState[SDL_SCANCODE_DOWN];
-    currentButtonState.buttonLeft = keyState[SDL_SCANCODE_LEFT];
-    currentButtonState.buttonRight = keyState[SDL_SCANCODE_RIGHT];
+
+    SDL_memcpy(pButtonState, cButtonState, NUM_BUTTONS * sizeof(bool));
+
+    for (int i = 0; i < NUM_BUTTONS; ++i)
+    {
+        cButtonState[i] = keyState[mappingToScancode[i]];
+    }
+}
+
+bool Input::isPressed(Button button) { return cButtonState[button]; }
+
+bool Input::isReleased(Button button) { return !cButtonState[button]; }
+
+bool Input::isJustPressed(Button button)
+{
+    return !pButtonState[button] && cButtonState[button];
+}
+
+bool Input::isJustReleased(Button button)
+{
+    return pButtonState[button] && !cButtonState[button];
+}
+
+int Input::getHorizontalInputDirection()
+{
+	int direction = 0;
+	if (isPressed(BUTTON_PAD_LEFT))
+	{
+		direction -= 1;
+	}
+	if (isPressed(BUTTON_PAD_RIGHT))
+	{
+		direction += 1;
+	}
+	return direction;
 }

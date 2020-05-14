@@ -1,5 +1,5 @@
 #include "Background.h"
-#include "AssertManager.h"
+
 #include "Game.h"
 #include "Level.h"
 #include "SDL_image.h"
@@ -57,6 +57,6 @@ bool Background::init(const tmx::ImageLayer& imageLayerData)
 }
 void Background::update(float)
 {
-    float cameraPositionX = getManager()->getCamera().getViewport().left();
+    float cameraPositionX = getScene()->getCamera().getViewport().left();
     setPositionX(m_initialPositionX + cameraPositionX * m_parallax);
 }

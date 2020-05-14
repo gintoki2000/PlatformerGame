@@ -1,14 +1,17 @@
 #include "Axe.h"
-#include "AssertManager.h"
+
+#include "Audio.h"
 #include "Constances.h"
 #include "Game.h"
-#include "LayerManager.h"
 #include "Level.h"
 #include "Monster.h"
 #include "SDL_mixer.h"
 #include "SDL_rect.h"
 #include "SDL_render.h"
 #include "SDL_stdinc.h"
+#include "Scene.h"
+#include "SpriteSheet.h"
+#include "TextureManager.h"
 #include "Utils.h"
 #include "WorldManager.h"
 #include "box2d/b2_circle_shape.h"
@@ -25,10 +28,10 @@ Axe::~Axe()
     }
 }
 
-Axe* Axe::create(const Vec2& pos, Direction playerDir)
+Axe* Axe::create(const Vec2& pos, Direction adventurerDir)
 {
     Axe* ret = new Axe;
-    if (ret->init(pos, playerDir))
+    if (ret->init(pos, adventurerDir))
     {
         return ret;
     }
@@ -58,7 +61,7 @@ void Axe::tick(float)
     boundingBox.y            = m_positionY - 16;
     boundingBox.w            = 32;
     boundingBox.h            = 32;
-    const SDL_Rect& viewport = getLayerManager()->getCamera().getViewport();
+    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
     if (!SDL_HasIntersection(&boundingBox, &viewport))
     {
         remove();
@@ -68,13 +71,12 @@ void Axe::tick(float)
 void Axe::paint()
 {
 
-    SDL_Renderer*   renderer = Game::getInstance()->renderer();
-    const SDL_Rect& viewport = getLayerManager()->getCamera().getViewport();
+    SDL_Renderer*   renderer = GAME->renderer();
+    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
 
     SDL_Rect dstrect;
     dstrect.w = m_sprite.getWidth();
     dstrect.h = m_sprite.getHeight();
-
 
     Uint8 d = 255 / (NUM_SHADOWS + 1);
     Uint8 a = d;
@@ -97,9 +99,7 @@ void Axe::cleanup() { delete this; }
 
 bool Axe::init(const Vec2& pos, Direction dir)
 {
-    TextureManager& textureMGR = Game::getInstance()->textureMGR();
-    SDL_Texture*    texture =
-        textureMGR.getTexture(TextureManager::THROWING_AXE);
+    SDL_Texture* texture = TextureManager::get(TEX_THROWING_AXE);
     if (texture == nullptr)
     {
         return false;
@@ -122,7 +122,7 @@ bool Axe::init(const Vec2& pos, Direction dir)
     fdef.shape               = &circle;
     fdef.filter.categoryBits = CATEGORY_BIT_SPELL;
     fdef.filter.maskBits     = CATEGORY_BIT_MONSTER;
-    fdef.isSensor            = true;
+    fdef.isSensor            = false;
 
     m_body->CreateFixture(&fdef);
 
@@ -146,21 +146,20 @@ bool Axe::init(const Vec2& pos, Direction dir)
     return true;
 }
 
-void Axe::onBeginContact(const ContactInfo& info)
-{
-    const Identifier* otherIDR = info.getOtherIdentifier();
-    if (otherIDR != nullptr && otherIDR->tag == TAG_MONSTER)
-    {
-        Monster* monster = static_cast<Monster*>(otherIDR->object);
-        if (monster->takeDamge(5, DIRECTION_NONE))
-        {
-            SoundManager& soundMGR = Game::getInstance()->soundMGR();
-            Mix_Chunk*    sound = soundMGR.getSound(SoundManager::IMPACT);
-            Mix_PlayChannel(-1, sound, 0);
-        }
-    }
-}
+void Axe::onBeginContact(const ContactInfo&) {}
 
 void Axe::onEndContact(const ContactInfo&) {}
-void Axe::onPreSolve(const ContactInfo&, const b2Manifold&) {}
+void Axe::onPreSolve(const ContactInfo& info, const b2Manifold&)
+{
+    const Identifier* idr = info.getOtherIdentifier();
+    if (idr != nullptr && idr->tag == TAG_MONSTER)
+    {
+        Monster* monster = static_cast<Monster*>(idr->object);
+        if (monster->takeDamge(5, DIRECTION_NONE))
+        {
+			Audio::play(SOUND_STAB);
+        }
+    }
+    info.setIsEnabled(false);
+}
 void Axe::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

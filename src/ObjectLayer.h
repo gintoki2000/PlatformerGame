@@ -10,11 +10,12 @@ class ObjectLayer : public Layer
 
     void update(float deltaTime) override;
     void render() override;
+	void start() override;
 
     GameObject* getObjectAt(int index) const;
-    void addObject(GameObject* obj);
-    int  indexOf(GameObject* obj) const;
-    int  getNumObjects() const;
+    void        addObject(GameObject* obj);
+    int         indexOf(GameObject* obj) const;
+    int         getNumObjects() const;
 
   private:
     void         growIfNeed();
@@ -24,5 +25,6 @@ class ObjectLayer : public Layer
     GameObject** m_objects;
     int          m_numObjects;
     int          m_capacity;
+    bool         m_isStarted;
 };
 #endif // OBJECT_LAYER_H

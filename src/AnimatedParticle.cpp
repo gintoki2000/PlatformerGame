@@ -1,23 +1,12 @@
 #include "AnimatedParticle.h"
 #include "Animation.h"
-#include "AssertManager.h"
 #include "Game.h"
-#include "LayerManager.h"
+#include "Scene.h"
 #include "Utils.h"
 
-AnimatedParticle::AnimatedParticle() : m_animation(nullptr) {}
+AnimatedParticle::AnimatedParticle() : m_model(nullptr) {}
 
-AnimatedParticle::~AnimatedParticle() { DELETE_NULL(m_animation); }
-
-bool AnimatedParticle::preinit(TextureManager::TextureID textureID,
-                               float frameDuration, int spriteWidth,
-                               int spriteHeight)
-{
-    SDL_Texture* texture = GAME->textureMGR().getTexture(textureID);
-    m_spriteSheet.init(texture, spriteWidth, spriteHeight);
-    m_animation = new Animation(&m_spriteSheet, frameDuration);
-    return true;
-}
+AnimatedParticle::~AnimatedParticle() { m_model = nullptr; }
 
 void AnimatedParticle::init(const Vec2& position)
 {
@@ -29,7 +18,7 @@ void AnimatedParticle::init(const Vec2& position)
 void AnimatedParticle::tick(float deltaTime)
 {
     m_timer += deltaTime;
-    if (m_animation->isFinished(m_timer))
+    if (m_model->animation->isFinished(m_timer))
     {
         remove();
     }
@@ -38,9 +27,9 @@ void AnimatedParticle::tick(float deltaTime)
 void AnimatedParticle::paint()
 {
 
-    const Sprite& sprite = *(m_animation->getCurrentSprite(m_timer));
+    const Sprite& sprite = *(m_model->animation->getCurrentSprite(m_timer));
 
-    const Camera& camera = getLayerManager()->getCamera();
+    const Camera& camera = getScene()->getCamera();
 
     const SDL_Rect& viewport = camera.getViewport();
 

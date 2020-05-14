@@ -6,7 +6,7 @@ class WorldManager
   public:
     static b2World* getWorld();
     static void     clearWorld();
-	static void 	end();
+    static void 	terminate();
 
   private:
     WorldManager() {}

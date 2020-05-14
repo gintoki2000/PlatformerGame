@@ -1,5 +1,7 @@
 #include "MainState.h"
+#include "Game.h"
 #include "Level.h"
+#include "SDL_render.h"
 
 MainState::MainState()
 {
@@ -37,6 +39,8 @@ bool MainState::init()
 void MainState::render(float deltaTime)
 {
     m_level->update(deltaTime);
+	SDL_SetRenderDrawColor(GAME->renderer(), 0x00, 0x00, 0x00, 0x00);
+	SDL_RenderClear(GAME->renderer());
     m_level->render();
 }
 

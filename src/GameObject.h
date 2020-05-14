@@ -2,7 +2,7 @@
 #define GAME_OBJECT_H
 #include "Vec.h"
 class ObjectLayer;
-class LayerManager;
+class Scene;
 class GameObject
 {
 
@@ -43,7 +43,7 @@ class GameObject
     ObjectLayer* getObjectLayer() const;
     void         setObjectLayer(ObjectLayer* objectLayer);
 
-    LayerManager* getLayerManager() const;
+    Scene* getScene() const;
 
   protected:
     virtual void onPositionChanged();

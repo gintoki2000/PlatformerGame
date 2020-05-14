@@ -1,4 +1,5 @@
 #include "WorldRenderer.h"
+#include "SDL2_gfxPrimitives.h"
 #include "SDL_render.h"
 
 WorldRenderer::WorldRenderer(SDL_Renderer* renderer, float ppm) :
@@ -50,31 +51,17 @@ void WorldRenderer::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount,
 
 void WorldRenderer::DrawCircle(const b2Vec2& p, float r, const b2Color& c)
 {
-    SDL_SetRenderDrawColor(m_renderer, 0xff, 0xff, 0x00, 0xff);
-    SDL_RenderDrawPoint(m_renderer, p.x * m_ppm, p.y * m_ppm);
-    SDL_Rect rect;
-    rect.x = (p.x - r) * m_ppm;
-    rect.y = (p.y - r) * m_ppm;
-    rect.w = r * 2.f * m_ppm;
-    rect.h = r * 2.f * m_ppm;
-    SDL_SetRenderDrawColor(m_renderer, c.r * 255, c.g * 255, c.b * 255,
-                           c.a * 255);
-    SDL_RenderDrawRect(m_renderer, &rect);
+    circleRGBA(m_renderer, p.x * m_ppm - m_viewport.x,
+               p.y * m_ppm - m_viewport.y, r * m_ppm, c.r * 255, c.g * 255,
+               c.b * 255, c.a * 255);
 }
 
 void WorldRenderer::DrawSolidCircle(const b2Vec2& p, float r, const b2Vec2&,
                                     const b2Color& c)
 {
-    SDL_SetRenderDrawColor(m_renderer, 0xff, 0xff, 0x00, 0xff);
-    SDL_RenderDrawPoint(m_renderer, p.x * m_ppm - m_viewport.x, p.y * m_ppm - m_viewport.y);
-    SDL_Rect rect;
-    rect.x = (p.x - r) * m_ppm - m_viewport.x;
-    rect.y = (p.y - r) * m_ppm - m_viewport.y;
-    rect.w = r * 2.f * m_ppm;
-    rect.h = r * 2.f * m_ppm;
-    SDL_SetRenderDrawColor(m_renderer, c.r * 255, c.g * 255, c.b * 255,
-                           c.a * 255);
-    SDL_RenderDrawRect(m_renderer, &rect);
+    circleRGBA(m_renderer, p.x * m_ppm - m_viewport.x,
+               p.y * m_ppm - m_viewport.y, r * m_ppm, c.r * 255, c.g * 255,
+               c.b * 255, c.a * 255);
 }
 
 void WorldRenderer::DrawSegment(const b2Vec2&, const b2Vec2&, const b2Color&) {}
