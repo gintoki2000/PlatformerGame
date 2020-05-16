@@ -18,9 +18,9 @@ enum TextureID
 class TextureManager
 {
   public:
-    static bool         load(SDL_Renderer* renderer);
-    static void         unload();
-    static SDL_Texture* get(int textureID);
+    static bool         Load(SDL_Renderer* renderer);
+    static void         Unload();
+    static SDL_Texture* Get(int textureID);
   private:
 	static SDL_Texture** textures;
 };

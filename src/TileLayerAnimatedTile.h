@@ -8,10 +8,10 @@ class TileLayerAnimatedTile : public TileLayerTile
     TileLayerAnimatedTile(const std::vector<TextureRegion>& frames,
                           const std::vector<Uint32>&        intervals);
 
-    virtual const TextureRegion& getTextureRegion() override;
+    virtual const TextureRegion& GetTextureRegion() override;
 
-    static void initBaseTime();
-    static void updateBaseTime();
+    static void InitBaseTime();
+    static void UpdateBaseTime();
 
   private:
     std::vector<TextureRegion> m_frames;

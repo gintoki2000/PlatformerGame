@@ -20,30 +20,30 @@ class Koblod : public Monster
 
     enum Anim
     {
-        ANIM_IDLE,
-        ANIM_RUN,
-        ANIM_ATTACK,
-        ANIM_HURT,
-        ANIM_DIE,
+        ANIm_IDLE,
+        ANIm_RUN,
+        ANIm_ATTACK,
+        ANIm_HURT,
+        ANIm_DIE,
         NUM_ANIMS
     };
 
   public:
     Koblod(Level* level);
     ~Koblod();
-    void getHit(int damage) override;
+    void GetHit(int damage) override;
 
   private:
-    void updateLogic(float deltaTime) override;
-    void resetMembers();
+    void UpdateLogic(float deltaTime) override;
+    void ResetMembers();
 
-    void idle();
-    void run();
-	void waitToAttack();
-    void attack();
-    void wait();
-    void hurt();
-    void die();
+    void Idle();
+    void Run();
+	void WaitToAttack();
+    void Attack();
+    void Wait();
+    void Hurt();
+    void Die();
 
     State m_state;
     float m_timer;

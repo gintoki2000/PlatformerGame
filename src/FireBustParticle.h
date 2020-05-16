@@ -14,7 +14,7 @@ class FireBustParticle : public AnimatedParticle,
     // GameObject interface
   public:
     typedef AnimatedParticlePool<FireBustParticle> Pool;
-    void cleanup() override { getPool()->free(this); }
+    void Cleanup() override { GetPool()->Free(this); }
 
   public:
     static constexpr int   SPRITE_WIDTH   = 64;

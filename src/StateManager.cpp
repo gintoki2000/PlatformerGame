@@ -9,7 +9,7 @@ StateManager::StateManager()
 }
 
 StateManager::~StateManager() {
-	update();
+	Update();
 	for (int i = 0; i < m_numStates; ++i)
 	{
 		delete m_stateStack[i];
@@ -18,25 +18,25 @@ StateManager::~StateManager() {
 	m_numStates = 0;
 }
 
-void StateManager::pushState(GameState* state)
+void StateManager::PushState(GameState* state)
 {
     SDL_assert(m_numPending < MAX_PENDING);
     m_actions[m_numPending++] = Action(state, ACTION_TYPE_PUSH);
 }
 
-void StateManager::popState()
+void StateManager::PopState()
 {
     SDL_assert(m_numPending < MAX_PENDING);
     m_actions[m_numPending++] = Action(nullptr, ACTION_TYPE_POP);
 }
 
-void StateManager::setState(GameState* state)
+void StateManager::SetState(GameState* state)
 {
     SDL_assert(m_numPending < MAX_PENDING);
     m_actions[m_numPending++] = Action(state, ACTION_TYPE_CHANGE);
 }
 
-void StateManager::update()
+void StateManager::Update()
 {
     if (m_numPending == 0)
         return;
@@ -69,7 +69,7 @@ void StateManager::update()
 	m_numPending = 0;
 }
 
-GameState* StateManager::getState() const 
+GameState* StateManager::GetState() const 
 {
 	if (m_numStates == 0)
 		return nullptr;

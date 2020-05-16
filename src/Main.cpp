@@ -8,12 +8,12 @@ int main()
     const float TIME_STEP       = 1.f / 60.f;
     Uint32      usedTicks;
     Uint32      startTicks;
-    if (game.init())
+    if (game.Init())
     {
-        while (game.isRunning())
+        while (game.IsRunning())
         {
             startTicks = SDL_GetTicks();
-            game.render(TIME_STEP);
+            game.Render(TIME_STEP);
             usedTicks = SDL_GetTicks() - startTicks;
             if (usedTicks < TICKS_PER_FRAME)
             {

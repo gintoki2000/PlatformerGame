@@ -7,12 +7,12 @@ class StateManager
     StateManager();
     ~StateManager();
 
-    void setState(GameState* state);
-    void pushState(GameState* state);
-    void popState();
+    void SetState(GameState* state);
+    void PushState(GameState* state);
+    void PopState();
 
-	void update();
-    GameState* getState() const;
+	void Update();
+    GameState* GetState() const;
 
   private:
     const static int MAX_STATES  = 10;

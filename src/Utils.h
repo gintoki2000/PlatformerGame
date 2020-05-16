@@ -55,11 +55,11 @@ struct Identifier
     ICollisionHandler* object;
 };
 
-bool      boxCast(const FloatRect& box, uint16 maskBits);
-void      boxQuery(const FloatRect& box, uint16 maskBits, b2Fixture* fixtures[],
+bool      BoxCast(const FloatRect& box, uint16 maskBits);
+void      BoxQuery(const FloatRect& box, uint16 maskBits, b2Fixture* fixtures[],
                    int& n, const int max);
-int       directionToSign(Direction direction);
-float     distance(const Vec2& a, const Vec2& b);
-Direction relativeDirection(float x1, float x2);
-int       randomRange(int a, int b);
+int       DirectionToSign(Direction direction);
+float     Distance(const Vec2& a, const Vec2& b);
+Direction RelativeDirection(float x1, float x2);
+int       RandomRange(int a, int b);
 #endif // UTILS_H

@@ -7,13 +7,13 @@ class PositionalLayer : public Layer
   public:
     PositionalLayer();
 
-    const Vec2&  getPosition() const;
-    virtual void setPosition(const Vec2& position);
-    float        getPositionX() const;
-    virtual void setPositionX(float positionX);
-    float        getPositionY() const;
-    virtual void setPositionY(float positionY);
-	virtual void moveBy(const Vec2& v);
+    const Vec2&  GetPosition() const;
+    virtual void SetPosition(const Vec2& position);
+    float        GetPositionX() const;
+    virtual void SetPositionX(float positionX);
+    float        GetPositionY() const;
+    virtual void SetPositionY(float positionY);
+	virtual void MoveBy(const Vec2& v);
 
   private:
     Vec2 m_position;

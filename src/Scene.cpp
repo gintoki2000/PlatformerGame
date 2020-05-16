@@ -20,53 +20,53 @@ Scene::~Scene()
     delete[] m_layers;
 }
 
-void Scene::update(float deltaTime)
+void Scene::Update(float deltaTime)
 {
-    m_camera.update();
+    m_camera.Update();
     for (int i = 0; i < m_numLayers; ++i)
     {
-        if (m_layers[i]->isActive())
+        if (m_layers[i]->IsActive())
         {
-            m_layers[i]->update(deltaTime);
+            m_layers[i]->Update(deltaTime);
         }
     }
 }
 
-void Scene::render()
+void Scene::Render()
 {
     for (int i = 0; i < m_numLayers; ++i)
     {
-        if (m_layers[i]->isVisible())
+        if (m_layers[i]->IsVisible())
         {
-            m_layers[i]->render();
+            m_layers[i]->Render();
         }
     }
 }
 
-void Scene::start()
+void Scene::Start()
 {
     if (!m_isStarted)
     {
         m_isStarted = true;
         for (int i = 0; i < m_numLayers; ++i)
         {
-            m_layers[i]->start();
+            m_layers[i]->Start();
         }
     }
 }
 
-int    Scene::getNumLayers() const { return m_numLayers; }
-Layer* Scene::getLayerAt(int index) const
+int    Scene::GetNumLayers() const { return m_numLayers; }
+Layer* Scene::GetLayerAt(int index) const
 {
     SDL_assert(index >= 0 && index < m_numLayers);
     return m_layers[index];
 }
 
-Layer* Scene::getLayerByName(const char* layerName)
+Layer* Scene::GetLayerByName(const char* layerName)
 {
     for (int i = 0; i < m_numLayers; ++i)
     {
-        if (m_layers[i]->getName() == layerName)
+        if (m_layers[i]->GetName() == layerName)
         {
             return m_layers[i];
         }
@@ -74,7 +74,7 @@ Layer* Scene::getLayerByName(const char* layerName)
     return nullptr;
 }
 
-int Scene::indexOf(Layer* layer) const
+int Scene::IndexOf(Layer* layer) const
 {
     for (int i = 0; i < m_numLayers; ++i)
     {
@@ -86,52 +86,52 @@ int Scene::indexOf(Layer* layer) const
     return -1;
 }
 
-void Scene::addLayer(Layer* layer)
+void Scene::AddLayer(Layer* layer)
 {
-    SDL_assert(layer != nullptr && layer->getScene() == nullptr);
-    growIfNeed();
+    SDL_assert(layer != nullptr && layer->GetScene() == nullptr);
+    GrowIfNeed();
     m_layers[m_numLayers++] = layer;
-    layer->setScene(this);
+    layer->SetScene(this);
 }
 
-void Scene::addLayer(Layer* layer, int index)
+void Scene::AddLayer(Layer* layer, int index)
 {
     SDL_assert(index >= 0 && index < m_numLayers);
-    SDL_assert(layer != nullptr && layer->getScene() == nullptr);
-    growIfNeed();
+    SDL_assert(layer != nullptr && layer->GetScene() == nullptr);
+    GrowIfNeed();
     for (int i = m_numLayers; i > index; --i)
     {
         m_layers[i] = m_layers[i - 1];
     }
     m_layers[index] = layer;
-    layer->setScene(this);
+    layer->SetScene(this);
     ++m_numLayers;
 }
 
-bool Scene::removeLayer(Layer* layer)
+bool Scene::RemoveLayer(Layer* layer)
 {
-    int index = indexOf(layer);
+    int index = IndexOf(layer);
     if (index == -1)
         return false;
 
-    removeLayerAt(index);
+    RemoveLayerAt(index);
     return true;
 }
 
-Layer* Scene::removeLayerAt(int index)
+Layer* Scene::RemoveLayerAt(int index)
 {
-    Layer* layer = getLayerAt(index);
+    Layer* layer = GetLayerAt(index);
     for (int i = index; i < m_numLayers - 1; ++i)
     {
         m_layers[i] = m_layers[i + 1];
     }
-    layer->setScene(nullptr);
+    layer->SetScene(nullptr);
     return layer;
 }
 
-Camera& Scene::getCamera() { return m_camera; }
+Camera& Scene::GetCamera() { return m_camera; }
 
-void Scene::growIfNeed()
+void Scene::GrowIfNeed()
 {
     if (m_numLayers == m_capacity)
     {

@@ -14,32 +14,32 @@ class Tilesets;
 class Background;
 class ObjectLayer;
 class ParticleSystem;
-class PauseMenu;
+class EquipmentMenu;
 class Level : public Scene, public b2ContactListener
 {
   public:
     ~Level();
 
-    static Level* loadFromFile(const char* filename);
+    static Level* LoadFromFile(const char* filename);
 
     /// getters
-    Adventurer*     getAdventurer() const;
-    Tilesets*       getTilesets() const;
-    ObjectLayer*    getParticleLayer() const;
-    ObjectLayer*    getSpriteLayer() const;
-    CameraShaker*   getCameraShaker();
-    ParticleSystem* getParticleSystem() const;
+    Adventurer*     GetAdventurer() const;
+    Tilesets*       GetTilesets() const;
+    ObjectLayer*    GetParticleLayer() const;
+    ObjectLayer*    GetSpriteLayer() const;
+    CameraShaker*   GetCameraShaker();
+    ParticleSystem* GetParticleSystem() const;
 
     // stuff
-    void setIsPaused(bool paused);
-    void displayPauseMenu();
-    void hidePauseMenu();
+    void SetIsPaused(bool paused);
+    void DisplayEquipmentMenu();
+    void HideEquipmentMenu();
 
     // Scene interface
   public:
-    void update(float deltaTime) override;
-    void render() override;
-    void start() override;
+    void Update(float deltaTime) override;
+    void Render() override;
+    void Start() override;
 
     // b2ContactListener interface
   public:
@@ -51,7 +51,12 @@ class Level : public Scene, public b2ContactListener
 
   private:
     Level();
-    bool init(const char* filename);
+    bool Init(const char* filename);
+    enum State
+    {
+        STATE_EQUIPMENT,
+        STATE_PLAYING
+    };
 
     /// data fields
     bool            m_isPaused;
@@ -65,8 +70,7 @@ class Level : public Scene, public b2ContactListener
     HUD*            m_hud;
     CameraShaker*   m_cameraShaker;
     ParticleSystem* m_particleSystem;
-    PauseMenu*      m_pauseMenu;
-
-    friend class LevelParser;
+    EquipmentMenu*      m_pauseMenu;
+    State           m_state;
 };
 #endif // LEVEL_H

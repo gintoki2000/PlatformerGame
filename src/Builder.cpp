@@ -2,7 +2,7 @@
 #include "Constances.h"
 #include "tmxlite/Types.hpp"
 
-b2PolygonShape* Builder::buildPolygon(const tmx::Vector2f& position, const std::vector<tmx::Vector2f>& points)
+b2PolygonShape* Builder::BuildPolygon(const tmx::Vector2f& position, const std::vector<tmx::Vector2f>& points)
 {
     auto    n = points.size();
     b2Vec2* v = new b2Vec2[n];
@@ -19,7 +19,7 @@ b2PolygonShape* Builder::buildPolygon(const tmx::Vector2f& position, const std::
     return polygon;
 }
 
-b2PolygonShape* Builder::buildRectangle(const tmx::Rectangle<float>& rect)
+b2PolygonShape* Builder::BuildRectangle(const tmx::Rectangle<float>& rect)
 {
     b2PolygonShape* polygon = new b2PolygonShape();
     polygon->SetAsBox(rect.width / 2.f / Constances::PPM,
@@ -30,12 +30,12 @@ b2PolygonShape* Builder::buildRectangle(const tmx::Rectangle<float>& rect)
     return polygon;
 }
 
-b2Shape* Builder::buildShape(const tmx::Object& object)
+b2Shape* Builder::BuildShape(const tmx::Object& object)
 {
     switch (object.getShape())
     {
-    case tmx::Object::Shape::Rectangle: return buildRectangle(object.getAABB());
-    case tmx::Object::Shape::Polygon: return buildPolygon(object.getPosition(), object.getPoints());
+    case tmx::Object::Shape::Rectangle: return BuildRectangle(object.getAABB());
+    case tmx::Object::Shape::Polygon: return BuildPolygon(object.getPosition(), object.getPoints());
     default: return nullptr;
     }
 }

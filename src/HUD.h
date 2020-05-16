@@ -6,13 +6,13 @@ class Level;
 class HUD : public Layer
 {
   public:
-    static HUD* create();
-    void        update(float deltaTime) override;
-    void        render() override;
+    static HUD* Create();
+    void        Update(float deltaTime) override;
+    void        Render() override;
 
   private:
     HUD();
-    bool   init();
+    bool   Init();
     Sprite m_circle;
     Sprite m_mpBorder;
     Sprite m_hpBorder;

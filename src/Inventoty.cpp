@@ -13,10 +13,12 @@ Inventory::~Inventory()
     }
 }
 
-void Inventory::addTechnique(Technique* technique)
+void Inventory::AddTechnique(Technique* technique)
 {
     SDL_assert(m_numTechniques < MAX_TECHNIQUES);
     m_techinques[m_numTechniques++] = technique;
 }
 
-Technique* Inventory::getTechnique(int i) { return m_techinques[i]; }
+Technique* Inventory::GetTechnique(int i) { return m_techinques[i]; }
+
+int Inventory::GetNumTechniques() const { return m_numTechniques; }

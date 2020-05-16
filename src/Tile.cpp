@@ -29,7 +29,7 @@ Tile::Tile(const std::vector<TextureRegion>& staticTiles,
     int i       = 0;
     for (const auto& object : tileData.objectGroup.getObjects())
     {
-        m_shapes[i++] = Builder::buildShape(object);
+        m_shapes[i++] = Builder::BuildShape(object);
     }
 }
 

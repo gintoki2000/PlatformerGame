@@ -6,7 +6,7 @@ bool Input::pButtonState[NUM_BUTTONS] = {};
 bool Input::cButtonState[NUM_BUTTONS] = {};
 int Input::mappingToScancode[NUM_BUTTONS] = {};
 
-void Input::init()
+void Input::Init()
 {
     mappingToScancode[BUTTON_A]         = SDL_SCANCODE_X;
     mappingToScancode[BUTTON_B]         = SDL_SCANCODE_Z;
@@ -22,7 +22,7 @@ void Input::init()
     mappingToScancode[BUTTON_PAD_RIGHT] = SDL_SCANCODE_RIGHT;
 }
 
-void Input::update()
+void Input::Update()
 {
     const Uint8* keyState = SDL_GetKeyboardState(nullptr);
 
@@ -34,28 +34,28 @@ void Input::update()
     }
 }
 
-bool Input::isPressed(Button button) { return cButtonState[button]; }
+bool Input::IsPressed(Button button) { return cButtonState[button]; }
 
-bool Input::isReleased(Button button) { return !cButtonState[button]; }
+bool Input::IsReleased(Button button) { return !cButtonState[button]; }
 
-bool Input::isJustPressed(Button button)
+bool Input::IsJustPressed(Button button)
 {
     return !pButtonState[button] && cButtonState[button];
 }
 
-bool Input::isJustReleased(Button button)
+bool Input::IsJustReleased(Button button)
 {
     return pButtonState[button] && !cButtonState[button];
 }
 
-int Input::getHorizontalInputDirection()
+int Input::GetHorizontalInputDirection()
 {
 	int direction = 0;
-	if (isPressed(BUTTON_PAD_LEFT))
+	if (IsPressed(BUTTON_PAD_LEFT))
 	{
 		direction -= 1;
 	}
-	if (isPressed(BUTTON_PAD_RIGHT))
+	if (IsPressed(BUTTON_PAD_RIGHT))
 	{
 		direction += 1;
 	}

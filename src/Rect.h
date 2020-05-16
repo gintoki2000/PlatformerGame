@@ -6,10 +6,10 @@ struct Rect : public SDL_Rect {
   Rect() : SDL_Rect({0, 0, 0, 0}) {}
   Rect(const SDL_Rect &_rect) : SDL_Rect(_rect) {}
   Rect(int _x, int _y, int _w, int _h) : SDL_Rect({_x, _y, _w, _h}) {}
-  int left() const { return x; }
-  int right() const { return x + w; }
-  int bottom() const { return y + h; }
-  int top() const { return y; }
+  int Left() const { return x; }
+  int Right() const { return x + w; }
+  int Bottom() const { return y + h; }
+  int Top() const { return y; }
   int width() const { return w; }
   int height() const { return h; }
 };
@@ -25,7 +25,7 @@ struct FloatRect
     FloatRect(const Vec2& xy, const Vec2& size):
         x(xy.x), y(xy.y), width(size.x), height(size.y){}
 
-    float right() const { return x + width; }
-    float bottom() const { return y + height; }
+    float Right() const { return x + width; }
+    float Bottom() const { return y + height; }
 };
 #endif // RECT_H

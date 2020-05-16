@@ -13,10 +13,10 @@ MainState::~MainState()
 	delete m_level;
 }
 
-MainState* MainState::create()
+MainState* MainState::Create()
 {
 	MainState* ret = new MainState;
-	if (ret->init())
+	if (ret->Init())
 	{
 		return ret;
 	}	
@@ -24,42 +24,42 @@ MainState* MainState::create()
 	return nullptr;
 }
 
-bool MainState::init()
+bool MainState::Init()
 {
     const char* file = "asserts/levels/deep-forest.tmx";
-    if ((m_level = Level::loadFromFile(file)) == nullptr)
+    if ((m_level = Level::LoadFromFile(file)) == nullptr)
 	{
         SDL_Log("Failed to load level: %s", file);
 		return false;
 	}
-	m_level->start();
+	m_level->Start();
 	return true;
 }
 
-void MainState::render(float deltaTime)
+void MainState::Render(float deltaTime)
 {
-    m_level->update(deltaTime);
-	SDL_SetRenderDrawColor(GAME->renderer(), 0x00, 0x00, 0x00, 0x00);
-	SDL_RenderClear(GAME->renderer());
-    m_level->render();
+    m_level->Update(deltaTime);
+	SDL_SetRenderDrawColor(GAME->GetRenderer(), 0x00, 0x00, 0x00, 0x00);
+	SDL_RenderClear(GAME->GetRenderer());
+    m_level->Render();
 }
 
-void MainState::show()
+void MainState::Show()
 {
-	m_level->setIsPaused(false);
+	m_level->SetIsPaused(false);
 }
 
-void MainState::hidden()
+void MainState::Hidden()
 {
-	m_level->setIsPaused(true);	
+	m_level->SetIsPaused(true);	
 }
 
-void MainState::pause()
+void MainState::Pause()
 {
-	m_level->setIsPaused(true);
+	m_level->SetIsPaused(true);
 }
 
-void MainState::resume()
+void MainState::Resume()
 {
-	m_level->setIsPaused(false);
+	m_level->SetIsPaused(false);
 }

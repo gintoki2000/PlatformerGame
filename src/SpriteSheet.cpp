@@ -28,7 +28,7 @@ SpriteSheet::SpriteSheet(const SpriteSheet& other)
     m_numSprites = other.m_numSprites;
     SDL_memcpy(m_sprites, other.m_sprites, m_numSprites * sizeof(Sprite));
 }
-void SpriteSheet::init(SDL_Texture* texture, int spriteWidth, int spriteHeight)
+void SpriteSheet::Init(SDL_Texture* texture, int spriteWidth, int spriteHeight)
 {
     SDL_assert(texture != nullptr);
     SDL_assert(m_sprites == nullptr);
@@ -53,7 +53,7 @@ void SpriteSheet::init(SDL_Texture* texture, int spriteWidth, int spriteHeight)
     m_numSprites = rows * cols;
 }
 
-void SpriteSheet::init(SDL_Texture* texture, int startX, int startY, int rows, int cols,
+void SpriteSheet::Init(SDL_Texture* texture, int startX, int startY, int rows, int cols,
               int spriteWidth, int spriteHeight)
 {
 	
@@ -82,32 +82,32 @@ SpriteSheet::~SpriteSheet()
     m_sprites = nullptr;
 }
 
-const Sprite& SpriteSheet::getSprite(int index) const
+const Sprite& SpriteSheet::GetSprite(int index) const
 {
     SDL_assert(index >= 0 || index < m_numSprites);
     return m_sprites[index];
 }
 
-void SpriteSheet::draw(SDL_Renderer* renderer, int index,
+void SpriteSheet::Draw(SDL_Renderer* renderer, int index,
                        const SDL_Rect* dstrect) const
 {
-    getSprite(index).draw(renderer, dstrect);
+    GetSprite(index).Draw(renderer, dstrect);
 }
 
-void SpriteSheet::draw(SDL_Renderer* renderer, int index,
+void SpriteSheet::Draw(SDL_Renderer* renderer, int index,
                        const SDL_Rect* dstrect, double angle,
                        const SDL_Point* center, SDL_RendererFlip flip) const
 {
-    getSprite(index).draw(renderer, dstrect, angle, center, flip);
+    GetSprite(index).Draw(renderer, dstrect, angle, center, flip);
 }
 
-void SpriteSheet::draw(SDL_Renderer* renderer, int index, int x, int y) const
+void SpriteSheet::Draw(SDL_Renderer* renderer, int index, int x, int y) const
 {
-    getSprite(index).draw(renderer, x, y);
+    GetSprite(index).Draw(renderer, x, y);
 }
 
-void SpriteSheet::draw(SDL_Renderer* renderer, int index, int x, int y,
+void SpriteSheet::Draw(SDL_Renderer* renderer, int index, int x, int y,
                        SDL_RendererFlip flip) const
 {
-    getSprite(index).draw(renderer, x, y, flip);
+    GetSprite(index).Draw(renderer, x, y, flip);
 }

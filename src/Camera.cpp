@@ -11,45 +11,45 @@ Camera::Camera(const Vec2 &center, const Vec2 &size):
     m_needToUpdateViewport = true;
 }
 
-void Camera::update()
+void Camera::Update()
 {
-    m_center.x += Math::lerp(m_center.x, m_target.x, 0.1f);
-    m_center.y += Math::lerp(m_center.y, m_target.y, 0.1f);
+    m_center.x += Math::Lerp(m_center.x, m_target.x, 0.1f);
+    m_center.y += Math::Lerp(m_center.y, m_target.y, 0.1f);
     m_needToUpdateViewport = true;
 }
 
-void Camera::setCenter(const Vec2 &center)
+void Camera::SetCenter(const Vec2 &center)
 {
     m_needToUpdateViewport = true;
     m_center = center;
 }
 
-Vec2 Camera::getCenter() const
+Vec2 Camera::GetCenter() const
 {
     return m_center;
 }
 
-Vec2 Camera::getTarget() const
+Vec2 Camera::GetTarget() const
 {
     return m_target;
 }
 
-void Camera::setTarget(const Vec2 &target)
+void Camera::SetTarget(const Vec2 &target)
 {
     m_target = target;
 }
 
-Vec2 Camera::getSize() const
+Vec2 Camera::GetSize() const
 {
     return m_size;
 }
 
-void Camera::setSize(const Vec2 &size)
+void Camera::SetSize(const Vec2 &size)
 {
     m_size = size;
 }
 
-Rect Camera::getViewport() const
+Rect Camera::GetViewport() const
 {
     if (m_needToUpdateViewport)
     {

@@ -8,7 +8,7 @@ struct Vec2
 
     Vec2(float _x, float _y) : x(_x), y(_y) {}
 
-    float len() const { return std::sqrt(x * x + y * y); }
+    float Len() const { return std::sqrt(x * x + y * y); }
 
     Vec2& operator+=(const Vec2& v)
     {

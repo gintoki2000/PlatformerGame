@@ -1,10 +1,10 @@
 #include "MyObjectLayer.h"
 #include "tmxlite/ObjectGroup.hpp"
 #include "ObjectFactory.h"
-MyObjectLayer* MyObjectLayer::create(const tmx::ObjectGroup &data)
+MyObjectLayer* MyObjectLayer::Create(const tmx::ObjectGroup &data)
 {
 	MyObjectLayer* ret = new MyObjectLayer;
-	if (ret->init(data))
+	if (ret->Init(data))
 	{
 		return ret;
 	}
@@ -12,19 +12,19 @@ MyObjectLayer* MyObjectLayer::create(const tmx::ObjectGroup &data)
 	return nullptr;
 }
 
-bool MyObjectLayer::init(const tmx::ObjectGroup& data)
+bool MyObjectLayer::Init(const tmx::ObjectGroup& data)
 {
 		
-    ObjectFactory& factory = *ObjectFactory::getInstance();
+    ObjectFactory& factory = *ObjectFactory::GetInstance();
     for (const auto& objectData : data.getObjects())
     {
         GameObject* object =
-            factory.createObject(objectData.getType(), objectData);
+            factory.CreateObject(objectData.getType(), objectData);
         if (object != nullptr)
         {
-            addObject(object);
+            AddObject(object);
         }
     }
-    setName(data.getName());
+    SetName(data.getName());
 	return true;
 }

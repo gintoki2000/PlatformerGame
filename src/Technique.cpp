@@ -7,6 +7,6 @@ Technique::Technique(int MPCost, const Sprite& sprite) :
 
 Technique::~Technique() {}
 
-void Technique::enter(Adventurer&) {}
+void Technique::Enter(Adventurer&) {}
 
-void Technique::exit(Adventurer&) {}
+void Technique::Exit(Adventurer&) {}

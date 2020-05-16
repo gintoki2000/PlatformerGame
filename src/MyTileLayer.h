@@ -7,12 +7,12 @@
 class MyTileLayer : public TileLayer
 {
   public:
-    static MyTileLayer* create(const tmx::Map& map, const tmx::TileLayer& data,
+    static MyTileLayer* Create(const tmx::Map& map, const tmx::TileLayer& data,
                                Tilesets* tilesets);
 
   private:
     MyTileLayer() {}
-    bool init(const tmx::Map& map, const tmx::TileLayer& data,
+    bool Init(const tmx::Map& map, const tmx::TileLayer& data,
               Tilesets* tilesets);
 };
 #endif // MY_TILE_LAYER_H

@@ -4,17 +4,17 @@
 
 CameraShaker::CameraShaker(): m_camera(nullptr){}
 
-bool CameraShaker::init(Camera *camera)
+bool CameraShaker::Init(Camera *camera)
 {
     m_camera = camera;
     m_isShaking = false;
     return true;
 }
 
-CameraShaker *CameraShaker::create(Camera *camera)
+CameraShaker *CameraShaker::Create(Camera *camera)
 {
     CameraShaker* ret = new CameraShaker;
-    if (ret->init(camera))
+    if (ret->Init(camera))
     {
         return ret;
     }
@@ -22,7 +22,7 @@ CameraShaker *CameraShaker::create(Camera *camera)
     return nullptr;
 }
 
-void CameraShaker::shake(float duration, int amplitude, int frequency)
+void CameraShaker::Shake(float duration, int amplitude, int frequency)
 {
     if (m_isShaking)
         return;
@@ -34,11 +34,11 @@ void CameraShaker::shake(float duration, int amplitude, int frequency)
     m_waitTimer      = 0.f;
     m_dx             = 0.f;
     m_dy             = 0.f;
-    m_initialOffsetX = m_camera->getCenter().x;
-    m_initialOffsetY = m_camera->getCenter().y;
+    m_initialOffsetX = m_camera->GetCenter().x;
+    m_initialOffsetY = m_camera->GetCenter().y;
 }
 
-void CameraShaker::tick(float deltaTime)
+void CameraShaker::Tick(float deltaTime)
 {
     if (!m_isShaking)
         return;
@@ -48,20 +48,20 @@ void CameraShaker::tick(float deltaTime)
     if (m_timer >= m_duration)
     {
         m_isShaking = false;
-        m_camera->setCenter({m_initialOffsetX, m_initialOffsetY});
+        m_camera->SetCenter({m_initialOffsetX, m_initialOffsetY});
         return;
     }
 
     if (m_waitTimer >= m_waitTime)
     {
         m_waitTimer -= m_waitTime;
-        m_dx = randomRange(-m_amplitude, m_amplitude);
-        m_dy = randomRange(-m_amplitude, m_amplitude);
+        m_dx = RandomRange(-m_amplitude, m_amplitude);
+        m_dy = RandomRange(-m_amplitude, m_amplitude);
     }
 
     Vec2 cameraOffset;
     cameraOffset.x += m_initialOffsetX + m_dx;
     cameraOffset.y += m_initialOffsetY + m_dy;
 
-    m_camera->setCenter(cameraOffset);
+    m_camera->SetCenter(cameraOffset);
 }

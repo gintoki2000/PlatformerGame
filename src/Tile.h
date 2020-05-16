@@ -12,13 +12,13 @@ class Tile : public TileLayerTile
 
     ~Tile() override;
 
-    const TextureRegion& getTextureRegion() override
+    const TextureRegion& GetTextureRegion() override
     {
-        return m_tile->getTextureRegion();
+        return m_tile->GetTextureRegion();
     }
 
-    int       getNumShapes() const { return m_numShapes; }
-    b2Shape** getShapes() const { return m_shapes; }
+    int       GetNumShapes() const { return m_numShapes; }
+    b2Shape** GetShapes() const { return m_shapes; }
 
   private:
     TileLayerTile* m_tile;

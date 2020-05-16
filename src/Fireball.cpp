@@ -37,11 +37,11 @@ Fireball::~Fireball()
     DELETE_NULL(m_animation);
 }
 
-Fireball* Fireball::create(const Vec2& position, Direction direction,
+Fireball* Fireball::Create(const Vec2& position, Direction direction,
                            float speed)
 {
     Fireball* ret = new Fireball;
-    if (ret->init(position, direction, speed))
+    if (ret->Init(position, direction, speed))
     {
         return ret;
     }
@@ -49,22 +49,22 @@ Fireball* Fireball::create(const Vec2& position, Direction direction,
     return nullptr;
 }
 
-Fireball* Fireball::create(const Vec2& position, Direction direction)
+Fireball* Fireball::Create(const Vec2& position, Direction direction)
 {
-    return create(position, direction, 10.f);
+    return Create(position, direction, 10.f);
 }
 
-void Fireball::start()
+void Fireball::Start()
 {
-	Audio::play(SOUND_FIREBALL);
+	Audio::Play(SOUND_FIREBALL);
 }
 
-void Fireball::cleanup() { delete this; }
+void Fireball::Cleanup() { delete this; }
 
-bool Fireball::init(const Vec2& position, Direction direction, float speed)
+bool Fireball::Init(const Vec2& position, Direction direction, float speed)
 {
-    SDL_Texture* texture = TextureManager::get(TEX_FIREBALL);
-    m_spriteSheet.init(texture, 64, 64);
+    SDL_Texture* texture = TextureManager::Get(TEX_FIREBALL);
+    m_spriteSheet.Init(texture, 64, 64);
     m_animation =
         new Animation(&m_spriteSheet, 0.06f, Animation::PLAY_MODE_LOOP);
     m_flip = direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
@@ -82,7 +82,7 @@ bool Fireball::init(const Vec2& position, Direction direction, float speed)
     float sign            = direction == DIRECTION_LEFT ? -1.f : 1.f;
     bdef.linearVelocity.x = speed * sign;
 
-    m_body = WorldManager::getWorld()->CreateBody(&bdef);
+    m_body = WorldManager::GetWorld()->CreateBody(&bdef);
 
     b2CircleShape circle;
     circle.m_radius = 8.f / Constances::PPM;
@@ -97,7 +97,7 @@ bool Fireball::init(const Vec2& position, Direction direction, float speed)
     return true;
 }
 
-void Fireball::tick(float deltaTime)
+void Fireball::Tick(float deltaTime)
 {
     static SDL_Rect boundingBox = {0, 0, 16, 16};
 
@@ -107,49 +107,49 @@ void Fireball::tick(float deltaTime)
     m_timer += deltaTime;
     boundingBox.x            = m_positionX - 8;
     boundingBox.y            = m_positionY - 8;
-    const Camera&   camera   = getScene()->getCamera();
-    const SDL_Rect& viewport = camera.getViewport();
+    const Camera&   camera   = GetScene()->GetCamera();
+    const SDL_Rect& viewport = camera.GetViewport();
 
     if (!SDL_HasIntersection(&boundingBox, &viewport))
     {
-        remove();
+        Remove();
     }
 }
 
-void Fireball::paint()
+void Fireball::Paint()
 {
 
-    const Sprite& sprite = *(m_animation->getCurrentSprite(m_timer));
+    const Sprite& sprite = *(m_animation->GetCurrentSprite(m_timer));
 
-    const Camera& camera = getScene()->getCamera();
+    const Camera& camera = GetScene()->GetCamera();
 
-    const SDL_Rect& viewport = camera.getViewport();
+    const SDL_Rect& viewport = camera.GetViewport();
 
-    SDL_Renderer* renderer = Game::getInstance()->renderer();
+    SDL_Renderer* renderer = Game::GetInstance()->GetRenderer();
 
     SDL_Rect dstrect;
-    dstrect.x = m_positionX - sprite.getWidth() / 2 - viewport.x;
-    dstrect.y = m_positionY - sprite.getHeight() / 2 - viewport.y;
-    dstrect.w = sprite.getWidth();
-    dstrect.h = sprite.getHeight();
-    sprite.draw(renderer, &dstrect, 0.0, nullptr, m_flip);
+    dstrect.x = m_positionX - sprite.GetWidth() / 2 - viewport.x;
+    dstrect.y = m_positionY - sprite.GetHeight() / 2 - viewport.y;
+    dstrect.w = sprite.GetWidth();
+    dstrect.h = sprite.GetHeight();
+    sprite.Draw(renderer, &dstrect, 0.0, nullptr, m_flip);
 }
 
-void Fireball::onBeginContact(const ContactInfo& info)
+void Fireball::OnBeginContact(const ContactInfo& info)
 {
-    const Identifier* idr = info.getOtherIdentifier();
+    const Identifier* idr = info.GetOtherIdentifier();
     if (idr != nullptr && idr->tag == TAG_MONSTER)
     {
         Monster* monster = static_cast<Monster*>(idr->object);
-        if (monster->takeDamge(1, DIRECTION_NONE))
+        if (monster->TakeDamge(1, DIRECTION_NONE))
         {
-            remove();
-			Level* level = static_cast<Level*>(getScene());
-			level->getParticleSystem()->create<FireExplosionParticle>(getPosition());
+            Remove();
+			Level* level = static_cast<Level*>(GetScene());
+			level->GetParticleSystem()->Create<FireExplosionParticle>(GetPosition());
         }
     }
 }
 
-void Fireball::onEndContact(const ContactInfo&) {}
-void Fireball::onPreSolve(const ContactInfo&, const b2Manifold&) {}
-void Fireball::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
+void Fireball::OnEndContact(const ContactInfo&) {}
+void Fireball::OnPreSolve(const ContactInfo&, const b2Manifold&) {}
+void Fireball::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

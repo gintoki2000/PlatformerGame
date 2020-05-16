@@ -23,16 +23,16 @@ struct OverlapTestCallback : public b2QueryCallback
     }
 };
 
-bool boxCast(const FloatRect& rect, uint16 maskBits)
+bool BoxCast(const FloatRect& rect, uint16 maskBits)
 {
-    b2World&            world = *WorldManager::getWorld();
+    b2World&            world = *WorldManager::GetWorld();
     OverlapTestCallback callback;
     callback.maskBits = maskBits;
     b2AABB box;
     box.lowerBound.x = rect.x / Constances::PPM;
     box.lowerBound.y = rect.y / Constances::PPM;
-    box.upperBound.x = rect.right() / Constances::PPM;
-    box.upperBound.y = rect.bottom() / Constances::PPM;
+    box.upperBound.x = rect.Right() / Constances::PPM;
+    box.upperBound.y = rect.Bottom() / Constances::PPM;
     world.QueryAABB(&callback, box);
 
     return callback.fixture != nullptr;
@@ -69,29 +69,29 @@ bool QueryCallback::ReportFixture(b2Fixture* fixture)
     return n < max;
 }
 
-void boxQuery(const FloatRect& rect, uint16 maskBits, b2Fixture* fixtures[], int& n,
+void BoxQuery(const FloatRect& rect, uint16 maskBits, b2Fixture* fixtures[], int& n,
               const int max)
 {
 
-    b2World&      world = *WorldManager::getWorld();
+    b2World&      world = *WorldManager::GetWorld();
     QueryCallback queryCallback(fixtures, max, maskBits);
     b2AABB        box;
     box.lowerBound.x = rect.x / Constances::PPM;
     box.lowerBound.y = rect.y / Constances::PPM;
-    box.upperBound.x = rect.right() / Constances::PPM;
-    box.upperBound.y = rect.bottom() / Constances::PPM;
+    box.upperBound.x = rect.Right() / Constances::PPM;
+    box.upperBound.y = rect.Bottom() / Constances::PPM;
     world.QueryAABB(&queryCallback, box);
 
     n = queryCallback.n;
 }
 
-int directionToSign(Direction direction)
+int DirectionToSign(Direction direction)
 {
 	return direction == DIRECTION_LEFT ? -1 : 1;
 }
 
 
-Direction relativeDirection(float x1, float x2)
+Direction RelativeDirection(float x1, float x2)
 {
 	if (x1 > x2)
 		return DIRECTION_LEFT;
@@ -100,7 +100,7 @@ Direction relativeDirection(float x1, float x2)
 	return DIRECTION_NONE;
 }
 
-int randomRange(int a, int b)
+int RandomRange(int a, int b)
 {
 	int d = b - a + 1;
 	return rand() % d + a + 1; 

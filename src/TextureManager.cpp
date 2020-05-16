@@ -5,7 +5,7 @@
 
 SDL_Texture** TextureManager::textures = nullptr;
 
-bool TextureManager::load(SDL_Renderer* renderer)
+bool TextureManager::Load(SDL_Renderer* renderer)
 {
     struct Pair
     {
@@ -13,7 +13,7 @@ bool TextureManager::load(SDL_Renderer* renderer)
         const char* file;
     };
 
-    unload();
+    Unload();
 
     textures = (SDL_Texture**)SDL_calloc(NUM_TEXTURES, sizeof(SDL_Texture*));
 
@@ -41,7 +41,7 @@ bool TextureManager::load(SDL_Renderer* renderer)
     return true;
 }
 
-void TextureManager::unload()
+void TextureManager::Unload()
 {
     if (textures != nullptr)
     {
@@ -54,4 +54,4 @@ void TextureManager::unload()
     }
 }
 
-SDL_Texture* TextureManager::get(int textureID) { return textures[textureID]; }
+SDL_Texture* TextureManager::Get(int textureID) { return textures[textureID]; }

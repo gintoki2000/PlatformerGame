@@ -10,18 +10,18 @@ class Cell : public TileLayerCell, public ICollisionHandler
   public:
     ~Cell();
 
-    static Cell* create(Tile* tile, const Vec2& center);
+    static Cell* Create(Tile* tile, const Vec2& center);
 
-    void onBeginContact(const ContactInfo& info) override;
-    void onEndContact(const ContactInfo& info) override;
-    void onPreSolve(const ContactInfo& info,
+    void OnBeginContact(const ContactInfo& info) override;
+    void OnEndContact(const ContactInfo& info) override;
+    void OnPreSolve(const ContactInfo& info,
                     const b2Manifold&  oldManiflod) override;
-    void onPostSolve(const ContactInfo&      info,
+    void OnPostSolve(const ContactInfo&      info,
                      const b2ContactImpulse& impluse) override;
 
   private:
     Cell();
-    virtual bool init(Tile* tile, const Vec2& center);
+    virtual bool Init(Tile* tile, const Vec2& center);
     Identifier   m_identifier;
     b2Body*      m_body;
 };

@@ -14,10 +14,10 @@ template <class TSpell> class DirectionalCast : public Technique
   public:
     DirectionalCast(int mpCost, const Sprite& icon) : Technique(mpCost, icon) {}
 
-    void enter(Adventurer& adventurer) override
+    void Enter(Adventurer& adventurer) override
     {
-        adventurer.getAnimator()->pushState(Adventurer::ANIM_CAST_SPELL);
-        if (adventurer.isGrounded())
+        adventurer.GetAnimator()->PushState(Adventurer::ANIm_CAST_SPELL);
+        if (adventurer.IsGrounded())
         {
             adventurer.m_horizontalAcceleration = 0.f;
             m_isInAir                           = false;
@@ -27,16 +27,16 @@ template <class TSpell> class DirectionalCast : public Technique
         m_timer  = 0.f;
     }
 
-    bool tick(Adventurer& adventurer, float deltaTime) override
+    bool Tick(Adventurer& adventurer, float deltaTime) override
     {
         m_timer += deltaTime;
         switch (m_phrase)
         {
         case 0:
         {
-            if (adventurer.getAnimator()->isCurrentAnimationFinshed())
+            if (adventurer.GetAnimator()->IsCurrentAnimationFinshed())
             {
-                adventurer.getAnimator()->play(Adventurer::ANIM_CAST_LOOP);
+                adventurer.GetAnimator()->Play(Adventurer::ANIm_CAST_LOOP);
                 m_timer  = 0.f;
                 m_phrase = 1;
             }
@@ -46,11 +46,11 @@ template <class TSpell> class DirectionalCast : public Technique
         {
             if (m_timer >= 0.1f)
             {
-                TSpell* spell = TSpell::create(adventurer.getPosition(),
-                                               adventurer.getDirection());
+                TSpell* spell = TSpell::Create(adventurer.GetPosition(),
+                                               adventurer.GetDirection());
                 SDL_assert(spell != nullptr);
-                Level* level = static_cast<Level*>(adventurer.getScene());
-                level->getSpriteLayer()->addObject(spell);
+                Level* level = static_cast<Level*>(adventurer.GetScene());
+                level->GetSpriteLayer()->AddObject(spell);
                 return true;
             }
         }
@@ -58,16 +58,16 @@ template <class TSpell> class DirectionalCast : public Technique
         }
         if (m_isInAir)
         {
-            if (!adventurer.isGrounded())
+            if (!adventurer.IsGrounded())
             {
-                int inputDirection = Input::getHorizontalInputDirection();
+                int inputDirection = Input::GetHorizontalInputDirection();
                 adventurer.m_horizontalAcceleration =
                     inputDirection * adventurer.m_runAcceleration;
             }
             else
             {
                 // just grounded
-                if (!adventurer.wasGrounded())
+                if (!adventurer.WasGrounded())
                 {
                     adventurer.m_horizontalAcceleration = 0.f;
                 }
@@ -76,9 +76,9 @@ template <class TSpell> class DirectionalCast : public Technique
         return false;
     }
 
-    void exit(Adventurer& adventurer) override
+    void Exit(Adventurer& adventurer) override
     {
-        adventurer.getAnimator()->popState();
+        adventurer.GetAnimator()->PopState();
     }
 
   private:

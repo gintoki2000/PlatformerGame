@@ -14,7 +14,7 @@ class BloodStainParticle : public AnimatedParticle,
     typedef AnimatedParticlePool<BloodStainParticle> Pool;
     // GameObject interface
   public:
-    void cleanup() override { getPool()->free(this); }
+    void Cleanup() override { GetPool()->Free(this); }
 
     static constexpr int   SPRITE_WIDTH   = 100;
     static constexpr int   SPRITE_HEIGHT  = 100;

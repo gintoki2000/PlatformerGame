@@ -9,12 +9,12 @@ class Technique : public IListItem
     Technique(int MPCost, const Sprite& sprite);
     virtual ~Technique();
 
-    virtual void enter(Adventurer& adventurer);
-    virtual bool tick(Adventurer& adventurer, float deltaTime) = 0;
-    virtual void exit(Adventurer& adventurer);
+    virtual void Enter(Adventurer& adventurer);
+    virtual bool Tick(Adventurer& adventurer, float deltaTime) = 0;
+    virtual void Exit(Adventurer& adventurer);
 
-    int           getMPCost() const { return m_MPCost; }
-    const Sprite* getIcon() const override { return &m_icon; }
+    int           GetMPCost() const { return m_MPCost; }
+    const Sprite* GetIcon() const override { return &m_icon; }
 
   private:
     int    m_MPCost;

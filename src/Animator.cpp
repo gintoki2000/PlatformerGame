@@ -9,7 +9,7 @@ Animator::Animator(Animation* animations[], int numAnimations)
         m_animations[i] = animations[i];
     }
 	m_numStates = 0;
-	pushState(AnimatorState());
+	PushState(AnimatorState());
 }
 Animator::~Animator()
 {
@@ -20,12 +20,12 @@ Animator::~Animator()
     delete[] m_animations;
 }
 
-void Animator::play(int index, float initialTime)
+void Animator::Play(int index, float initialTime)
 {
-    changeState(AnimatorState(index, initialTime));
+    ChangeState(AnimatorState(index, initialTime));
 }
 
-void Animator::tick(float deltaTime)
+void Animator::Tick(float deltaTime)
 {
     AnimatorState& state = m_states[m_numStates - 1];
     if (!state.isPaused)
@@ -34,48 +34,48 @@ void Animator::tick(float deltaTime)
     }
 }
 
-Animation* Animator::getCurrentAnimation() const
+Animation* Animator::GetCurrentAnimation() const
 {
 
     return m_animations[m_states[m_numStates - 1].index];
 }
 
-const Sprite &Animator::getCurrentSprite() const
+const Sprite &Animator::GetCurrentSprite() const
 {
-    return *getCurrentAnimation()->getCurrentSprite(getElapsedTime());
+    return *GetCurrentAnimation()->GetCurrentSprite(GetElapsedTime());
 }
 
-bool Animator::isCurrentAnimationFinshed()
+bool Animator::IsCurrentAnimationFinshed()
 {
-    return getCurrentAnimation()->isFinished(getElapsedTime());
+    return GetCurrentAnimation()->IsFinished(GetElapsedTime());
 }
 
-void Animator::pushState(const AnimatorState& state)
+void Animator::PushState(const AnimatorState& state)
 {
     SDL_assert(m_numStates < MAX_STATES);
     m_states[m_numStates++] = state;
 }
 
-void Animator::popState()
+void Animator::PopState()
 {
     SDL_assert(m_numStates > 1);
     --m_numStates;
 }
 
-void Animator::changeState(const AnimatorState& state)
+void Animator::ChangeState(const AnimatorState& state)
 {
     m_states[m_numStates - 1] = state;
 }
 
-int Animator::getAnimationIndex() const { return m_states[m_numStates - 1].index; }
+int Animator::GetAnimationIndex() const { return m_states[m_numStates - 1].index; }
 
-float Animator::getElapsedTime() const { return m_states[m_numStates - 1].elapsedTime; }
+float Animator::GetElapsedTime() const { return m_states[m_numStates - 1].elapsedTime; }
 
-void Animator::setElapsedTime(float elapsedTime)
+void Animator::SetElapsedTime(float elapsedTime)
 {
     m_states[m_numStates - 1].elapsedTime = elapsedTime;
 }
 
-bool Animator::isPaused() const { return m_states[m_numStates - 1].isPaused; }
+bool Animator::IsPaused() const { return m_states[m_numStates - 1].isPaused; }
 
-void Animator::setPaused(bool paused) { m_states[m_numStates - 1].isPaused = paused; }
+void Animator::SetPaused(bool paused) { m_states[m_numStates - 1].isPaused = paused; }

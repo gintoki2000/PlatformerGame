@@ -5,14 +5,14 @@ Animation::Animation(const Sprite* sprites[], int numSprites, float duration,
                      int playMode) :
     m_sprites(nullptr)
 {
-    setSprites(sprites, numSprites);
+    SetSprites(sprites, numSprites);
     m_duration = duration;
     m_playMode = playMode;
 }
 
 Animation::Animation(const SpriteSheet* spriteSheet, float duration,
                      int playMode) :
-    Animation(spriteSheet, 0, spriteSheet->getNumSprites(), duration, playMode)
+    Animation(spriteSheet, 0, spriteSheet->GetNumSprites(), duration, playMode)
 {
 }
 
@@ -23,7 +23,7 @@ Animation::Animation(const SpriteSheet* spriteSheet, int sIndex, int numSprites,
     m_sprites    = new const Sprite*[(unsigned long)m_numSprites];
     for (int i = sIndex, j = 0; i < sIndex + numSprites; ++i, ++j)
     {
-        m_sprites[j] = &spriteSheet->getSprite(i);
+        m_sprites[j] = &spriteSheet->GetSprite(i);
     }
     m_duration = duration;
     m_playMode = playMode;
@@ -31,7 +31,7 @@ Animation::Animation(const SpriteSheet* spriteSheet, int sIndex, int numSprites,
 
 Animation::~Animation() { delete[] m_sprites; }
 
-int Animation::getCurrentIndex(float elapsedTime) const
+int Animation::GetCurrentIndex(float elapsedTime) const
 {
     if (m_numSprites == 1)
     {
@@ -40,7 +40,7 @@ int Animation::getCurrentIndex(float elapsedTime) const
     int index = elapsedTime / m_duration;
     switch (m_playMode)
     {
-    case PLAY_MODE_NORMAL: index = Math::min(index, m_numSprites - 1); break;
+    case PLAY_MODE_NORMAL: index = Math::Min(index, m_numSprites - 1); break;
     case PLAY_MODE_LOOP: index = index % m_numSprites; break;
     case PLAY_MODE_LOOP_PINGPONG:
         index = index % ((m_numSprites * 2) - 2);
@@ -59,12 +59,12 @@ int Animation::getCurrentIndex(float elapsedTime) const
     return index;
 }
 
-const Sprite* Animation::getCurrentSprite(float elapsedTime) const
+const Sprite* Animation::GetCurrentSprite(float elapsedTime) const
 {
-    return m_sprites[getCurrentIndex(elapsedTime)];
+    return m_sprites[GetCurrentIndex(elapsedTime)];
 }
 
-void Animation::setSprites(const Sprite* sprites[], int numSprites)
+void Animation::SetSprites(const Sprite* sprites[], int numSprites)
 {
     if (m_sprites != nullptr)
     {
@@ -80,7 +80,7 @@ void Animation::setSprites(const Sprite* sprites[], int numSprites)
     }
 }
 
-bool Animation::isFinished(float elapsedTime) const
+bool Animation::IsFinished(float elapsedTime) const
 {
     int index = elapsedTime / m_duration;
     return index >= m_numSprites - 1;

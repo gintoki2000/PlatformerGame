@@ -34,9 +34,9 @@ Game::Game()
 Game::~Game()
 {
     DELETE_NULL(m_stateMGR);
-    WorldManager::terminate();
-    Audio::terminate();
-    TextureManager::unload();
+    WorldManager::Terminate();
+    Audio::Terminate();
+    TextureManager::Unload();
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
     Mix_CloseAudio();
@@ -44,7 +44,7 @@ Game::~Game()
     SDL_Quit();
 }
 
-bool Game::init()
+bool Game::Init()
 {
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
@@ -95,52 +95,52 @@ bool Game::init()
 
     m_stateMGR = new StateManager();
 
-    ObjectFactory& factory = *ObjectFactory::getInstance();
-    factory.resigter("BoarWarrior", BoarWarrior::create);
+    ObjectFactory& factory = *ObjectFactory::GetInstance();
+    factory.Resigter("BoarWarrior", BoarWarrior::Create);
 
-    Input::init();
-    Audio::init();
-    TextureManager::load(m_renderer);
-    Audio::volumeSound(SOUND_STAB, MIX_MAX_VOLUME / 4);
+    Input::Init();
+    Audio::Init();
+    TextureManager::Load(m_renderer);
+    Audio::VolumeSound(SOUND_STAB, MIX_MAX_VOLUME / 4);
 
-    GameState* state = TitleState::create();
+    GameState* state = TitleState::Create();
     if (state == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create initial state!\n");
         return false;
     }
-    m_stateMGR->pushState(state);
+    m_stateMGR->PushState(state);
 
     m_isRunning = true;
     return true;
 }
 
-void Game::render(float deltaTime)
+void Game::Render(float deltaTime)
 {
     static SDL_Event event;
-    m_stateMGR->update();
-    GameState* state = m_stateMGR->getState();
+    m_stateMGR->Update();
+    GameState* state = m_stateMGR->GetState();
     while (SDL_PollEvent(&event))
     {
         switch (event.type)
         {
-        case SDL_QUIT: stop(); break;
+        case SDL_QUIT: Stop(); break;
         case SDL_WINDOWEVENT:
             switch (event.window.event)
             {
-            case SDL_WINDOWEVENT_HIDDEN: state->hidden(); break;
-            case SDL_WINDOWEVENT_SHOWN: state->show(); break;
-            case SDL_WINDOWEVENT_FOCUS_GAINED: state->resume(); break;
-            case SDL_WINDOWEVENT_FOCUS_LOST: state->pause(); break;
-            case SDL_WINDOWEVENT_TAKE_FOCUS: state->resume(); break;
+            case SDL_WINDOWEVENT_HIDDEN: state->Hidden(); break;
+            case SDL_WINDOWEVENT_SHOWN: state->Show(); break;
+            case SDL_WINDOWEVENT_FOCUS_GAINED: state->Resume(); break;
+            case SDL_WINDOWEVENT_FOCUS_LOST: state->Pause(); break;
+            case SDL_WINDOWEVENT_TAKE_FOCUS: state->Resume(); break;
             }
             break;
         }
     }
-    Input::update();
-    state->render(deltaTime);
+    Input::Update();
+    state->Render(deltaTime);
     SDL_RenderPresent(m_renderer);
 }
 
-void Game::stop() { m_isRunning = false; }
+void Game::Stop() { m_isRunning = false; }

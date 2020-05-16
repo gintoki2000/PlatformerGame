@@ -37,24 +37,24 @@ class Animator
 
     ~Animator();
 
-    void play(int index, float initialTime = 0.f);
-    void tick(float deltaTime);
-    void pause();
-    void resume();
-    bool isCurrentAnimationFinshed();
+    void Play(int index, float initialTime = 0.f);
+    void Tick(float deltaTime);
+    void Pause();
+    void Resume();
+    bool IsCurrentAnimationFinshed();
 
     /// setter & getter
-    int           getAnimationIndex() const;
-    float         getElapsedTime() const;
-    void          setElapsedTime(float elapsedTime);
-    bool          isPaused() const;
-    void          setPaused(bool paused);
-    Animation*    getCurrentAnimation() const;
-    const Sprite& getCurrentSprite() const;
+    int           GetAnimationIndex() const;
+    float         GetElapsedTime() const;
+    void          SetElapsedTime(float elapsedTime);
+    bool          IsPaused() const;
+    void          SetPaused(bool paused);
+    Animation*    GetCurrentAnimation() const;
+    const Sprite& GetCurrentSprite() const;
 
-    void pushState(const AnimatorState& state);
-    void popState();
-    void changeState(const AnimatorState& state);
+    void PushState(const AnimatorState& state);
+    void PopState();
+    void ChangeState(const AnimatorState& state);
 
   private:
     Animation**      m_animations;

@@ -9,10 +9,10 @@
 
 Cell::Cell() : m_identifier(TAG_BLOCK, this), m_body(nullptr) {}
 
-Cell* Cell::create(Tile *tile, const Vec2 &center)
+Cell* Cell::Create(Tile *tile, const Vec2 &center)
 {
 	Cell* cell = new Cell;
-	if (cell->init(tile, center))
+	if (cell->Init(tile, center))
 	{
 		return cell;
 	}
@@ -20,31 +20,31 @@ Cell* Cell::create(Tile *tile, const Vec2 &center)
 	return nullptr;
 }
 
-bool Cell::init(Tile* tile, const Vec2& center)
+bool Cell::Init(Tile* tile, const Vec2& center)
 {
     if (tile == nullptr)
     {
         return false;
     }
-    setTile(tile);
+    SetTile(tile);
     m_identifier.tag    = TAG_BLOCK;
     m_identifier.object = this;
-    if (tile->getNumShapes() != 0)
+    if (tile->GetNumShapes() != 0)
     {
         b2BodyDef bdef;
         bdef.position.x = center.x / Constances::PPM;
         bdef.position.y = center.y / Constances::PPM;
         bdef.userData   = &m_identifier;
 
-        m_body = WorldManager::getWorld()->CreateBody(&bdef);
+        m_body = WorldManager::GetWorld()->CreateBody(&bdef);
 
         b2FixtureDef fdef;
         fdef.filter.categoryBits = CATEGORY_BIT_BLOCK;
         fdef.friction            = 0.1f;
         fdef.restitution         = 0.f;
-        for (int i = 0; i < tile->getNumShapes(); ++i)
+        for (int i = 0; i < tile->GetNumShapes(); ++i)
         {
-            fdef.shape = tile->getShapes()[i];
+            fdef.shape = tile->GetShapes()[i];
             m_body->CreateFixture(&fdef);
         }
     }
@@ -61,7 +61,7 @@ Cell::~Cell()
     }
 }
 
-void Cell::onBeginContact(const ContactInfo&) {}
-void Cell::onEndContact(const ContactInfo&) {}
-void Cell::onPreSolve(const ContactInfo&, const b2Manifold&) {}
-void Cell::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
+void Cell::OnBeginContact(const ContactInfo&) {}
+void Cell::OnEndContact(const ContactInfo&) {}
+void Cell::OnPreSolve(const ContactInfo&, const b2Manifold&) {}
+void Cell::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

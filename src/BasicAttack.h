@@ -6,12 +6,12 @@ class BasicAttack : public Technique
 {
   public:
     BasicAttack();
-    void enter(Adventurer& adventurer) override;
-    void exit(Adventurer& adventurer) override;
-    bool tick(Adventurer& adventurer, float deltaTime) override;
+    void Enter(Adventurer& adventurer) override;
+    void Exit(Adventurer& adventurer) override;
+    bool Tick(Adventurer& adventurer, float deltaTime) override;
 
   private:
-    void check(const Vec2& position, const Vec2& size, Direction direction);
+    void Check(const Vec2& position, const Vec2& size, Direction direction);
 
     bool m_chain;
     int  m_phrase;

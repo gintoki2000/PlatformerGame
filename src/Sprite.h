@@ -2,6 +2,6 @@
 #define SPRITE_H
 #include "TextureRegion.h"
 typedef TextureRegion Sprite;
-Sprite makeSprite(int textureID, const SDL_Rect& rect);
-Sprite makeSprite(int textureID);
+Sprite MakeSprite(int textureID, const SDL_Rect& rect);
+Sprite MakeSprite(int textureID);
 #endif //SPRITE_H

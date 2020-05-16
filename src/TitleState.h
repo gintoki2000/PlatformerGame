@@ -6,16 +6,16 @@
 class TitleState : public GameState
 {
   public:
-    static TitleState* create();
+    static TitleState* Create();
     ~TitleState();
 
-    void render(float deltaTime) override;
+    void Render(float deltaTime) override;
 
   private:
     TitleState();
-    bool init();
-    void handle(int op);
-    void drawToCenter(SDL_Texture* text, int startY, int index, int margin);
+    bool Init();
+    void Handle(int op);
+    void DrawToCenter(SDL_Texture* text, int startY, int index, int margin);
     static constexpr int NUM_OPTIONS = 1;
     SDL_Texture*         m_unselectedTexts[NUM_OPTIONS];
     SDL_Texture*         m_selectedTexts[NUM_OPTIONS];

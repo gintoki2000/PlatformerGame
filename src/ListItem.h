@@ -1,9 +1,9 @@
-#ifndef LIST_ITEM_H
-#define LIST_ITEM_H
+#ifndef LIST_ITEm_H
+#define LIST_ITEm_H
 #include "SpriteSheet.h"
 struct IListItem
 {
     virtual ~IListItem() {}
-    virtual const Sprite* getIcon() const = 0;
+    virtual const Sprite* GetIcon() const = 0;
 };
-#endif // LIST_ITEM_H
+#endif // LIST_ITEm_H

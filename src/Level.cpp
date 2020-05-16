@@ -18,7 +18,7 @@
 #include "ObjectFactory.h"
 #include "ObjectLayer.h"
 #include "ParticleSystem.h"
-#include "PauseMenu.h"
+#include "EquipmentMenu.h"
 #include "Pool.h"
 #include "Rect.h"
 #include "SDL_assert.h"
@@ -53,10 +53,10 @@ Level::Level()
     m_cameraShaker  = nullptr;
 }
 
-Level* Level::loadFromFile(const char* filename)
+Level* Level::LoadFromFile(const char* filename)
 {
     Level* level = new Level;
-    if (level->init(filename))
+    if (level->Init(filename))
     {
         return level;
     }
@@ -64,9 +64,9 @@ Level* Level::loadFromFile(const char* filename)
     return nullptr;
 }
 
-bool Level::init(const char* filename)
+bool Level::Init(const char* filename)
 {
-    WorldManager::clearWorld();
+    WorldManager::ClearWorld();
     srand(time(nullptr));
 
     /// load data
@@ -83,58 +83,58 @@ bool Level::init(const char* filename)
     Vec2     vc;
     vc.x = vs.x / 2;
     vc.y = rows * tileHeight - vs.y / 2.f;
-    getCamera().setSize(vs);
-    getCamera().setCenter(vc);
+    GetCamera().SetSize(vs);
+    GetCamera().SetCenter(vc);
 
-    m_tilesets = new Tilesets(map.getTilesets(), GAME->renderer());
+    m_tilesets = new Tilesets(map.getTilesets(), GAME->GetRenderer());
     for (const auto& l : map.getLayers())
     {
         tmx::Layer& layerData = dynamic_cast<tmx::Layer&>(*l.get());
         if (layerData.getType() == tmx::Layer::Type::Tile)
         {
             auto& data = dynamic_cast<tmx::TileLayer&>(layerData);
-            addLayer(MyTileLayer::create(map, data, m_tilesets));
+            AddLayer(MyTileLayer::Create(map, data, m_tilesets));
         }
         else if (layerData.getType() == tmx::Layer::Type::Image)
         {
             auto& data = dynamic_cast<tmx::ImageLayer&>(layerData);
-            addLayer(Background::create(data));
+            AddLayer(Background::Create(data));
         }
         else if (layerData.getType() == tmx::Layer::Type::Object)
         {
             auto& data = dynamic_cast<tmx::ObjectGroup&>(layerData);
-            addLayer(MyObjectLayer::create(data));
+            AddLayer(MyObjectLayer::Create(data));
         }
     }
 
     m_music = Mix_LoadMUS("asserts/musics/Next to You.mp3");
 
-    SDL_Renderer* renderer = GAME->renderer();
-    b2World*      world    = WorldManager::getWorld();
+    SDL_Renderer* renderer = GAME->GetRenderer();
+    b2World*      world    = WorldManager::GetWorld();
 
     m_worldRenderer  = new WorldRenderer(renderer, Constances::PPM);
-    m_adventurer     = new Adventurer(getCamera().getCenter());
-    m_hud            = HUD::create();
+    m_adventurer     = new Adventurer(GetCamera().GetCenter());
+    m_hud            = HUD::Create();
     m_particleSystem = new ParticleSystem(this);
-    m_cameraShaker   = CameraShaker::create(&getCamera());
-    m_spriteLayer    = static_cast<ObjectLayer*>(getLayerByName("sprites"));
-    m_particleLayer  = static_cast<ObjectLayer*>(getLayerByName("particles"));
-    m_pauseMenu      = PauseMenu::create();
+    m_cameraShaker   = CameraShaker::Create(&GetCamera());
+    m_spriteLayer    = static_cast<ObjectLayer*>(GetLayerByName("sprites"));
+    m_particleLayer  = static_cast<ObjectLayer*>(GetLayerByName("particles"));
+    m_pauseMenu      = new EquipmentMenu();
     m_drawDebugData  = false;
 
-    m_spriteLayer->addObject(m_adventurer);
+    m_spriteLayer->AddObject(m_adventurer);
     world->SetContactListener(this);
     world->SetDebugDraw(m_worldRenderer);
     m_worldRenderer->AppendFlags(b2Draw::e_shapeBit);
     m_worldRenderer->AppendFlags(b2Draw::e_pairBit);
 
-    m_particleSystem->resgiter<FireBustParticle, FireBustParticle::Pool>(20);
-    m_particleSystem->resgiter<BloodStainParticle, BloodStainParticle::Pool>(
+    m_particleSystem->Resgiter<FireBustParticle, FireBustParticle::Pool>(20);
+    m_particleSystem->Resgiter<BloodStainParticle, BloodStainParticle::Pool>(
         20);
-    addLayer(m_pauseMenu);
-    addLayer(m_hud);
+    AddLayer(m_pauseMenu);
+    AddLayer(m_hud);
 
-    m_pauseMenu->hide();
+    m_pauseMenu->Hide();
     return true;
 }
 
@@ -148,48 +148,61 @@ Level::~Level()
     m_music = nullptr;
 }
 
-void Level::start()
+void Level::Start()
 {
     Mix_PlayMusic(m_music, -1);
-    Scene::start();
+    m_state = STATE_PLAYING;
+    Scene::Start();
 }
 
-Adventurer* Level::getAdventurer() const { return m_adventurer; }
+Adventurer* Level::GetAdventurer() const { return m_adventurer; }
 
-Tilesets* Level::getTilesets() const { return m_tilesets; }
+Tilesets* Level::GetTilesets() const { return m_tilesets; }
 
-void Level::setIsPaused(bool paused) { m_isPaused = paused; }
+void Level::SetIsPaused(bool paused) { m_isPaused = paused; }
 
-void Level::update(float deltaTime)
+void Level::Update(float deltaTime)
 {
-    WorldManager::getWorld()->Step(deltaTime, 2, 6);
-    if (Input::isPressed(BUTTON_START))
+    WorldManager::GetWorld()->Step(deltaTime, 2, 6);
+    if (Input::IsPressed(BUTTON_START))
     {
-        displayPauseMenu();
+        DisplayEquipmentMenu();
     }
-    Scene::update(deltaTime);
+    switch (m_state)
+    {
+    case STATE_EQUIPMENT:
+    {
+        m_pauseMenu->HandleInput();
+    }
+    break;
+    case STATE_PLAYING:
+    {
+        m_adventurer->HandleInput();
+    }
+    }
+    Scene::Update(deltaTime);
 
     Vec2 cameraTarget;
-    int  sign      = directionToSign(m_adventurer->getDirection());
-    cameraTarget.x = m_adventurer->getPositionX() + sign * 16.f;
-    cameraTarget.y = getCamera().getCenter().y;
+    int  sign      = DirectionToSign(m_adventurer->GetDirection());
+    cameraTarget.x = m_adventurer->GetPositionX() + sign * 16.f;
+    cameraTarget.y = GetCamera().GetCenter().y;
 
     int leftBound = Constances::GAME_WIDTH / 2;
     if (cameraTarget.x < leftBound)
     {
         cameraTarget.x = leftBound;
     }
-    getCamera().setTarget(cameraTarget);
-    m_cameraShaker->tick(deltaTime);
+    GetCamera().SetTarget(cameraTarget);
+    m_cameraShaker->Tick(deltaTime);
 }
 
-void Level::render()
+void Level::Render()
 {
-    Scene::render();
-    m_worldRenderer->setViewport(getCamera().getViewport());
+    Scene::Render();
+    m_worldRenderer->SetViewport(GetCamera().GetViewport());
     if (m_drawDebugData)
     {
-        WorldManager::getWorld()->DrawDebugData();
+        WorldManager::GetWorld()->DrawDebugData();
     }
 }
 void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
@@ -204,12 +217,12 @@ void Level::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
     if (indentifierA != nullptr)
     {
         ContactInfo info(contact, fixtureA, fixtureB, indentifierB);
-        indentifierA->object->onPreSolve(info, *oldManifold);
+        indentifierA->object->OnPreSolve(info, *oldManifold);
     }
     if (indentifierB != nullptr)
     {
         ContactInfo info(contact, fixtureB, fixtureA, indentifierA);
-        indentifierB->object->onPreSolve(info, *oldManifold);
+        indentifierB->object->OnPreSolve(info, *oldManifold);
     }
 }
 
@@ -225,12 +238,12 @@ void Level::BeginContact(b2Contact* contact)
     if (indentifierA != nullptr)
     {
         ContactInfo info(contact, fixtureA, fixtureB, indentifierB);
-        indentifierA->object->onBeginContact(info);
+        indentifierA->object->OnBeginContact(info);
     }
     if (indentifierB != nullptr)
     {
         ContactInfo info(contact, fixtureB, fixtureA, indentifierA);
-        indentifierB->object->onBeginContact(info);
+        indentifierB->object->OnBeginContact(info);
     }
 }
 void Level::EndContact(b2Contact* contact)
@@ -245,12 +258,12 @@ void Level::EndContact(b2Contact* contact)
     if (indentifierA != nullptr)
     {
         ContactInfo info(contact, fixtureA, fixtureB, indentifierB);
-        indentifierA->object->onEndContact(info);
+        indentifierA->object->OnEndContact(info);
     }
     if (indentifierB != nullptr)
     {
         ContactInfo info(contact, fixtureB, fixtureA, indentifierA);
-        indentifierB->object->onEndContact(info);
+        indentifierB->object->OnEndContact(info);
     }
 }
 
@@ -259,40 +272,42 @@ void Level::PostSolve(b2Contact* /*contact*/,
 {
 }
 
-ObjectLayer* Level::getParticleLayer() const { return m_particleLayer; }
+ObjectLayer* Level::GetParticleLayer() const { return m_particleLayer; }
 
-ObjectLayer* Level::getSpriteLayer() const { return m_spriteLayer; }
+ObjectLayer* Level::GetSpriteLayer() const { return m_spriteLayer; }
 
-CameraShaker* Level::getCameraShaker() { return m_cameraShaker; }
+CameraShaker* Level::GetCameraShaker() { return m_cameraShaker; }
 
-ParticleSystem* Level::getParticleSystem() const { return m_particleSystem; }
+ParticleSystem* Level::GetParticleSystem() const { return m_particleSystem; }
 
-void Level::displayPauseMenu()
+void Level::DisplayEquipmentMenu()
 {
-    m_pauseMenu->show();
-    m_pauseMenu->activate();
-    for (int i = 0; i < getNumLayers(); ++i)
+    m_pauseMenu->Show();
+    m_pauseMenu->Activate();
+    m_state = STATE_EQUIPMENT;
+    for (int i = 0; i < GetNumLayers(); ++i)
     {
-        Layer* layer = getLayerAt(i);
+        Layer* layer = GetLayerAt(i);
         if (layer != m_pauseMenu)
         {
-            layer->deactivate();
-            layer->hide();
+            layer->Deactivate();
+            layer->Hide();
         }
     }
 }
 
-void Level::hidePauseMenu()
+void Level::HideEquipmentMenu()
 {
-    m_pauseMenu->hide();
-    m_pauseMenu->deactivate();
-    for (int i = 0; i < getNumLayers(); ++i)
+    m_pauseMenu->Hide();
+    m_pauseMenu->Deactivate();
+    m_state = STATE_PLAYING;
+    for (int i = 0; i < GetNumLayers(); ++i)
     {
-        Layer* layer = getLayerAt(i);
+        Layer* layer = GetLayerAt(i);
         if (layer != m_pauseMenu)
         {
-            layer->activate();
-            layer->show();
+            layer->Activate();
+            layer->Show();
         }
     }
 }

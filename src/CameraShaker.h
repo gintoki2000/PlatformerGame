@@ -5,14 +5,14 @@ class CameraShaker
 {
   public:
 
-    static CameraShaker *create(Camera* camera);
+    static CameraShaker *Create(Camera* camera);
 
-    void shake(float duration, int amplitude, int frequency);
-    void tick(float deltaTime);
+    void Shake(float duration, int amplitude, int frequency);
+    void Tick(float deltaTime);
 
   private:
     CameraShaker();
-    bool init(Camera* camera);
+    bool Init(Camera* camera);
     Camera* m_camera;
     float   m_duration;
     int     m_amplitude;

@@ -4,9 +4,9 @@ class b2World;
 class WorldManager
 {
   public:
-    static b2World* getWorld();
-    static void     clearWorld();
-    static void 	terminate();
+    static b2World* GetWorld();
+    static void     ClearWorld();
+    static void 	Terminate();
 
   private:
     WorldManager() {}
