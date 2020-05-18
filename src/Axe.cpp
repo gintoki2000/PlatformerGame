@@ -16,7 +16,7 @@
 #include "WorldManager.h"
 #include "box2d/b2_circle_shape.h"
 
-Axe::Axe() : m_body(nullptr), m_identifier(TAG_SPELL, this) {}
+Axe::Axe() : m_body(nullptr), m_identifier(TAG_PROJECTILE, this) {}
 
 Axe::~Axe()
 {
@@ -120,7 +120,7 @@ bool Axe::Init(const Vec2& pos, Direction dir)
 
     b2FixtureDef fdef;
     fdef.shape               = &circle;
-    fdef.filter.categoryBits = CATEGORY_BIT_SPELL;
+    fdef.filter.categoryBits = CATEGORY_BIT_PROJECTILE;
     fdef.filter.maskBits     = CATEGORY_BIT_MONSTER;
     fdef.isSensor            = false;
 

@@ -17,7 +17,7 @@ ObjectLayer::~ObjectLayer()
     delete[] m_objects;
 }
 
-void ObjectLayer::Update(float deltaTime)
+void ObjectLayer::Tick(float deltaTime)
 {
     Refresh();
     int numObjects = m_numObjects;
@@ -30,7 +30,7 @@ void ObjectLayer::Update(float deltaTime)
     }
 }
 
-void ObjectLayer::Render()
+void ObjectLayer::Paint()
 {
     int numObjects = m_numObjects;
     for (int i = 0; i < numObjects; ++i)

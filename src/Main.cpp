@@ -1,24 +1,27 @@
 #include "Game.h"
 #include "SDL_log.h"
 #include "SDL_timer.h"
+void CaptureFPS(Uint32 initialTime, Uint32 tickPerFrame)
+{
+    Uint32 currentTime = SDL_GetTicks();
+    if (currentTime - initialTime < tickPerFrame)
+    {
+        SDL_Delay(tickPerFrame - (currentTime - initialTime));
+    }
+}
 int main()
 {
-    Game        game;
-    const int   TICKS_PER_FRAME = 15;
-    const float TIME_STEP       = 1.f / 60.f;
-    Uint32      usedTicks;
-    Uint32      startTicks;
+    Game         game;
+    const Uint32 TICKS_PER_FRAME = 1000 / 60;
+    const float  TIME_STEP       = 1.f / 60.f;
+    Uint32       initialTime;
     if (game.Init())
     {
         while (game.IsRunning())
         {
-            startTicks = SDL_GetTicks();
+            initialTime = SDL_GetTicks();
             game.Render(TIME_STEP);
-            usedTicks = SDL_GetTicks() - startTicks;
-            if (usedTicks < TICKS_PER_FRAME)
-            {
-                SDL_Delay(TICKS_PER_FRAME - usedTicks);
-            }
+            CaptureFPS(initialTime, TICKS_PER_FRAME);
         }
     }
     return 0;

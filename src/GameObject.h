@@ -11,8 +11,8 @@ class GameObject
     GameObject();
     virtual ~GameObject();
     /// stuffs
-    virtual void Tick(float deltaTime) = 0;
-    virtual void Paint()               = 0;
+    virtual void Tick(float deltaTime);
+    virtual void Paint(); 
     virtual void Cleanup();
     virtual void Start();
     void         Show();

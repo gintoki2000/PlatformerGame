@@ -10,8 +10,8 @@ class EquipmentMenu : public Layer
     ~EquipmentMenu();
 
     void Start() override;
-    void Update(float deltaTime) override;
-    void Render() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
     void HandleInput();
     void OnBecomeVisible() override;
 
@@ -20,7 +20,16 @@ class EquipmentMenu : public Layer
   private:
     void UpdateList();
 
+    enum State
+    {
+        STATE_MAIN,
+        STATE_SUB_TECNIQUE,
+        STATE_MAIN_TECNIQUE,
+        STATE_ITEM
+    };
+
     ListMenu*   m_listMenu;
     Adventurer* m_adventurer;
+    State       m_state;
 };
 #endif // PAUSE_MENU_H

@@ -6,6 +6,7 @@
 #include "CameraShaker.h"
 #include "CollisionHandler.h"
 #include "Constances.h"
+#include "EquipmentMenu.h"
 #include "FireBustParticle.h"
 #include "FireExplosionParticle.h"
 #include "Game.h"
@@ -18,7 +19,6 @@
 #include "ObjectFactory.h"
 #include "ObjectLayer.h"
 #include "ParticleSystem.h"
-#include "EquipmentMenu.h"
 #include "Pool.h"
 #include "Rect.h"
 #include "SDL_assert.h"
@@ -114,7 +114,7 @@ bool Level::Init(const char* filename)
 
     m_worldRenderer  = new WorldRenderer(renderer, Constances::PPM);
     m_adventurer     = new Adventurer(GetCamera().GetCenter());
-    m_hud            = HUD::Create();
+    m_hud            = new HUD();
     m_particleSystem = new ParticleSystem(this);
     m_cameraShaker   = CameraShaker::Create(&GetCamera());
     m_spriteLayer    = static_cast<ObjectLayer*>(GetLayerByName("sprites"));
@@ -161,13 +161,8 @@ Tilesets* Level::GetTilesets() const { return m_tilesets; }
 
 void Level::SetIsPaused(bool paused) { m_isPaused = paused; }
 
-void Level::Update(float deltaTime)
+void Level::Tick(float deltaTime)
 {
-    WorldManager::GetWorld()->Step(deltaTime, 2, 6);
-    if (Input::IsPressed(BUTTON_START))
-    {
-        DisplayEquipmentMenu();
-    }
     switch (m_state)
     {
     case STATE_EQUIPMENT:
@@ -177,28 +172,25 @@ void Level::Update(float deltaTime)
     break;
     case STATE_PLAYING:
     {
-        m_adventurer->HandleInput();
+        if (Input::IsPressed(BUTTON_START))
+        {
+            DisplayEquipmentMenu();
+        }
+        else
+        {
+            m_adventurer->HandleInput();
+            m_cameraShaker->Tick(deltaTime);
+        }
     }
     }
-    Scene::Update(deltaTime);
-
-    Vec2 cameraTarget;
-    int  sign      = DirectionToSign(m_adventurer->GetDirection());
-    cameraTarget.x = m_adventurer->GetPositionX() + sign * 16.f;
-    cameraTarget.y = GetCamera().GetCenter().y;
-
-    int leftBound = Constances::GAME_WIDTH / 2;
-    if (cameraTarget.x < leftBound)
-    {
-        cameraTarget.x = leftBound;
-    }
-    GetCamera().SetTarget(cameraTarget);
-    m_cameraShaker->Tick(deltaTime);
+    WorldManager::GetWorld()->Step(deltaTime, 6, 2);
+    Scene::Tick(deltaTime);
+    UpdateCamera(deltaTime);
 }
 
-void Level::Render()
+void Level::Paint()
 {
-    Scene::Render();
+    Scene::Paint();
     m_worldRenderer->SetViewport(GetCamera().GetViewport());
     if (m_drawDebugData)
     {
@@ -282,6 +274,7 @@ ParticleSystem* Level::GetParticleSystem() const { return m_particleSystem; }
 
 void Level::DisplayEquipmentMenu()
 {
+    Input::ResetState();
     m_pauseMenu->Show();
     m_pauseMenu->Activate();
     m_state = STATE_EQUIPMENT;
@@ -298,6 +291,7 @@ void Level::DisplayEquipmentMenu()
 
 void Level::HideEquipmentMenu()
 {
+    Input::ResetState();
     m_pauseMenu->Hide();
     m_pauseMenu->Deactivate();
     m_state = STATE_PLAYING;
@@ -310,4 +304,19 @@ void Level::HideEquipmentMenu()
             layer->Show();
         }
     }
+}
+
+void Level::UpdateCamera(float)
+{
+    Vec2 cameraTarget;
+    int  sign      = DirectionToSign(m_adventurer->GetDirection());
+    cameraTarget.x = m_adventurer->GetPositionX() + sign * 16.f;
+    cameraTarget.y = GetCamera().GetCenter().y;
+
+    int leftBound = Constances::GAME_WIDTH / 2;
+    if (cameraTarget.x < leftBound)
+    {
+        cameraTarget.x = leftBound;
+    }
+    GetCamera().SetTarget(cameraTarget);
 }

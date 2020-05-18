@@ -50,9 +50,9 @@ bool TileLayer::Init(int width, int height, int tileWidth, int tileHeight)
 	return true;
 }
 
-void TileLayer::Update(float) {}
+void TileLayer::Tick(float) {}
 
-void TileLayer::Render()
+void TileLayer::Paint()
 {
     const Rect&   viewport = GetScene()->GetCamera().GetViewport();
     SDL_Renderer* renderer = GAME->GetRenderer();

@@ -37,8 +37,8 @@ class Level : public Scene, public b2ContactListener
 
     // Scene interface
   public:
-    void Update(float deltaTime) override;
-    void Render() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
     void Start() override;
 
     // b2ContactListener interface
@@ -52,6 +52,7 @@ class Level : public Scene, public b2ContactListener
   private:
     Level();
     bool Init(const char* filename);
+    void UpdateCamera(float deltaTime);
     enum State
     {
         STATE_EQUIPMENT,
@@ -70,7 +71,7 @@ class Level : public Scene, public b2ContactListener
     HUD*            m_hud;
     CameraShaker*   m_cameraShaker;
     ParticleSystem* m_particleSystem;
-    EquipmentMenu*      m_pauseMenu;
+    EquipmentMenu*  m_pauseMenu;
     State           m_state;
 };
 #endif // LEVEL_H

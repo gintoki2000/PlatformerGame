@@ -2,6 +2,7 @@
 #define LIST_MENU_H
 #include "ListItem.h"
 class EquipmentMenu;
+
 class ListMenu
 {
   public:

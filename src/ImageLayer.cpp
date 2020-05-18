@@ -11,7 +11,7 @@ ImageLayer::ImageLayer(const TextureRegion& image) : m_image(image) {}
 const TextureRegion& ImageLayer::GetImage() const { return m_image; }
 void ImageLayer::SetImage(const TextureRegion& image) { m_image = image; }
 
-void ImageLayer::Render()
+void ImageLayer::Paint()
 {
     SDL_Renderer*   renderer = Game::GetInstance()->GetRenderer();
     const SDL_Rect& viewport = GetScene()->GetCamera().GetViewport();

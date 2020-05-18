@@ -28,11 +28,11 @@ class Slime : public Monster
     void Die();
     enum
     {
-        ANIm_IDLE,
-        ANIm_MOVE,
-        ANIm_ATTACK,
-        ANIm_HURT,
-        ANIm_DIE,
+        ANIM_IDLE,
+        ANIM_MOVE,
+        ANIM_ATTACK,
+        ANIM_HURT,
+        ANIM_DIE,
         NUM_ANIMS
     };
 

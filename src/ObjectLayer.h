@@ -8,8 +8,8 @@ class ObjectLayer : public Layer
     ObjectLayer();
     ~ObjectLayer();
 
-    void Update(float deltaTime) override;
-    void Render() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
 	void Start() override;
 
     GameObject* GetObjectAt(int index) const;

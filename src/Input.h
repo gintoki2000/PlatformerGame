@@ -30,8 +30,8 @@ class Input
     static bool IsJustReleased(Button button);
 
 	static void Init();
-
     static void Update();
+	static void ResetState();
 
   private:
     static int  mappingToScancode[NUM_BUTTONS];

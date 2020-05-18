@@ -33,34 +33,34 @@ class Adventurer : public GameObject,
     static constexpr float DEFAULT_CUT_JUMP_HEIGHT  = 0.5f;
     enum
     {
-        ANIm_IDLE_1,
-        ANIm_IDLE_2,
-        ANIm_CROUCH,
-        ANIm_RUN,
-        ANIm_JUMP,
-        ANIm_SOMERSULT,
-        ANIm_FALL,
-        ANIm_SLIDE,
-        ANIm_STAND,
-        ANIm_CORNER_GRAB,
-        ANIm_CORNER_JUMP,
-        ANIm_HURT,
-        ANIm_DIE,
-        ANIm_SWORD_DRAW,
-        ANIm_SWORD_SHEATHE,
-        ANIm_WALL_SLIDE,
-        ANIm_WALL_CLIMB,
-        ANIm_CAST_SPELL,
-        ANIm_CAST_LOOP,
-        ANIm_ATK_1,
-        ANIm_ATK_2,
-        ANIm_ATK_3,
-        ANIm_USE_ITEM,
-        ANIm_AIR_ATK_1,
-        ANIm_AIR_ATK_2,
-        ANIm_AIR_ATK_3_LOOP,
-        ANIm_AIR_ATK_3_RDY,
-        ANIm_DASH,
+        ANIM_IDLE_1,
+        ANIM_IDLE_2,
+        ANIM_CROUCH,
+        ANIM_RUN,
+        ANIM_JUMP,
+        ANIM_SOMERSULT,
+        ANIM_FALL,
+        ANIM_SLIDE,
+        ANIM_STAND,
+        ANIM_CORNER_GRAB,
+        ANIM_CORNER_JUMP,
+        ANIM_HURT,
+        ANIM_DIE,
+        ANIM_SWORD_DRAW,
+        ANIM_SWORD_SHEATHE,
+        ANIM_WALL_SLIDE,
+        ANIM_WALL_CLIMB,
+        ANIM_CAST_SPELL,
+        ANIM_CAST_LOOP,
+        ANIM_ATK_1,
+        ANIM_ATK_2,
+        ANIM_ATK_3,
+        ANIM_USE_ITEM,
+        ANIM_AIR_ATK_1,
+        ANIM_AIR_ATK_2,
+        ANIM_AIR_ATK_3_LOOP,
+        ANIM_AIR_ATK_3_RDY,
+        ANIM_DASH,
         NUM_ANIMS
     };
 
@@ -103,6 +103,7 @@ class Adventurer : public GameObject,
     void       DisableAbility(int ability);
     void       HandleInput();
     Inventory* GetInventory() const { return m_inventory; }
+    void       ResetExtraJumps();
 
   private:
     bool InitGraphicsComponent();
@@ -142,8 +143,8 @@ class Adventurer : public GameObject,
     float     m_jumpPressedRemember;
     float     m_groundedRemember;
     float     m_maxHoriontalSpeed;
-    int       m_totalExtrasJump;
-    int       m_extrasJumpCount;
+    int       m_totalExtraJumps;
+    int       m_extraJumps;
     bool      m_ableToUseTechnique;
     float     m_runAcceleration;
     bool      m_vulnerable;

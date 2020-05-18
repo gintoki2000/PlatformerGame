@@ -10,7 +10,7 @@ class ImageLayer : public PositionalLayer
 
     const TextureRegion& GetImage() const;
     void                 SetImage(const TextureRegion& image);
-    void                 Render() override;
+    void                 Paint() override;
 
   private:
     TextureRegion m_image;

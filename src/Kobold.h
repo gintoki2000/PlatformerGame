@@ -20,11 +20,11 @@ class Koblod : public Monster
 
     enum Anim
     {
-        ANIm_IDLE,
-        ANIm_RUN,
-        ANIm_ATTACK,
-        ANIm_HURT,
-        ANIm_DIE,
+        ANIM_IDLE,
+        ANIM_RUN,
+        ANIM_ATTACK,
+        ANIM_HURT,
+        ANIM_DIE,
         NUM_ANIMS
     };
 

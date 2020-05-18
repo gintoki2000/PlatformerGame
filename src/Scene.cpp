@@ -20,25 +20,25 @@ Scene::~Scene()
     delete[] m_layers;
 }
 
-void Scene::Update(float deltaTime)
+void Scene::Tick(float deltaTime)
 {
     m_camera.Update();
     for (int i = 0; i < m_numLayers; ++i)
     {
         if (m_layers[i]->IsActive())
         {
-            m_layers[i]->Update(deltaTime);
+            m_layers[i]->Tick(deltaTime);
         }
     }
 }
 
-void Scene::Render()
+void Scene::Paint()
 {
     for (int i = 0; i < m_numLayers; ++i)
     {
         if (m_layers[i]->IsVisible())
         {
-            m_layers[i]->Render();
+            m_layers[i]->Paint();
         }
     }
 }

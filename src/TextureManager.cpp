@@ -1,5 +1,6 @@
 #include "TextureManager.h"
 #include "SDL_image.h"
+#include "SDL_log.h"
 #include "SDL_render.h"
 #include "SDL_stdinc.h"
 
@@ -28,6 +29,7 @@ bool TextureManager::Load(SDL_Renderer* renderer)
         {TEX_STATUS_BAR, "asserts/spritesheets/status-bar-2.png"},
         {TEX_BLOOD_STAIN, "asserts/spritesheets/blood-stain.png"},
         {TEX_ICONS, "asserts/spritesheets/icons.png"},
+		{TEX_FOODS, "asserts/spritesheets/food.png"}
     };
     int numTextures = sizeof(pairs) / sizeof(Pair);
     for (int i = 0; i < numTextures; ++i)
@@ -35,6 +37,9 @@ bool TextureManager::Load(SDL_Renderer* renderer)
         if ((textures[pairs[i].id] =
                  IMG_LoadTexture(renderer, pairs[i].file)) == nullptr)
         {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to load \'%s\': %s", pairs[i].file,
+                         IMG_GetError());
             return false;
         }
     }

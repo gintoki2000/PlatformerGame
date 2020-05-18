@@ -34,6 +34,12 @@ void Input::Update()
     }
 }
 
+void Input::ResetState()
+{
+	SDL_memset(cButtonState, 0, NUM_BUTTONS * sizeof(bool));	
+	SDL_memset(pButtonState, 0, NUM_BUTTONS * sizeof(bool));	
+}
+
 bool Input::IsPressed(Button button) { return cButtonState[button]; }
 
 bool Input::IsReleased(Button button) { return !cButtonState[button]; }

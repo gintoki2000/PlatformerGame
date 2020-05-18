@@ -16,7 +16,7 @@ template <class TSpell> class DirectionalCast : public Technique
 
     void Enter(Adventurer& adventurer) override
     {
-        adventurer.GetAnimator()->PushState(Adventurer::ANIm_CAST_SPELL);
+        adventurer.GetAnimator()->PushState(Adventurer::ANIM_CAST_SPELL);
         if (adventurer.IsGrounded())
         {
             adventurer.m_horizontalAcceleration = 0.f;
@@ -36,7 +36,13 @@ template <class TSpell> class DirectionalCast : public Technique
         {
             if (adventurer.GetAnimator()->IsCurrentAnimationFinshed())
             {
-                adventurer.GetAnimator()->Play(Adventurer::ANIm_CAST_LOOP);
+                TSpell* spell = TSpell::Create(adventurer.GetPosition(),
+                                               adventurer.GetDirection());
+                SDL_assert(spell != nullptr);
+                Level* level = static_cast<Level*>(adventurer.GetScene());
+                level->GetSpriteLayer()->AddObject(spell);
+
+                adventurer.GetAnimator()->Play(Adventurer::ANIM_CAST_LOOP);
                 m_timer  = 0.f;
                 m_phrase = 1;
             }
@@ -46,11 +52,6 @@ template <class TSpell> class DirectionalCast : public Technique
         {
             if (m_timer >= 0.1f)
             {
-                TSpell* spell = TSpell::Create(adventurer.GetPosition(),
-                                               adventurer.GetDirection());
-                SDL_assert(spell != nullptr);
-                Level* level = static_cast<Level*>(adventurer.GetScene());
-                level->GetSpriteLayer()->AddObject(spell);
                 return true;
             }
         }

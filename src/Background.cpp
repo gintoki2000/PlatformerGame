@@ -55,7 +55,7 @@ bool Background::Init(const tmx::ImageLayer& imageLayerData)
     }
     return true;
 }
-void Background::Update(float)
+void Background::Tick(float)
 {
     float cameraPositionX = GetScene()->GetCamera().GetViewport().Left();
     SetPositionX(m_initialPositionX + cameraPositionX * m_parallax);

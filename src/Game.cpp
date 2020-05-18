@@ -99,8 +99,16 @@ bool Game::Init()
     factory.Resigter("BoarWarrior", BoarWarrior::Create);
 
     Input::Init();
-    Audio::Init();
-    TextureManager::Load(m_renderer);
+    if (!Audio::Init())
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to init Audio!");
+        return false;
+    }
+    if (!TextureManager::Load(m_renderer))
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed load textures!");
+        return false;
+    }
     Audio::VolumeSound(SOUND_STAB, MIX_MAX_VOLUME / 4);
 
     GameState* state = TitleState::Create();

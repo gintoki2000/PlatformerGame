@@ -10,6 +10,7 @@
 #include "Level.h"
 #include "ObjectLayer.h"
 #include "Adventurer.h"
+#include "PickupObjMeat.h"
 #include "Rect.h"
 #include "SDL_blendmode.h"
 #include "SDL_rect.h"
@@ -65,17 +66,17 @@ bool BoarWarrior::Init(const Vec2& leftTop)
     m_spriteSheet.Init(m_texture, 120, 100);
     Animation* anims[NUM_ANIMS];
 
-    anims[ANIm_IDLE]             = new Animation(&m_spriteSheet, 0, 10, 0.2f);
-    anims[ANIm_MOVE_FORWARD]     = new Animation(&m_spriteSheet, 10, 10, 0.2f);
-    anims[ANIm_MOVE_BACKWARD]    = new Animation(&m_spriteSheet, 10, 10, 0.2f);
-    anims[ANIm_PRE_ATTACK]       = new Animation(&m_spriteSheet, 20, 12, 0.1f);
-    anims[ANIm_ATTACK]           = new Animation(&m_spriteSheet, 32, 6, 0.1f);
-    anims[ANIm_PRE_HEAVY_ATTACK] = new Animation(&m_spriteSheet, 38, 9, 0.1f);
-    anims[ANIm_HEAVY_ATTACK]     = new Animation(&m_spriteSheet, 47, 7, 0.1f);
+    anims[ANIM_IDLE]             = new Animation(&m_spriteSheet, 0, 10, 0.2f);
+    anims[ANIM_MOVE_FORWARD]     = new Animation(&m_spriteSheet, 10, 10, 0.2f);
+    anims[ANIM_MOVE_BACKWARD]    = new Animation(&m_spriteSheet, 10, 10, 0.2f);
+    anims[ANIM_PRE_ATTACK]       = new Animation(&m_spriteSheet, 20, 12, 0.1f);
+    anims[ANIM_ATTACK]           = new Animation(&m_spriteSheet, 32, 6, 0.1f);
+    anims[ANIM_PRE_HEAVY_ATTACK] = new Animation(&m_spriteSheet, 38, 9, 0.1f);
+    anims[ANIM_HEAVY_ATTACK]     = new Animation(&m_spriteSheet, 47, 7, 0.1f);
 
-    anims[ANIm_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIm_MOVE_FORWARD]->SetPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIm_MOVE_BACKWARD]->SetPlayMode(Animation::PLAY_MODE_LOOP_REVERSE);
+    anims[ANIM_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_MOVE_FORWARD]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_MOVE_BACKWARD]->SetPlayMode(Animation::PLAY_MODE_LOOP_REVERSE);
 
     m_animator  = new Animator(anims, NUM_ANIMS);
     m_waitTimer = 0.f;
@@ -108,28 +109,6 @@ bool BoarWarrior::TakeDamge(int damage, Direction direction)
         return true;
     }
     return false;
-}
-
-void BoarWarrior::OnPreSolve(const ContactInfo& info, const b2Manifold&)
-{
-    const Identifier* otherIDR = info.GetOtherIdentifier();
-    if (otherIDR != nullptr && otherIDR->tag == TAG_PLAYER)
-    {
-        if (!IsDead())
-        {
-            Adventurer*   adventurer = static_cast<Adventurer*>(otherIDR->object);
-            Direction direction =
-                RelativeDirection(adventurer->GetPositionX(), GetPositionX());
-            if (adventurer->TakeDamge(1, direction) && adventurer->IsGrounded())
-            {
-                b2Vec2 f;
-                f.x = -DirectionToSign(direction) * 20.f;
-                f.y = -10.f;
-                adventurer->GetBody()->ApplyLinearImpulseToCenter(f, true);
-            }
-        }
-        info.SetIsEnabled(false);
-    }
 }
 
 void BoarWarrior::Tick(float deltaTime)
@@ -210,7 +189,7 @@ void BoarWarrior::Tick(float deltaTime)
                 rect.width  = 42;
                 rect.height = 35;
 
-                if (BoxCast(rect, CATEGORY_BIT_PLAYER))
+                if (BoxCast(rect, CATEGORY_BIT_ADVENTURER))
                 {
                     Level*  level  = static_cast<Level*>(GetScene());
                     Adventurer* adventurer = level->GetAdventurer();
@@ -294,7 +273,7 @@ void BoarWarrior::Tick(float deltaTime)
                 rect.width  = 43;
                 rect.height = 64;
 
-                if (BoxCast(rect, CATEGORY_BIT_PLAYER))
+                if (BoxCast(rect, CATEGORY_BIT_ADVENTURER))
                 {
                     Adventurer*   adventurer    = level->GetAdventurer();
                     Direction direction = RelativeDirection(
@@ -368,6 +347,8 @@ void BoarWarrior::Tick(float deltaTime)
         else
         {
             Remove();
+			Level* level = static_cast<Level*>(GetScene());
+			level->GetSpriteLayer()->AddObject(new PickupObjectMeat(GetPosition()));
         }
     }
     break;
@@ -428,7 +409,7 @@ void BoarWarrior::Idle()
 {
     m_timer = 0.f;
     m_state = STATE_IDLE;
-    m_animator->Play(ANIm_IDLE);
+    m_animator->Play(ANIM_IDLE);
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x      = 0.f;
     m_body->SetLinearVelocity(vel);
@@ -437,13 +418,13 @@ void BoarWarrior::Idle()
 void BoarWarrior::MoveForward()
 {
     m_state = STATE_TRIGGER_MOVE_FORWARD;
-    m_animator->Play(ANIm_MOVE_FORWARD);
+    m_animator->Play(ANIM_MOVE_FORWARD);
 }
 
 void BoarWarrior::MoveBackward()
 {
     m_state = STATE_TRIGGER_MOVE_BACKWARD;
-    m_animator->Play(ANIm_MOVE_BACKWARD);
+    m_animator->Play(ANIM_MOVE_BACKWARD);
     m_phrase = 0;
     m_timer  = 0.f;
 }
@@ -451,7 +432,7 @@ void BoarWarrior::MoveBackward()
 void BoarWarrior::PreAttack()
 {
     m_state = STATE_PRE_ATTACK;
-    m_animator->Play(ANIm_PRE_ATTACK);
+    m_animator->Play(ANIM_PRE_ATTACK);
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x      = 0.f;
     m_body->SetLinearVelocity(vel);
@@ -461,7 +442,7 @@ void BoarWarrior::PreAttack()
 void BoarWarrior::Attack()
 {
     m_state = STATE_ATTACK;
-    m_animator->Play(ANIm_ATTACK);
+    m_animator->Play(ANIM_ATTACK);
     m_phrase = 0;
 }
 
@@ -469,7 +450,7 @@ void BoarWarrior::PreHeavyAttack()
 {
 
     m_state = STATE_PRE_HEAVY_ATTACK;
-    m_animator->Play(ANIm_PRE_HEAVY_ATTACK);
+    m_animator->Play(ANIM_PRE_HEAVY_ATTACK);
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x      = 0.f;
     m_body->SetLinearVelocity(vel);
@@ -478,7 +459,7 @@ void BoarWarrior::PreHeavyAttack()
 void BoarWarrior::HeavyAttack()
 {
     m_state = STATE_HEAVY_ATTACK;
-    m_animator->Play(ANIm_HEAVY_ATTACK);
+    m_animator->Play(ANIM_HEAVY_ATTACK);
     m_phrase = 0;
 }
 
@@ -490,7 +471,7 @@ void BoarWarrior::Die()
     m_counter   = 0;
     m_timer     = 0.f;
     m_waitTimer = 0.f;
-    m_animator->Play(ANIm_IDLE);
+    m_animator->Play(ANIM_IDLE);
     m_body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
     m_body->SetGravityScale(0.f);
 }

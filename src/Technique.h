@@ -10,7 +10,8 @@ class Technique : public IListItem
     virtual ~Technique();
 
     virtual void Enter(Adventurer& adventurer);
-    virtual bool Tick(Adventurer& adventurer, float deltaTime) = 0;
+	virtual bool HandleInput(Adventurer& adventurer);
+    virtual bool Tick(Adventurer& adventurer, float deltaTime);
     virtual void Exit(Adventurer& adventurer);
 
     int           GetMPCost() const { return m_MPCost; }

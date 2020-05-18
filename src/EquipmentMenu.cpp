@@ -18,7 +18,7 @@ void EquipmentMenu::Start()
     m_adventurer = static_cast<Level*>(GetScene())->GetAdventurer();
 }
 
-void EquipmentMenu::Update(float)
+void EquipmentMenu::Tick(float)
 {
     if (Input::IsJustPressed(BUTTON_B))
     {
@@ -26,7 +26,7 @@ void EquipmentMenu::Update(float)
         level->HideEquipmentMenu();
     }
 }
-void EquipmentMenu::Render() { m_listMenu->Paint(); }
+void EquipmentMenu::Paint() { m_listMenu->Paint(); }
 
 void EquipmentMenu::HandleInput() { m_listMenu->HandleInput(); }
 

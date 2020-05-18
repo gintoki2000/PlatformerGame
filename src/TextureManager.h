@@ -13,6 +13,7 @@ enum TextureID
     TEX_STATUS_BAR,
     TEX_BLOOD_STAIN,
     TEX_ICONS,
+	TEX_FOODS,
     NUM_TEXTURES
 };
 class TextureManager

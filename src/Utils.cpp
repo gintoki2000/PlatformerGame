@@ -91,6 +91,7 @@ int DirectionToSign(Direction direction)
 }
 
 
+
 Direction RelativeDirection(float x1, float x2)
 {
 	if (x1 > x2)

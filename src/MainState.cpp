@@ -38,10 +38,10 @@ bool MainState::Init()
 
 void MainState::Render(float deltaTime)
 {
-    m_level->Update(deltaTime);
+    m_level->Tick(deltaTime);
 	SDL_SetRenderDrawColor(GAME->GetRenderer(), 0x00, 0x00, 0x00, 0x00);
 	SDL_RenderClear(GAME->GetRenderer());
-    m_level->Render();
+    m_level->Paint();
 }
 
 void MainState::Show()

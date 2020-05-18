@@ -10,11 +10,14 @@
 #include "Utils.h"
 #include "Vec.h"
 
-BasicAttack::BasicAttack() : Technique(0, MakeSprite(TEX_ICONS, {16, 0, 16, 16}))
+BasicAttack::BasicAttack() :
+    Technique(0, MakeSprite(TEX_ICONS, {16, 0, 16, 16}))
 {
 }
 
-bool BasicAttack::Tick(Adventurer& adventurer, float)
+bool BasicAttack::Tick(Adventurer&, float) { return false; }
+
+bool BasicAttack::HandleInput(Adventurer& adventurer)
 {
     switch (m_phrase)
     {
@@ -26,13 +29,12 @@ bool BasicAttack::Tick(Adventurer& adventurer, float)
         }
         if (adventurer.GetAnimator()->IsCurrentAnimationFinshed())
         {
-            Check(adventurer.GetPosition(), {20.f, 30.f},
-                  adventurer.GetDirection());
+            DealDamage(adventurer, {20.f, 30.f});
             if (m_chain)
             {
                 m_phrase = 1;
                 m_chain  = false;
-                adventurer.GetAnimator()->Play(Adventurer::ANIm_ATK_2);
+                adventurer.GetAnimator()->Play(Adventurer::ANIM_ATK_2);
             }
             else
             {
@@ -49,13 +51,12 @@ bool BasicAttack::Tick(Adventurer& adventurer, float)
         }
         if (adventurer.GetAnimator()->IsCurrentAnimationFinshed())
         {
-            Check(adventurer.GetPosition(), {35.f, 20.f},
-                  adventurer.GetDirection());
+            DealDamage(adventurer, {35.f, 20.f});
             if (m_chain)
             {
                 m_phrase = 2;
                 m_chain  = false;
-                adventurer.GetAnimator()->Play(Adventurer::ANIm_ATK_3);
+                adventurer.GetAnimator()->Play(Adventurer::ANIM_ATK_3);
             }
             else
             {
@@ -68,8 +69,7 @@ bool BasicAttack::Tick(Adventurer& adventurer, float)
     {
         if (adventurer.GetAnimator()->IsCurrentAnimationFinshed())
         {
-            Check(adventurer.GetPosition(), {20.f, 30.f},
-                  adventurer.GetDirection());
+            DealDamage(adventurer, {20.f, 30.f});
             return true;
         }
     }
@@ -79,7 +79,7 @@ bool BasicAttack::Tick(Adventurer& adventurer, float)
 
 void BasicAttack::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->PushState(Adventurer::ANIm_ATK_1);
+    adventurer.GetAnimator()->PushState(Adventurer::ANIM_ATK_1);
     adventurer.m_horizontalAcceleration = 0.f;
     m_chain                             = false;
     m_phrase                            = 0;
@@ -93,14 +93,16 @@ void BasicAttack::Exit(Adventurer& adventurer)
     adventurer.GetAnimator()->PopState();
 }
 
-void BasicAttack::Check(const Vec2& position, const Vec2& size,
-                        Direction direction)
+void BasicAttack::DealDamage(Adventurer& adventurer, const Vec2& size)
 {
 
     const int  MAX = 10;
     b2Fixture* fixtures[MAX];
     int        n = 0;
     FloatRect  rect;
+
+    Vec2      position  = adventurer.GetPosition();
+    Direction direction = adventurer.GetDirection();
 
     rect.x = position.x + DirectionToSign(direction) * size.x / 2.f;
     rect.y = position.y;

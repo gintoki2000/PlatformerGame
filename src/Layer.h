@@ -10,8 +10,8 @@ class Layer
 
     virtual ~Layer() = 0;
 
-    virtual void Update(float deltaTime) = 0;
-    virtual void Render()                = 0;
+    virtual void Tick(float deltaTime) = 0;
+    virtual void Paint()                = 0;
 	virtual void Start();
 
     bool IsVisible() const { return m_isVisible; }

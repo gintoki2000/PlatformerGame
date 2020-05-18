@@ -16,36 +16,45 @@ class AdventurerOnGroundState : public AdventurerState
 {
   public:
     AdventurerState* HandleInput(Adventurer& adventurer) override;
+    AdventurerState* Tick(Adventurer& adventurer, float deltaTime) override;
 };
 
 class AdventurerIdle1State : public AdventurerOnGroundState
 {
+  public:
     void Enter(Adventurer& adventurer) override;
+	void Exit(Adventurer& adventurer) override;
 };
 
 class AdventurerIdle2State : public AdventurerOnGroundState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
-	AdventurerState* Tick(Adventurer& adventurer, float deltaTime) override;
+    AdventurerState* Tick(Adventurer& adventurer, float deltaTime) override;
 
     float m_timer;
 };
 
 class AdventurerRunState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
+    AdventurerState* Tick(Adventurer& adventurer, float deltaTime) override;
 };
 
 class AdventurerJumpState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
+    AdventurerState* Tick(Adventurer& adventurer, float deltaTime) override;
 };
 
 class AdventurerSomersaultState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
     void             Exit(Adventurer& adventurer) override;
@@ -53,12 +62,15 @@ class AdventurerSomersaultState : public AdventurerState
 
 class AdventurerFallState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
+    AdventurerState* Tick(Adventurer& adventurer, float deltaTime) override;
 };
 
 class AdventurerHurtState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
     void             Exit(Adventurer& adventurer) override;
@@ -66,6 +78,7 @@ class AdventurerHurtState : public AdventurerState
 
 class AdventurerDieState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
     void             Exit(Adventurer& adventurer) override;
@@ -73,13 +86,15 @@ class AdventurerDieState : public AdventurerState
 
 class AdventurerCrouchState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
 };
 
 class AdventurerAirJumpState : public AdventurerState
 {
+  public:
     void             Enter(Adventurer& adventurer) override;
     AdventurerState* HandleInput(Adventurer& adventurer) override;
 };
-#endif //ADVENTURE_STATE_H
+#endif // ADVENTURE_STATE_H

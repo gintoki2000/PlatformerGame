@@ -14,7 +14,7 @@ class Background : public ImageLayer
 	~Background();
 
     bool Init(const tmx::ImageLayer& imageLayerData);
-    void Update(float deltaTime) override;
+    void Tick(float deltaTime) override;
 
   private:
     Background(); 

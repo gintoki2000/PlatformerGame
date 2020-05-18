@@ -18,11 +18,6 @@ class BoarWarrior : public Monster
   public:
     bool TakeDamge(int damage, Direction direction) override;
 
-    // ICollisionHandler interface
-  public:
-    void OnPreSolve(const ContactInfo& info,
-                    const b2Manifold&  oldManiflod) override;
-
     // GameObject interface
   public:
     void Tick(float deltaTime) override;
@@ -60,13 +55,13 @@ class BoarWarrior : public Monster
     };
     enum Anim
     {
-        ANIm_IDLE,
-        ANIm_MOVE_FORWARD,
-        ANIm_MOVE_BACKWARD,
-        ANIm_PRE_ATTACK,
-        ANIm_ATTACK,
-        ANIm_PRE_HEAVY_ATTACK,
-        ANIm_HEAVY_ATTACK,
+        ANIM_IDLE,
+        ANIM_MOVE_FORWARD,
+        ANIM_MOVE_BACKWARD,
+        ANIM_PRE_ATTACK,
+        ANIM_ATTACK,
+        ANIM_PRE_HEAVY_ATTACK,
+        ANIM_HEAVY_ATTACK,
         NUM_ANIMS
     };
     SDL_Texture*      m_texture;

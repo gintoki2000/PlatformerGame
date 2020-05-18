@@ -35,7 +35,7 @@ void ListMenu::Paint()
 
     SDL_Rect      dstrect;
     SDL_Renderer* renderer = GAME->GetRenderer();
-    for (int i = beginIdx; i <= endIdx; ++i)
+    for (int i = beginIdx; i <= endIdx; ++i, ++j)
     {
         int r     = j / m_numItemsPerColumn;
         int c     = j % m_numItemsPerColumn;
@@ -52,7 +52,6 @@ void ListMenu::Paint()
             SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
             SDL_RenderDrawRect(renderer, &dstrect);
         }
-        ++j;
     }
 }
 
@@ -92,7 +91,7 @@ void ListMenu::HandleInput()
     {
         m_selectedIndex = 0;
     }
-    if (m_selectedIndex > m_numItems)
+    if (m_selectedIndex > m_numItems - 1)
     {
         m_selectedIndex = m_numItems - 1;
     }

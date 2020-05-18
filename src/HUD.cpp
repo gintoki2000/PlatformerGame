@@ -1,6 +1,5 @@
 #include "HUD.h"
 #include "Adventurer.h"
-
 #include "Game.h"
 #include "Level.h"
 #include "SDL_render.h"
@@ -8,22 +7,10 @@
 #include "TextureManager.h"
 #include "Utils.h"
 
-HUD::HUD() {}
-
-HUD* HUD::Create()
+HUD::HUD()
 {
-    HUD* ret = new HUD;
-    if (ret->Init())
-    {
-        return ret;
-    }
-    DELETE_NULL(ret);
-    return nullptr;
-}
 
-bool HUD::Init()
-{
-    SDL_Texture*    texture =TextureManager::Get(TEX_STATUS_BAR);
+    SDL_Texture* texture = TextureManager::Get(TEX_STATUS_BAR);
 
     m_circle   = Sprite(texture, {0, 0, 65, 61});
     m_mpBorder = Sprite(texture, {0, 89, 132, 23});
@@ -32,16 +19,14 @@ bool HUD::Init()
     m_hp.Init(texture, 64, 0, 2, 12, 16, 11);
     m_mp.Init(texture, 65, 22, 3, 7, 11, 6);
 
-    return true;
 }
 
-void HUD::Update(float) {}
+void HUD::Tick(float) {}
 
-void HUD::Render()
+void HUD::Paint()
 {
     SDL_Renderer* renderer;
     SDL_Rect      dstrect;
-    SDL_Rect      srcrect;
     Adventurer*   adventurer;
     Level*        level = static_cast<Level*>(GetScene());
 

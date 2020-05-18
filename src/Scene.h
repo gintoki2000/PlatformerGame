@@ -8,8 +8,8 @@ class Scene
     Scene();
     virtual ~Scene();
 
-    virtual void Update(float deltaTime);
-    virtual void Render();
+    virtual void Tick(float deltaTime);
+    virtual void Paint();
     virtual void Start();
 
     int     GetNumLayers() const;

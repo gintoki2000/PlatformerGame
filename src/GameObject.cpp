@@ -10,6 +10,10 @@ GameObject::GameObject() :
 
 GameObject::~GameObject() {}
 
+void GameObject::Tick(float){}
+
+void GameObject::Paint() {}
+
 void GameObject::Cleanup() { m_objectLayer = nullptr; }
 
 void GameObject::Start() {}

@@ -32,7 +32,12 @@ AdventurerState* AdventurerOnGroundState::HandleInput(Adventurer& adventurer)
     {
         return &Adventurer::runState;
     }
-    else if (!adventurer.IsGrounded())
+    return nullptr;
+}
+
+AdventurerState* AdventurerOnGroundState::Tick(Adventurer& adventurer, float)
+{
+    if (!adventurer.IsGrounded())
     {
         return &Adventurer::fallState;
     }
@@ -42,14 +47,20 @@ AdventurerState* AdventurerOnGroundState::HandleInput(Adventurer& adventurer)
 void AdventurerIdle1State::Enter(Adventurer& adventurer)
 {
     adventurer.m_horizontalAcceleration = 0.f;
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_IDLE_1, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_IDLE_1, 0.f);
+	adventurer.GetBody()->SetAwake(false);
+}
+
+void AdventurerIdle1State::Exit(Adventurer& adventurer)
+{
+	adventurer.GetBody()->SetAwake(true);
 }
 
 void AdventurerIdle2State::Enter(Adventurer& adventurer)
 {
     m_timer                             = 0.f;
     adventurer.m_horizontalAcceleration = 0;
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_IDLE_2, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_IDLE_2, 0.f);
 }
 
 AdventurerState* AdventurerIdle2State::HandleInput(Adventurer& adventurer)
@@ -65,7 +76,7 @@ AdventurerState* AdventurerIdle2State::Tick(Adventurer&, float deltaTime)
 
 void AdventurerRunState::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_RUN, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_RUN, 0.f);
 }
 
 AdventurerState* AdventurerRunState::HandleInput(Adventurer& adventurer)
@@ -83,10 +94,6 @@ AdventurerState* AdventurerRunState::HandleInput(Adventurer& adventurer)
     {
         return &Adventurer::jumpState;
     }
-    else if (!adventurer.IsGrounded())
-    {
-        return &Adventurer::fallState;
-    }
     else if (inputDirection == 0)
     {
         return &Adventurer::idle1State;
@@ -99,12 +106,21 @@ AdventurerState* AdventurerRunState::HandleInput(Adventurer& adventurer)
     return nullptr;
 }
 
+AdventurerState* AdventurerRunState::Tick(Adventurer& adventurer, float)
+{
+    if (!adventurer.IsGrounded())
+    {
+        return &Adventurer::fallState;
+    }
+    return nullptr;
+}
+
 void AdventurerJumpState::Enter(Adventurer& adventurer)
 {
     b2Vec2 vel = adventurer.GetBody()->GetLinearVelocity();
     vel.y      = -Adventurer::JUMP_VEL;
     adventurer.GetBody()->SetLinearVelocity(vel);
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_JUMP, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_JUMP, 0.f);
     adventurer.SetUnGrounded();
     adventurer.m_jumpPressedRemember = 0.f;
     adventurer.m_groundedRemember    = 0.f;
@@ -130,13 +146,9 @@ AdventurerState* AdventurerJumpState::HandleInput(Adventurer& adventurer)
             adventurer.GetBody()->SetLinearVelocity(vel);
         }
     }
-    if (adventurer.IsGrounded())
+    if (Input::IsJustPressed(BUTTON_B) && adventurer.m_extraJumps > 0)
     {
-        return &Adventurer::idle1State;
-    }
-    else if (Input::IsJustPressed(BUTTON_B) && adventurer.m_extrasJumpCount > 0)
-    {
-        --adventurer.m_extrasJumpCount;
+        --adventurer.m_extraJumps;
         return &Adventurer::airJumpState;
     }
     else if (adventurer.GetBody()->GetLinearVelocity().y > 0.f)
@@ -155,9 +167,18 @@ AdventurerState* AdventurerJumpState::HandleInput(Adventurer& adventurer)
     return nullptr;
 }
 
+AdventurerState* AdventurerJumpState::Tick(Adventurer& adventurer, float)
+{
+    if (adventurer.IsGrounded())
+    {
+        return &Adventurer::idle1State;
+    }
+    return nullptr;
+}
+
 void AdventurerSomersaultState::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_SOMERSULT, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_SOMERSULT, 0.f);
     adventurer.m_ableToUseTechnique = false;
 }
 
@@ -210,7 +231,7 @@ void AdventurerSomersaultState::Exit(Adventurer& adventurer)
 
 void AdventurerFallState::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_FALL, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_FALL, 0.f);
 }
 
 AdventurerState* AdventurerFallState::HandleInput(Adventurer& adventurer)
@@ -240,9 +261,9 @@ AdventurerState* AdventurerFallState::HandleInput(Adventurer& adventurer)
             return &Adventurer::runState;
         }
     }
-    else if (Input::IsJustPressed(BUTTON_B) && adventurer.m_extrasJumpCount > 0)
+    else if (Input::IsJustPressed(BUTTON_B) && adventurer.m_extraJumps > 0)
     {
-        --adventurer.m_extrasJumpCount;
+        --adventurer.m_extraJumps;
         return &Adventurer::airJumpState;
     }
     else if (inputDirection != 0)
@@ -256,11 +277,19 @@ AdventurerState* AdventurerFallState::HandleInput(Adventurer& adventurer)
     }
     return nullptr;
 }
+AdventurerState* AdventurerFallState::Tick(Adventurer& adventurer, float)
+{
+    if (adventurer.IsGrounded())
+    {
+        return &Adventurer::idle1State;
+    }
+    return nullptr;
+}
 
 void AdventurerHurtState::Enter(Adventurer& adventurer)
 {
     adventurer.m_horizontalAcceleration = 0.f;
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_HURT, 0.f);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_HURT, 0.f);
     adventurer.m_ableToUseTechnique = false;
     adventurer.m_vulnerable         = false;
     adventurer.GetBody()->SetLinearVelocity(b2Vec2_zero);
@@ -284,7 +313,7 @@ void AdventurerHurtState::Exit(Adventurer& adventurer)
 
 void AdventurerDieState::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_DIE);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_DIE);
     adventurer.m_ableToUseTechnique     = false;
     adventurer.m_vulnerable             = false;
     adventurer.m_horizontalAcceleration = 0.f;
@@ -308,7 +337,7 @@ void AdventurerDieState::Exit(Adventurer& adventurer)
 
 void AdventurerCrouchState::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_CROUCH);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_CROUCH);
 }
 
 AdventurerState* AdventurerCrouchState::HandleInput(Adventurer& adventurer)
@@ -331,7 +360,7 @@ AdventurerState* AdventurerCrouchState::HandleInput(Adventurer& adventurer)
 
 void AdventurerAirJumpState::Enter(Adventurer& adventurer)
 {
-    adventurer.GetAnimator()->Play(Adventurer::ANIm_JUMP);
+    adventurer.GetAnimator()->Play(Adventurer::ANIM_JUMP);
     b2Vec2 vel = adventurer.GetBody()->GetLinearVelocity();
     vel.y      = -Adventurer::JUMP_VEL;
     adventurer.GetBody()->SetLinearVelocity(vel);

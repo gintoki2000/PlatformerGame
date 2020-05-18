@@ -22,14 +22,14 @@ Slime::Slime(Level* level) :
     auto texture   = level->GetTextureManager()->Get("asserts/spritesheets/slime.png");
 
 	m_spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
-    anims[ANIm_IDLE]   = new Animation(m_spriteSheet, 0, 4, 1.f / 4.f);
-    anims[ANIm_MOVE]   = new Animation(m_spriteSheet, 4, 4, 1.f / 4.f);
-    anims[ANIm_ATTACK] = new Animation(m_spriteSheet, 8, 5, 1.f / 6.f);
-    anims[ANIm_HURT]   = new Animation(m_spriteSheet, 13, 4, 1.f / 8.f);
-    anims[ANIm_DIE]    = new Animation(m_spriteSheet, 17, 4, 1.f / 8.f);
+    anims[ANIM_IDLE]   = new Animation(m_spriteSheet, 0, 4, 1.f / 4.f);
+    anims[ANIM_MOVE]   = new Animation(m_spriteSheet, 4, 4, 1.f / 4.f);
+    anims[ANIM_ATTACK] = new Animation(m_spriteSheet, 8, 5, 1.f / 6.f);
+    anims[ANIM_HURT]   = new Animation(m_spriteSheet, 13, 4, 1.f / 8.f);
+    anims[ANIM_DIE]    = new Animation(m_spriteSheet, 17, 4, 1.f / 8.f);
 
-    anims[ANIm_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIm_MOVE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_MOVE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_ANIMS);
     m_animator->SetOriginX(SPRITE_WIDTH / 2);
@@ -65,7 +65,7 @@ Slime::~Slime()
 
 void Slime::ResetMembers()
 {
-    m_animator->Play(ANIm_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
     SetPosition(0, 0);
     m_direction = DIRECTION_LEFT;
     Idle();
@@ -163,12 +163,12 @@ void Slime::GetHit(int damage)
         if (m_hitPoints == 0)
         {
             m_state = STATE_DIE;
-            m_animator->Play(ANIm_DIE, 0.f);
+            m_animator->Play(ANIM_DIE, 0.f);
         }
         else
         {
             m_state = STATE_HURT;
-            m_animator->Play(ANIm_HURT, 0.f);
+            m_animator->Play(ANIM_HURT, 0.f);
         }
     }
 }
@@ -210,38 +210,38 @@ void Slime::SetState(State newState, float initialTime)
 void Slime::Idle()
 {
     SetState(STATE_IDLE, 0.f);
-    m_animator->Play(ANIm_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
     StopHorizontalMovement();
 }
 
 void Slime::Wait()
 {
     SetState(STATE_WAIT, 0.f);
-    m_animator->Play(ANIm_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
     StopHorizontalMovement();
 }
 
 void Slime::Move()
 {
     SetState(STATE_MOVE, 0.f);
-    m_animator->Play(ANIm_MOVE, 0.f);
+    m_animator->Play(ANIM_MOVE, 0.f);
 }
 
 void Slime::Attack()
 {
     SetState(STATE_ATTACK, 0.f);
-    m_animator->Play(ANIm_ATTACK, 0.f);
+    m_animator->Play(ANIM_ATTACK, 0.f);
 }
 
 void Slime::Hurt()
 {
     SetState(STATE_HURT, 0.f);
-    m_animator->Play(ANIm_HURT, 0.f);
+    m_animator->Play(ANIM_HURT, 0.f);
 }
 
 void Slime::Die()
 {
     SetState(STATE_DIE, 0.f);
-    m_animator->Play(ANIm_DIE, 0.f);
+    m_animator->Play(ANIM_DIE, 0.f);
 }
 */

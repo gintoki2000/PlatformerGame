@@ -3,10 +3,10 @@
 
 void DoubleJump::Enable(Adventurer& adventurer)
 {
-    adventurer.m_totalExtrasJump = 1;
+    adventurer.m_totalExtraJumps = 1;
 }
 
 void DoubleJump::Disable(Adventurer& adventurer)
 {
-    adventurer.m_extrasJumpCount = 0;
+    adventurer.m_extraJumps = 0;
 }

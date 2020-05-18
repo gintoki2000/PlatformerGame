@@ -1,6 +1,6 @@
 #include "Monster.h"
-#include "Constances.h"
 #include "Adventurer.h"
+#include "Constances.h"
 #include "Utils.h"
 #include "WorldManager.h"
 #include "box2d/b2_fixture.h"
@@ -53,7 +53,7 @@ bool Monster::Init(const FloatRect& aabb)
     b2FixtureDef fdef;
     fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
     fdef.filter.maskBits =
-        CATEGORY_BIT_PLAYER | CATEGORY_BIT_BLOCK | CATEGORY_BIT_SPELL;
+        CATEGORY_BIT_ADVENTURER | CATEGORY_BIT_BLOCK | CATEGORY_BIT_PROJECTILE;
     fdef.restitution = 0;
     fdef.shape       = &box;
 
@@ -92,15 +92,23 @@ void Monster::OnBeginContact(const ContactInfo&) {}
 void Monster::OnEndContact(const ContactInfo&) {}
 void Monster::OnPreSolve(const ContactInfo& info, const b2Manifold&)
 {
-    if (IsDead())
-        return;
-    if (info.GetOtherIdentifier()->tag == TAG_PLAYER)
+    const Identifier* otherIDR = info.GetOtherIdentifier();
+    if (otherIDR != nullptr && otherIDR->tag == TAG_ADVENTURER)
     {
-        Adventurer* adventurer =
-            static_cast<Adventurer*>(info.GetOtherIdentifier()->object);
-        adventurer->TakeDamge(
-            m_damageWhenTouching,
-            RelativeDirection(adventurer->GetPositionX(), GetPositionX()));
+        if (!IsDead())
+        {
+            Adventurer* adventurer = static_cast<Adventurer*>(otherIDR->object);
+            Direction   direction =
+                RelativeDirection(adventurer->GetPositionX(), GetPositionX());
+            if (adventurer->TakeDamge(1, direction) && adventurer->IsGrounded())
+            {
+                b2Vec2 f;
+                f.x = -DirectionToSign(direction) * 20.f;
+                f.y = -5.f;
+                adventurer->GetBody()->ApplyLinearImpulseToCenter(f, true);
+            }
+        }
+        info.SetIsEnabled(false);
     }
 }
 void Monster::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

@@ -16,8 +16,8 @@ class TileLayer : public PositionalLayer
     int GetTileWidth() const { return m_tileWidth; }
     int GetTileHeight() const { return m_tileHeight; }
 
-    void           Update(float deltaTime) override;
-    void           Render() override;
+    void           Tick(float deltaTime) override;
+    void           Paint() override;
     TileLayerCell* GetCellAt(int x, int y);
     void           SetCellAt(int x, int y, TileLayerCell* cell);
 

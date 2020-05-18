@@ -3,7 +3,6 @@
 #include "FireExplosionParticle.h"
 #include "ParticleSystem.h"
 #include "Animation.h"
-
 #include "Camera.h"
 #include "Constances.h"
 #include "Game.h"
@@ -88,8 +87,8 @@ bool Fireball::Init(const Vec2& position, Direction direction, float speed)
     circle.m_radius = 8.f / Constances::PPM;
 
     b2FixtureDef fdef;
-    fdef.filter.categoryBits = CATEGORY_BIT_SPELL;
-    fdef.filter.maskBits     = CATEGORY_BIT_MONSTER | CATEGORY_BIT_PLAYER;
+    fdef.filter.categoryBits = CATEGORY_BIT_PROJECTILE;
+    fdef.filter.maskBits     = CATEGORY_BIT_MONSTER | CATEGORY_BIT_ADVENTURER;
     fdef.isSensor            = true;
     fdef.shape               = &circle;
     m_body->CreateFixture(&fdef);
@@ -125,7 +124,7 @@ void Fireball::Paint()
 
     const SDL_Rect& viewport = camera.GetViewport();
 
-    SDL_Renderer* renderer = Game::GetInstance()->GetRenderer();
+    SDL_Renderer* renderer = GAME->GetRenderer();
 
     SDL_Rect dstrect;
     dstrect.x = m_positionX - sprite.GetWidth() / 2 - viewport.x;
@@ -144,8 +143,6 @@ void Fireball::OnBeginContact(const ContactInfo& info)
         if (monster->TakeDamge(1, DIRECTION_NONE))
         {
             Remove();
-			Level* level = static_cast<Level*>(GetScene());
-			level->GetParticleSystem()->Create<FireExplosionParticle>(GetPosition());
         }
     }
 }

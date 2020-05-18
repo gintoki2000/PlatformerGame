@@ -10,14 +10,14 @@ Koblod::Koblod(Level* level) : Monster(level, MONSTER_TYPE_KOBLOD, 20)
 
     Animation* anims[NUM_ANIMS];
 
-    anims[ANIm_IDLE]   = new Animation(m_spriteSheet, 0, 8, 1.f / 8.f);
-    anims[ANIm_RUN]    = new Animation(m_spriteSheet, 8, 12, 1.f / 10.f);
-    anims[ANIm_ATTACK] = new Animation(m_spriteSheet, 20, 5, 1.f / 10.f);
-    anims[ANIm_HURT]   = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
-    anims[ANIm_DIE]    = new Animation(m_spriteSheet, 27, 8, 1.f / 8.f);
+    anims[ANIM_IDLE]   = new Animation(m_spriteSheet, 0, 8, 1.f / 8.f);
+    anims[ANIM_RUN]    = new Animation(m_spriteSheet, 8, 12, 1.f / 10.f);
+    anims[ANIM_ATTACK] = new Animation(m_spriteSheet, 20, 5, 1.f / 10.f);
+    anims[ANIM_HURT]   = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
+    anims[ANIM_DIE]    = new Animation(m_spriteSheet, 27, 8, 1.f / 8.f);
 
-    anims[ANIm_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIm_RUN]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_RUN]->SetPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_ANIMS);
     m_animator->SetOriginX(SPRITE_WIDTH / 2);
@@ -169,46 +169,46 @@ void Koblod::UpdateLogic(float deltaTime)
 void Koblod::Idle()
 {
     m_state = STATE_IDLE;
-    m_animator->Play(ANIm_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
     StopHorizontalMovement();
 }
 
 void Koblod::Run()
 {
     m_state = STATE_RUN;
-    m_animator->Play(ANIm_RUN, 0.f);
+    m_animator->Play(ANIM_RUN, 0.f);
 }
 
 void Koblod::Attack()
 {
     m_state = STATE_ATTACK;
-    m_animator->Play(ANIm_ATTACK, 0.f);
+    m_animator->Play(ANIM_ATTACK, 0.f);
 }
 
 void Koblod::Wait()
 {
     m_state = STATE_WAIT;
-    m_animator->Play(ANIm_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
 }
 
 void Koblod::Hurt()
 {
     m_state = STATE_HURT;
-    m_animator->Play(ANIm_HURT, 0.f);
+    m_animator->Play(ANIM_HURT, 0.f);
     StopHorizontalMovement();
 }
 
 void Koblod::Die()
 {
     m_state = STATE_DIE;
-    m_animator->Play(ANIm_DIE, 0.f);
+    m_animator->Play(ANIM_DIE, 0.f);
     StopHorizontalMovement();
 }
 
 void Koblod::WaitToAttack()
 {
     m_state = STATE_WAIT_TO_ATTACK;
-    m_animator->Play(ANIm_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
     StopHorizontalMovement();
 }
 
