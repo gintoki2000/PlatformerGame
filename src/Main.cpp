@@ -24,5 +24,6 @@ int main()
             CaptureFPS(initialTime, TICKS_PER_FRAME);
         }
     }
+	// Cong la thang dbrr
     return 0;
 }
