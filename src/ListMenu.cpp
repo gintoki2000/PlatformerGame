@@ -9,8 +9,8 @@
 #include "SpriteSheet.h"
 
 ListMenu::ListMenu(EquipmentMenu* equipmentMenu) :
-    m_equipmentMenu(equipmentMenu), m_items(nullptr), m_numItems(0),
-    m_selectedIndex(0), m_numItemsPerPage(4), m_numItemsPerColumn(2)
+    m_equipmentMenu(equipmentMenu), m_selectedIndex(0), m_numItemsPerPage(4),
+    m_numItemsPerColumn(2)
 {
 }
 
@@ -18,12 +18,11 @@ ListMenu::~ListMenu() { Clear(); }
 
 void ListMenu::Paint()
 {
-
-    if (m_items == nullptr)
+    if (GetNumItems() == 0)
         return;
     int page     = m_selectedIndex / m_numItemsPerPage;
     int beginIdx = page * m_numItemsPerPage;
-    int endIdx   = Math::Min(m_numItems - 1, beginIdx + m_numItemsPerPage - 1);
+    int endIdx   = Math::Min(GetNumItems() - 1, beginIdx + m_numItemsPerPage - 1);
 
     int j    = 0;
     int dstx = 100;
@@ -55,14 +54,12 @@ void ListMenu::Paint()
     }
 }
 
-void ListMenu::SetItems(IListItem** items, int numItems)
+void ListMenu::SetItems(const std::vector<IListItem*>& items)
 {
-    Clear();
-
-    m_items    = (IListItem**)SDL_malloc(numItems * sizeof(IListItem));
-    m_numItems = numItems;
-    SDL_memcpy(m_items, items, numItems * sizeof(IListItem));
+    m_items = items;
 }
+
+int ListMenu::GetNumItems() const { return m_items.size(); }
 
 void ListMenu::HandleInput()
 {
@@ -91,14 +88,13 @@ void ListMenu::HandleInput()
     {
         m_selectedIndex = 0;
     }
-    if (m_selectedIndex > m_numItems - 1)
+    if (m_selectedIndex > GetNumItems() - 1)
     {
-        m_selectedIndex = m_numItems - 1;
+        m_selectedIndex = GetNumItems() - 1;
     }
 }
 
 void ListMenu::Clear()
 {
-    delete[] m_items;
-    m_items = nullptr;
+	
 }

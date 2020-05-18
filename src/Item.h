@@ -1,6 +1,7 @@
 #ifndef ITEM_H
 #define ITEM_H
-class Item
+#include "ListItem.h"
+class Item : public IListItem
 {
 };
 #endif //ITEM_H

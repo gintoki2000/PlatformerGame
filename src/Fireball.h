@@ -3,11 +3,11 @@
 #include "Animation.h"
 #include "CollisionHandler.h"
 #include "GameObject.h"
-#include "Spell.h"
+#include "Projectile.h"
 #include "Utils.h"
 #include "Vec.h"
 #include "box2d/box2d.h"
-class Fireball : public Spell, public ICollisionHandler
+class Fireball : public Projectile, public ICollisionHandler
 {
   public:
     static Fireball* Create(const Vec2& position, Direction direction,

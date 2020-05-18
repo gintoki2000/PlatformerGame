@@ -2,6 +2,7 @@
 #include "Constances.h"
 #include "Game.h"
 #include "Input.h"
+#include "Item.h"
 #include "Level.h"
 #include "ListItem.h"
 #include "ListMenu.h"
@@ -30,7 +31,7 @@ void EquipmentMenu::Paint() { m_listMenu->Paint(); }
 
 void EquipmentMenu::HandleInput() { m_listMenu->HandleInput(); }
 
-void EquipmentMenu::OnBecomeVisible() { UpdateList(); }
+void EquipmentMenu::OnBecomeVisible() { UpdateList(STATE_SUB_TECNIQUE); }
 
 void EquipmentMenu::OnItemSelected(int index)
 {
@@ -41,13 +42,30 @@ void EquipmentMenu::OnItemSelected(int index)
     level->HideEquipmentMenu();
 }
 
-void EquipmentMenu::UpdateList()
+void EquipmentMenu::UpdateList(State state)
 {
-    int        numItems = m_adventurer->GetInventory()->GetNumTechniques();
-    IListItem* items[numItems];
-    for (int i = 0; i < numItems; ++i)
+    std::vector<IListItem*> items;
+    switch (state)
     {
-        items[i] = m_adventurer->GetInventory()->GetTechnique(i);
+    case STATE_SUB_TECNIQUE:
+    {
+        int numItems = m_adventurer->GetInventory()->GetNumTechniques();
+        items.reserve (numItems);
+        for (int i = 0; i < numItems; ++i)
+        {
+            items[i] = m_adventurer->GetInventory()->GetTechnique(i);
+        }
+        m_listMenu->SetItems(items);
     }
-    m_listMenu->SetItems(items, numItems);
+    case STATE_ITEM:
+    {
+        int numItems = m_adventurer->GetInventory()->GetNumItems();
+        items.reserve(numItems);
+        for (int i = 0; i < numItems; ++i)
+        {
+            items[i] = m_adventurer->GetInventory()->GetItem(i);
+        }
+        m_listMenu->SetItems(items);
+    }
+    }
 }

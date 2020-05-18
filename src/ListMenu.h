@@ -1,6 +1,7 @@
 #ifndef LIST_MENU_H
 #define LIST_MENU_H
 #include "ListItem.h"
+#include <vector>
 class EquipmentMenu;
 
 class ListMenu
@@ -11,16 +12,16 @@ class ListMenu
 
     void Paint();
     void HandleInput();
-    void SetItems(IListItem** items, int numItems);
+    void SetItems(const std::vector<IListItem*>& items);
+    int  GetNumItems() const;
 
   private:
     void Clear();
 
-    EquipmentMenu* m_equipmentMenu;
-    IListItem**    m_items;
-    int            m_numItems;
-    int            m_selectedIndex;
-    int            m_numItemsPerPage;
-    int            m_numItemsPerColumn;
+    EquipmentMenu*          m_equipmentMenu;
+    std::vector<IListItem*> m_items;
+    int                     m_selectedIndex;
+    int                     m_numItemsPerPage;
+    int                     m_numItemsPerColumn;
 };
 #endif // LIST_MENU_H

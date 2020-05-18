@@ -2,12 +2,12 @@
 #define GRENADE_H
 #include "Animation.h"
 #include "CollisionHandler.h"
-#include "Spell.h"
+#include "Projectile.h"
 #include "SpriteSheet.h"
 #include "Utils.h"
 #include "Vec.h"
 #include "box2d/box2d.h"
-class Grenade : public Spell, public ICollisionHandler
+class Grenade : public Projectile, public ICollisionHandler
 {
   public:
     static Grenade* Create(const Vec2& pos, Direction dir);

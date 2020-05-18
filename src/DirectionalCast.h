@@ -5,11 +5,11 @@
 #include "Input.h"
 #include "Level.h"
 #include "ObjectLayer.h"
-#include "Spell.h"
+#include "Projectile.h"
 #include "Technique.h"
 #include "Utils.h"
 #include "Vec.h"
-template <class TSpell> class DirectionalCast : public Technique
+template <class TProjectile> class DirectionalCast : public Technique
 {
   public:
     DirectionalCast(int mpCost, const Sprite& icon) : Technique(mpCost, icon) {}
@@ -36,7 +36,7 @@ template <class TSpell> class DirectionalCast : public Technique
         {
             if (adventurer.GetAnimator()->IsCurrentAnimationFinshed())
             {
-                TSpell* spell = TSpell::Create(adventurer.GetPosition(),
+                TProjectile* spell = TProjectile::Create(adventurer.GetPosition(),
                                                adventurer.GetDirection());
                 SDL_assert(spell != nullptr);
                 Level* level = static_cast<Level*>(adventurer.GetScene());

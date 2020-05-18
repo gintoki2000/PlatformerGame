@@ -18,8 +18,6 @@ class EquipmentMenu : public Layer
     void OnItemSelected(int index);
 
   private:
-    void UpdateList();
-
     enum State
     {
         STATE_MAIN,
@@ -27,6 +25,9 @@ class EquipmentMenu : public Layer
         STATE_MAIN_TECNIQUE,
         STATE_ITEM
     };
+
+    void UpdateList(State state);
+
 
     ListMenu*   m_listMenu;
     Adventurer* m_adventurer;

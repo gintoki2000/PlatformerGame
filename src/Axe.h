@@ -2,10 +2,10 @@
 #define AXE_H
 #include "CollisionHandler.h"
 #include "SDL.h"
-#include "Spell.h"
+#include "Projectile.h"
 #include "SpriteSheet.h"
 #include "Utils.h"
-class Axe : public Spell, public ICollisionHandler
+class Axe : public Projectile, public ICollisionHandler
 {
   public:
     static Axe* Create(const Vec2& adventurerPos, Direction adventurerDir);
