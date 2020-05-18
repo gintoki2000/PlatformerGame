@@ -9,12 +9,12 @@ class ImageLayer;
 class Background : public ImageLayer
 {
   public:
-    static Background* create(const tmx::ImageLayer& data);
+    static Background* Create(const tmx::ImageLayer& data);
 
 	~Background();
 
-    bool init(const tmx::ImageLayer& imageLayerData);
-    void update(float deltaTime) override;
+    bool Init(const tmx::ImageLayer& imageLayerData);
+    void Tick(float deltaTime) override;
 
   private:
     Background(); 

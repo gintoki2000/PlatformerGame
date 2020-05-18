@@ -10,27 +10,27 @@ class Layer
 
     virtual ~Layer() = 0;
 
-    virtual void update(float deltaTime) = 0;
-    virtual void render()                = 0;
-	virtual void start();
+    virtual void Tick(float deltaTime) = 0;
+    virtual void Paint()                = 0;
+	virtual void Start();
 
-    bool isVisible() const { return m_isVisible; }
-    void setIsVisible(bool isVisible);
-    void show();
-    void hide();
-    bool isActive() const { return m_isActive; }
-    void setIsActive(bool isActive);
-    void activate() { setIsActive(true); }
-    void deactivate() { setIsActive(false); }
+    bool IsVisible() const { return m_isVisible; }
+    void SetIsVisible(bool isVisible);
+    void Show();
+    void Hide();
+    bool IsActive() const { return m_isActive; }
+    void SetIsActive(bool isActive);
+    void Activate() { SetIsActive(true); }
+    void Deactivate() { SetIsActive(false); }
 
-    Scene*             getScene() const;
-    void               setScene(Scene* manager);
-    const std::string& getName() const;
-    void               setName(const std::string& name);
+    Scene*             GetScene() const;
+    void               SetScene(Scene* manager);
+    const std::string& GetName() const;
+    void               SetName(const std::string& name);
 
   protected:
-    virtual void onBecomeVisible();
-    virtual void onBecomeInvisible();
+    virtual void OnBecomeVisible();
+    virtual void OnBecomeInvisible();
 
   private:
     bool        m_isVisible;

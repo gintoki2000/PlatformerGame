@@ -5,7 +5,7 @@ Koblod::Koblod(Level* level) : Monster(level, MONSTER_TYPE_KOBLOD, 20)
     m_width  = WIDTH;
     m_height = HEIGHT;
     SDL_Texture* texture =
-        level->getTextureManager()->get("asserts/spritesheets/kobold.png");
+        level->GetTextureManager()->Get("asserts/spritesheets/kobold.png");
     m_spriteSheet = new SpriteSheet(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
 
     Animation* anims[NUM_ANIMS];
@@ -16,19 +16,19 @@ Koblod::Koblod(Level* level) : Monster(level, MONSTER_TYPE_KOBLOD, 20)
     anims[ANIM_HURT]   = new Animation(m_spriteSheet, 25, 2, 1.f / 8.f);
     anims[ANIM_DIE]    = new Animation(m_spriteSheet, 27, 8, 1.f / 8.f);
 
-    anims[ANIM_IDLE]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_RUN]->setPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_RUN]->SetPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_ANIMS);
-    m_animator->setOriginX(SPRITE_WIDTH / 2);
-    m_animator->setOriginY(SPRITE_WIDTH / 2);
+    m_animator->SetOriginX(SPRITE_WIDTH / 2);
+    m_animator->SetOriginY(SPRITE_WIDTH / 2);
 
     b2BodyDef bdef;
     bdef.fixedRotation = true;
     bdef.userData      = this;
     bdef.type          = b2_dynamicBody;
 
-    m_body = m_level->getWorld()->CreateBody(&bdef);
+    m_body = m_level->GetWorld()->CreateBody(&bdef);
 
     b2PolygonShape box;
     box.SetAsBox(WIDTH / 2.f / Constances::PPM, HEIGHT / 2.f / Constances::PPM);
@@ -39,7 +39,7 @@ Koblod::Koblod(Level* level) : Monster(level, MONSTER_TYPE_KOBLOD, 20)
         CATEGORY_BIT_BLOCK | CATEGORY_BIT_PLAYER | CATEGORY_BIT_SPELL;
     fdef.shape = &box;
     m_body->CreateFixture(&fdef);
-    resetMembers();
+    ResetMembers();
 }
 
 Koblod::~Koblod()
@@ -48,11 +48,11 @@ Koblod::~Koblod()
     m_spriteSheet = nullptr;
 }
 
-void Koblod::resetMembers()
+void Koblod::ResetMembers()
 {
     m_direction = DIRECTION_RIGHT;
-    idle();
-    setPosition(0.f, 0.f);
+    Idle();
+    SetPosition(0.f, 0.f);
 }
 
 class KoblodAttackCallback : public b2QueryCallback
@@ -61,50 +61,50 @@ class KoblodAttackCallback : public b2QueryCallback
     {
         auto userData = fixture->GetBody()->GetUserData();
         if (userData != nullptr &&
-            ((GameObject*)userData)->getGameObjectType() ==
+            ((GameObject*)userData)->GetGameObjectType() ==
                 GAME_OBJECT_TYPE_PLAYER)
         {
             auto adventurer = (Adventurer*)userData;
-            adventurer->getHit(2);
+            adventurer->GetHit(2);
         }
         return true;
     }
 };
-void Koblod::updateLogic(float deltaTime)
+void Koblod::UpdateLogic(float deltaTime)
 {
     m_timer += deltaTime;
-    m_direction = (Direction)getFacingAdventurerDirection();
+    m_direction = (Direction)GetFacingAdventurerDirection();
     switch (m_state)
     {
     case STATE_IDLE:
     {
-        if (getDistanceToAdventurer() <= ACTIVATE_RUN_DIS)
+        if (GetDistanceToAdventurer() <= ACTIVATE_RUN_DIS)
         {
-            run();
+            Run();
         }
     }
     break;
     case STATE_RUN:
     {
-        auto distanceToAdventurer = getDistanceToAdventurer();
+        auto distanceToAdventurer = GetDistanceToAdventurer();
         if (distanceToAdventurer > ACTIVATE_RUN_DIS)
         {
-            idle();
+            Idle();
         }
         else if (distanceToAdventurer <= ACTIVATE_ATK_DIS)
         {
-            waitToAttack();
+            WaitToAttack();
         }
         else
         {
             int sign = m_direction == DIRECTION_LEFT ? -1 : 1;
-            setHorizontalSpeed(sign * 3.f);
+            SetHorizontalSpeed(sign * 3.f);
         }
     }
     break;
     case STATE_ATTACK:
     {
-        if (m_animator->isCurrentAnimationFinshed())
+        if (m_animator->IsCurrentAnimationFinshed())
         {
             b2AABB               area;
             KoblodAttackCallback callback;
@@ -126,14 +126,14 @@ void Koblod::updateLogic(float deltaTime)
                 area.upperBound.y =
                     m_body->GetPosition().y + 4.f / Constances::PPM;
             }
-            m_level->getWorld()->QueryAABB(&callback, area);
-            wait();
+            m_level->GetWorld()->QueryAABB(&callback, area);
+            Wait();
         }
     }
     break;
     case STATE_WAIT:
     {
-        if (m_animator->getElapsedTime() > 2.f)
+        if (m_animator->GetElapsedTime() > 2.f)
         {
             m_state = STATE_IDLE;
         }
@@ -143,87 +143,87 @@ void Koblod::updateLogic(float deltaTime)
     {
         if (m_timer > 3.f)
         {
-            attack();
+            Attack();
         }
     }
     break;
     case STATE_HURT:
     {
-        if (m_animator->isCurrentAnimationFinshed())
+        if (m_animator->IsCurrentAnimationFinshed())
         {
-            wait();
+            Wait();
         }
     }
     break;
     case STATE_DIE:
     {
-        if (m_animator->isCurrentAnimationFinshed())
+        if (m_animator->IsCurrentAnimationFinshed())
         {
-            m_level->removeMonster(this);
+            m_level->RemoveMonster(this);
         }
     }
     break;
     }
 }
 
-void Koblod::idle()
+void Koblod::Idle()
 {
     m_state = STATE_IDLE;
-    m_animator->play(ANIM_IDLE, 0.f);
-    stopHorizontalMovement();
+    m_animator->Play(ANIM_IDLE, 0.f);
+    StopHorizontalMovement();
 }
 
-void Koblod::run()
+void Koblod::Run()
 {
     m_state = STATE_RUN;
-    m_animator->play(ANIM_RUN, 0.f);
+    m_animator->Play(ANIM_RUN, 0.f);
 }
 
-void Koblod::attack()
+void Koblod::Attack()
 {
     m_state = STATE_ATTACK;
-    m_animator->play(ANIM_ATTACK, 0.f);
+    m_animator->Play(ANIM_ATTACK, 0.f);
 }
 
-void Koblod::wait()
+void Koblod::Wait()
 {
     m_state = STATE_WAIT;
-    m_animator->play(ANIM_IDLE, 0.f);
+    m_animator->Play(ANIM_IDLE, 0.f);
 }
 
-void Koblod::hurt()
+void Koblod::Hurt()
 {
     m_state = STATE_HURT;
-    m_animator->play(ANIM_HURT, 0.f);
-    stopHorizontalMovement();
+    m_animator->Play(ANIM_HURT, 0.f);
+    StopHorizontalMovement();
 }
 
-void Koblod::die()
+void Koblod::Die()
 {
     m_state = STATE_DIE;
-    m_animator->play(ANIM_DIE, 0.f);
-    stopHorizontalMovement();
+    m_animator->Play(ANIM_DIE, 0.f);
+    StopHorizontalMovement();
 }
 
-void Koblod::waitToAttack()
+void Koblod::WaitToAttack()
 {
     m_state = STATE_WAIT_TO_ATTACK;
-    m_animator->play(ANIM_IDLE, 0.f);
-    stopHorizontalMovement();
+    m_animator->Play(ANIM_IDLE, 0.f);
+    StopHorizontalMovement();
 }
 
-void Koblod::getHit(int damage)
+void Koblod::GetHit(int damage)
 {
     if (m_state != STATE_DIE && m_state != STATE_HURT)
     {
-        Monster::getHit(damage);
+        Monster::GetHit(damage);
         if (m_hitPoints == 0)
         {
-            die();
+            Die();
         }
         else
         {
-            hurt();
+            Hurt();
         }
     }
 }

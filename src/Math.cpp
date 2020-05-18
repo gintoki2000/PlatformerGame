@@ -1,12 +1,12 @@
 #include "Math.h"
 #include <cstdlib>
 
-float Math::lerp(float current, float target, float step)
+float Math::Lerp(float current, float target, float step)
 {
     return (target - current) * step;
 }
 
-float Math::sign(float v)
+float Math::Sign(float v)
 {
     if (v == 0.f)
         return 0.f;
@@ -16,7 +16,7 @@ float Math::sign(float v)
         return 1.f;
 }
 
-int Math::rand(int a, int b)
+int Math::Rand(int a, int b)
 {
 	return std::rand() % (b - a) + a;
 }

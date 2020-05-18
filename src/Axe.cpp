@@ -16,7 +16,7 @@
 #include "WorldManager.h"
 #include "box2d/b2_circle_shape.h"
 
-Axe::Axe() : m_body(nullptr), m_identifier(TAG_SPELL, this) {}
+Axe::Axe() : m_body(nullptr), m_identifier(TAG_PROJECTILE, this) {}
 
 Axe::~Axe()
 {
@@ -28,10 +28,10 @@ Axe::~Axe()
     }
 }
 
-Axe* Axe::create(const Vec2& pos, Direction adventurerDir)
+Axe* Axe::Create(const Vec2& pos, Direction adventurerDir)
 {
     Axe* ret = new Axe;
-    if (ret->init(pos, adventurerDir))
+    if (ret->Init(pos, adventurerDir))
     {
         return ret;
     }
@@ -39,7 +39,7 @@ Axe* Axe::create(const Vec2& pos, Direction adventurerDir)
     return nullptr;
 }
 
-void Axe::tick(float)
+void Axe::Tick(float)
 {
     ++m_frameCounter;
     m_positionX = m_body->GetPosition().x * Constances::PPM;
@@ -61,22 +61,22 @@ void Axe::tick(float)
     boundingBox.y            = m_positionY - 16;
     boundingBox.w            = 32;
     boundingBox.h            = 32;
-    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
+    const SDL_Rect& viewport = GetScene()->GetCamera().GetViewport();
     if (!SDL_HasIntersection(&boundingBox, &viewport))
     {
-        remove();
+        Remove();
     }
 }
 
-void Axe::paint()
+void Axe::Paint()
 {
 
-    SDL_Renderer*   renderer = GAME->renderer();
-    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
+    SDL_Renderer*   renderer = GAME->GetRenderer();
+    const SDL_Rect& viewport = GetScene()->GetCamera().GetViewport();
 
     SDL_Rect dstrect;
-    dstrect.w = m_sprite.getWidth();
-    dstrect.h = m_sprite.getHeight();
+    dstrect.w = m_sprite.GetWidth();
+    dstrect.h = m_sprite.GetHeight();
 
     Uint8 d = 255 / (NUM_SHADOWS + 1);
     Uint8 a = d;
@@ -85,21 +85,21 @@ void Axe::paint()
         SDL_SetTextureAlphaMod(m_sprite.texture, a);
         dstrect.x = m_shadows[i].x - 16 - viewport.x;
         dstrect.y = m_shadows[i].y - 16 - viewport.y;
-        m_sprite.draw(renderer, &dstrect, m_shadows[i].r, nullptr,
+        m_sprite.Draw(renderer, &dstrect, m_shadows[i].r, nullptr,
                       SDL_FLIP_NONE);
         a += d;
     }
     dstrect.x = m_positionX - 16 - viewport.x;
     dstrect.y = m_positionY - 16 - viewport.y;
     SDL_SetTextureAlphaMod(m_sprite.texture, 255);
-    m_sprite.draw(renderer, &dstrect, m_rotation, nullptr, SDL_FLIP_NONE);
+    m_sprite.Draw(renderer, &dstrect, m_rotation, nullptr, SDL_FLIP_NONE);
 }
 
-void Axe::cleanup() { delete this; }
+void Axe::Cleanup() { delete this; }
 
-bool Axe::init(const Vec2& pos, Direction dir)
+bool Axe::Init(const Vec2& pos, Direction dir)
 {
-    SDL_Texture* texture = TextureManager::get(TEX_THROWING_AXE);
+    SDL_Texture* texture = TextureManager::Get(TEX_THROWING_AXE);
     if (texture == nullptr)
     {
         return false;
@@ -113,20 +113,20 @@ bool Axe::init(const Vec2& pos, Direction dir)
     bdef.position.x = pos.x / Constances::PPM;
     bdef.position.y = pos.y / Constances::PPM;
 
-    m_body = WorldManager::getWorld()->CreateBody(&bdef);
+    m_body = WorldManager::GetWorld()->CreateBody(&bdef);
 
     b2CircleShape circle;
     circle.m_radius = 16.f / Constances::PPM;
 
     b2FixtureDef fdef;
     fdef.shape               = &circle;
-    fdef.filter.categoryBits = CATEGORY_BIT_SPELL;
+    fdef.filter.categoryBits = CATEGORY_BIT_PROJECTILE;
     fdef.filter.maskBits     = CATEGORY_BIT_MONSTER;
     fdef.isSensor            = false;
 
     m_body->CreateFixture(&fdef);
 
-    int sign = directionToSign(dir);
+    int sign = DirectionToSign(dir);
     m_body->SetAngularVelocity(sign * 2.f * 3.141592f);
     m_body->SetAngularDamping(0.f);
 
@@ -146,20 +146,20 @@ bool Axe::init(const Vec2& pos, Direction dir)
     return true;
 }
 
-void Axe::onBeginContact(const ContactInfo&) {}
+void Axe::OnBeginContact(const ContactInfo&) {}
 
-void Axe::onEndContact(const ContactInfo&) {}
-void Axe::onPreSolve(const ContactInfo& info, const b2Manifold&)
+void Axe::OnEndContact(const ContactInfo&) {}
+void Axe::OnPreSolve(const ContactInfo& info, const b2Manifold&)
 {
-    const Identifier* idr = info.getOtherIdentifier();
+    const Identifier* idr = info.GetOtherIdentifier();
     if (idr != nullptr && idr->tag == TAG_MONSTER)
     {
         Monster* monster = static_cast<Monster*>(idr->object);
-        if (monster->takeDamge(5, DIRECTION_NONE))
+        if (monster->TakeDamge(5, DIRECTION_NONE))
         {
-			Audio::play(SOUND_STAB);
+			Audio::Play(SOUND_STAB);
         }
     }
-    info.setIsEnabled(false);
+    info.SetIsEnabled(false);
 }
-void Axe::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
+void Axe::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

@@ -13,10 +13,10 @@ Background::Background() :
 {
 }
 
-Background* Background::create(const tmx::ImageLayer& data)
+Background* Background::Create(const tmx::ImageLayer& data)
 {
     Background* ret = new Background;
-    if (ret->init(data))
+    if (ret->Init(data))
     {
         return ret;
     }
@@ -26,14 +26,14 @@ Background* Background::create(const tmx::ImageLayer& data)
 
 Background::~Background() { SDL_DestroyTexture(m_texture); }
 
-bool Background::init(const tmx::ImageLayer& imageLayerData)
+bool Background::Init(const tmx::ImageLayer& imageLayerData)
 {
-    setPositionX(imageLayerData.getOffset().x);
-    setPositionY(imageLayerData.getOffset().y);
-    setIsVisible(imageLayerData.getVisible());
+    SetPositionX(imageLayerData.getOffset().x);
+    SetPositionY(imageLayerData.getOffset().y);
+    SetIsVisible(imageLayerData.getVisible());
 
     const char*  path      = imageLayerData.getImagePath().c_str();
-    SDL_Texture* m_texture = IMG_LoadTexture(GAME->renderer(), path);
+    SDL_Texture* m_texture = IMG_LoadTexture(GAME->GetRenderer(), path);
 
     if (m_texture == nullptr)
     {
@@ -42,9 +42,9 @@ bool Background::init(const tmx::ImageLayer& imageLayerData)
         return false;
     }
 
-    setImage(m_texture);
+    SetImage(m_texture);
 
-    m_initialPositionX = getPositionX();
+    m_initialPositionX = GetPositionX();
 
     for (const auto& prop : imageLayerData.getProperties())
     {
@@ -55,8 +55,8 @@ bool Background::init(const tmx::ImageLayer& imageLayerData)
     }
     return true;
 }
-void Background::update(float)
+void Background::Tick(float)
 {
-    float cameraPositionX = getScene()->getCamera().getViewport().left();
-    setPositionX(m_initialPositionX + cameraPositionX * m_parallax);
+    float cameraPositionX = GetScene()->GetCamera().GetViewport().Left();
+    SetPositionX(m_initialPositionX + cameraPositionX * m_parallax);
 }

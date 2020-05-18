@@ -22,18 +22,20 @@ enum Direction
 
 enum CateroryBit
 {
-    CATEGORY_BIT_PLAYER  = 1 << 0,
-    CATEGORY_BIT_MONSTER = 1 << 1,
-    CATEGORY_BIT_BLOCK   = 1 << 2,
-    CATEGORY_BIT_SPELL   = 1 << 3
+    CATEGORY_BIT_ADVENTURER   = 1 << 0,
+    CATEGORY_BIT_MONSTER      = 1 << 1,
+    CATEGORY_BIT_BLOCK        = 1 << 2,
+    CATEGORY_BIT_PROJECTILE   = 1 << 3,
+    CATEGORY_BIT_OTHER_OBJECT = 1 << 4
 };
 enum Tag
 {
     TAG_UNDEFIED,
     TAG_BLOCK,
-    TAG_PLAYER,
+    TAG_ADVENTURER,
     TAG_MONSTER,
-    TAG_SPELL
+    TAG_OTHER_OBJECT,
+    TAG_PROJECTILE
 };
 
 enum AttackType
@@ -55,11 +57,11 @@ struct Identifier
     ICollisionHandler* object;
 };
 
-bool      boxCast(const FloatRect& box, uint16 maskBits);
-void      boxQuery(const FloatRect& box, uint16 maskBits, b2Fixture* fixtures[],
+bool      BoxCast(const FloatRect& box, uint16 maskBits);
+void      BoxQuery(const FloatRect& box, uint16 maskBits, b2Fixture* fixtures[],
                    int& n, const int max);
-int       directionToSign(Direction direction);
-float     distance(const Vec2& a, const Vec2& b);
-Direction relativeDirection(float x1, float x2);
-int       randomRange(int a, int b);
+int       DirectionToSign(Direction direction);
+float     Distance(const Vec2& a, const Vec2& b);
+Direction RelativeDirection(float x1, float x2);
+int       RandomRange(int a, int b);
 #endif // UTILS_H

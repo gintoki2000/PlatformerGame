@@ -21,12 +21,12 @@ class AnimatedParticle : public Particle
     AnimatedParticle();
     ~AnimatedParticle();
 
-    void init(const Vec2& position);
+    void Init(const Vec2& position);
 
     // GameObject interface
   public:
-    void tick(float deltaTime) override;
-    void paint() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
 
   public:
     AnimatedParticleModel* m_model;
@@ -41,8 +41,8 @@ class AnimatedParticlePool : public BasePool<TObject>
   public:
     AnimatedParticlePool(int numObjects) : BasePool<TObject>(numObjects)
     {
-        SDL_Texture* texture = TextureManager::get(TObject::TEXTURE_ID);
-        m_model.spriteSheet.init(texture, TObject::SPRITE_WIDTH,
+        SDL_Texture* texture = TextureManager::Get(TObject::TEXTURE_ID);
+        m_model.spriteSheet.Init(texture, TObject::SPRITE_WIDTH,
                                  TObject::SPRITE_HEIGHT);
         m_model.animation =
             new Animation(&m_model.spriteSheet, TObject::FRAME_DURATION);

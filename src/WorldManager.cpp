@@ -5,9 +5,9 @@
 
 b2World* WorldManager::world = nullptr;
 
-b2World* WorldManager::getWorld() { return world; }
+b2World* WorldManager::GetWorld() { return world; }
 
-void WorldManager::clearWorld()
+void WorldManager::ClearWorld()
 {
     if (world != nullptr)
     {
@@ -17,4 +17,4 @@ void WorldManager::clearWorld()
     world = new b2World(Constances::GRAVITY);
 }
 
-void WorldManager::terminate() { DELETE_NULL(world); }
+void WorldManager::Terminate() { DELETE_NULL(world); }

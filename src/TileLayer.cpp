@@ -23,11 +23,11 @@ TileLayer::~TileLayer()
     }
 }
 
-TileLayer* TileLayer::create(int width, int height, int tileWidth,
+TileLayer* TileLayer::Create(int width, int height, int tileWidth,
                              int tileHeight)
 {
     TileLayer* ret = new TileLayer;
-    if (ret->init(width, height, tileWidth, tileHeight))
+    if (ret->Init(width, height, tileWidth, tileHeight))
     {
         return ret;
     }
@@ -35,7 +35,7 @@ TileLayer* TileLayer::create(int width, int height, int tileWidth,
     return nullptr;
 }
 
-bool TileLayer::init(int width, int height, int tileWidth, int tileHeight)
+bool TileLayer::Init(int width, int height, int tileWidth, int tileHeight)
 {
     m_width      = width;
     m_height     = height;
@@ -50,25 +50,25 @@ bool TileLayer::init(int width, int height, int tileWidth, int tileHeight)
 	return true;
 }
 
-void TileLayer::update(float) {}
+void TileLayer::Tick(float) {}
 
-void TileLayer::render()
+void TileLayer::Paint()
 {
-    const Rect&   viewport = getScene()->getCamera().getViewport();
-    SDL_Renderer* renderer = GAME->renderer();
-    int           startX   = viewport.left() / m_tileWidth - 1;
-    int           startY   = viewport.top() / m_tileHeight - 1;
-    int           endX     = viewport.right() / m_tileWidth + 1;
-    int           endY     = viewport.bottom() / m_tileHeight + 1;
+    const Rect&   viewport = GetScene()->GetCamera().GetViewport();
+    SDL_Renderer* renderer = GAME->GetRenderer();
+    int           startX   = viewport.Left() / m_tileWidth - 1;
+    int           startY   = viewport.Top() / m_tileHeight - 1;
+    int           endX     = viewport.Right() / m_tileWidth + 1;
+    int           endY     = viewport.Bottom() / m_tileHeight + 1;
 
-    startX = Math::max(0, startX);
-    startY = Math::max(0, startY);
-    endX   = Math::min(m_width - 1, endX);
-    endY   = Math::min(m_height - 1, endY);
+    startX = Math::Max(0, startX);
+    startY = Math::Max(0, startY);
+    endX   = Math::Min(m_width - 1, endX);
+    endY   = Math::Min(m_height - 1, endY);
 
     Rect dstrect;
-    dstrect.x = startX * m_tileWidth + getPositionX();
-    dstrect.y = startY * m_tileHeight + getPositionY();
+    dstrect.x = startX * m_tileWidth + GetPositionX();
+    dstrect.y = startY * m_tileHeight + GetPositionY();
     dstrect.w = m_tileWidth;
     dstrect.h = m_tileHeight;
     for (int y = startY; y <= endY; ++y)
@@ -80,20 +80,20 @@ void TileLayer::render()
             {
                 continue;
             }
-            TileLayerTile* tile = cell->getTile();
+            TileLayerTile* tile = cell->GetTile();
             if (tile == nullptr)
             {
                 continue;
             }
-            dstrect.x = x * m_tileWidth + getPositionX() - viewport.x;
-            dstrect.y = y * m_tileHeight + getPositionY() - viewport.y;
-            const TextureRegion& textureRegion = tile->getTextureRegion();
-            textureRegion.draw(renderer, &dstrect);
+            dstrect.x = x * m_tileWidth + GetPositionX() - viewport.x;
+            dstrect.y = y * m_tileHeight + GetPositionY() - viewport.y;
+            const TextureRegion& textureRegion = tile->GetTextureRegion();
+            textureRegion.Draw(renderer, &dstrect);
         }
     }
 }
 
-TileLayerCell* TileLayer::getCellAt(int x, int y)
+TileLayerCell* TileLayer::GetCellAt(int x, int y)
 {
     if (x < 0 || x > m_width)
         return nullptr;
@@ -102,7 +102,7 @@ TileLayerCell* TileLayer::getCellAt(int x, int y)
     return m_cells[x + y * m_width];
 }
 
-void TileLayer::setCellAt(int x, int y, TileLayerCell* cell)
+void TileLayer::SetCellAt(int x, int y, TileLayerCell* cell)
 {
     if (x < 0 || x > m_width)
         return;

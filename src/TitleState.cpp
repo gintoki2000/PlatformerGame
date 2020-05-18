@@ -29,10 +29,10 @@ TitleState::~TitleState()
     }
 }
 
-TitleState* TitleState::create()
+TitleState* TitleState::Create()
 {
     TitleState* ret = new TitleState;
-    if (ret->init())
+    if (ret->Init())
     {
         return ret;
     }
@@ -40,13 +40,13 @@ TitleState* TitleState::create()
     return nullptr;
 }
 
-bool TitleState::init()
+bool TitleState::Init()
 {
     const char*     text[NUM_OPTIONS] = {"Game Start"};
     const char*     ffile             = "asserts/fonts/BitPap.ttf";
     const SDL_Color white{255, 255, 255, 255};
     const SDL_Color red{255, 0, 0, 255};
-    SDL_Renderer*   renderer = Game::getInstance()->renderer();
+    SDL_Renderer*   renderer = Game::GetInstance()->GetRenderer();
     SDL_Surface*    tmp      = nullptr;
     TTF_Font*       font     = nullptr;
     if ((font = TTF_OpenFont(ffile, 16)) == nullptr)
@@ -73,13 +73,13 @@ bool TitleState::init()
     return true;
 }
 
-void TitleState::render(float)
+void TitleState::Render(float)
 {
-    if (Input::isJustPressed(BUTTON_A))
+    if (Input::IsJustPressed(BUTTON_A))
     {
-        handle(m_selected);
+        Handle(m_selected);
     }
-    else if (Input::isJustPressed(BUTTON_PAD_UP))
+    else if (Input::IsJustPressed(BUTTON_PAD_UP))
     {
         --m_selected;
         if (m_selected < 0)
@@ -87,7 +87,7 @@ void TitleState::render(float)
             m_selected = NUM_OPTIONS - 1;
         }
     }
-    else if (Input::isJustPressed(BUTTON_PAD_DOWN))
+    else if (Input::IsJustPressed(BUTTON_PAD_DOWN))
     {
         ++m_selected;
         if (m_selected > NUM_OPTIONS - 1)
@@ -101,16 +101,16 @@ void TitleState::render(float)
     {
         if (i == m_selected)
         {
-            drawToCenter(m_selectedTexts[i], startY, i, 5);
+            DrawToCenter(m_selectedTexts[i], startY, i, 5);
         }
         else
         {
-            drawToCenter(m_unselectedTexts[i], startY, i, 5);
+            DrawToCenter(m_unselectedTexts[i], startY, i, 5);
         }
     }
 }
 
-void TitleState::drawToCenter(SDL_Texture* text, int startY, int index,
+void TitleState::DrawToCenter(SDL_Texture* text, int startY, int index,
                               int space)
 {
     SDL_Rect dstrect;
@@ -119,15 +119,15 @@ void TitleState::drawToCenter(SDL_Texture* text, int startY, int index,
     dstrect.x = Constances::GAME_WIDTH / 2 - dstrect.w / 2;
     dstrect.y = startY + index * dstrect.h + space * index;
 
-    SDL_RenderCopy(Game::getInstance()->renderer(), text, nullptr, &dstrect);
+    SDL_RenderCopy(Game::GetInstance()->GetRenderer(), text, nullptr, &dstrect);
 }
 
-void TitleState::handle(int op)
+void TitleState::Handle(int op)
 {
     switch (op)
     {
     case 0:
-        Game::getInstance()->stateMGR().setState(MainState::create());
+        Game::GetInstance()->GetStateManager().SetState(MainState::Create());
         break;
     }
 }

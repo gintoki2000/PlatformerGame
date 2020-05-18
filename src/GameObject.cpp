@@ -10,113 +10,117 @@ GameObject::GameObject() :
 
 GameObject::~GameObject() {}
 
-void GameObject::cleanup() { m_objectLayer = nullptr; }
+void GameObject::Tick(float){}
 
-void GameObject::start() {}
+void GameObject::Paint() {}
 
-float GameObject::getPositionX() const { return m_positionX; }
+void GameObject::Cleanup() { m_objectLayer = nullptr; }
 
-void GameObject::setPositionX(float x)
+void GameObject::Start() {}
+
+float GameObject::GetPositionX() const { return m_positionX; }
+
+void GameObject::SetPositionX(float x)
 {
     if (m_positionX != x)
     {
         m_positionX = x;
-        onPositionChanged();
+        OnPositionChanged();
     }
 }
 
-float GameObject::getPositionY() const { return m_positionY; }
+float GameObject::GetPositionY() const { return m_positionY; }
 
-void GameObject::setPositionY(float y)
+void GameObject::SetPositionY(float y)
 {
     if (m_positionY != y)
     {
         m_positionY = y;
-        onPositionChanged();
+        OnPositionChanged();
     }
 }
 
-Vec2 GameObject::getPosition() const { return {m_positionX, m_positionY}; }
+Vec2 GameObject::GetPosition() const { return {m_positionX, m_positionY}; }
 
-void GameObject::setPosition(float x, float y)
+void GameObject::SetPosition(float x, float y)
 {
     if (m_positionX != x || m_positionY != y)
     {
         m_positionX = x;
         m_positionY = y;
-        onPositionChanged();
+        OnPositionChanged();
     }
 }
 
-void   GameObject::setPosition(const Vec2& pos) { setPosition(pos.x, pos.y); }
-double GameObject::getRotation() const { return m_rotation; }
+void   GameObject::SetPosition(const Vec2& pos) { SetPosition(pos.x, pos.y); }
+double GameObject::GetRotation() const { return m_rotation; }
 
-void GameObject::setRotation(double rotation)
+void GameObject::SetRotation(double rotation)
 {
     if (m_rotation != rotation)
     {
         m_rotation = rotation;
-        onRotationChanged();
+        OnRotationChanged();
     }
 }
 
-bool GameObject::isVisible() const { return m_isVisible; }
+bool GameObject::IsVisible() const { return m_isVisible; }
 
-void GameObject::remove() { m_needToRemove = true; }
+void GameObject::Remove() { m_needToRemove = true; }
 
-void GameObject::setIsVisible(bool flag)
+void GameObject::SetIsVisible(bool flag)
 {
     if (m_isVisible != flag)
     {
         m_isVisible = flag;
-        flag ? onBecomeVisible() : onBecomeInvisible();
+        flag ? OnBecomeVisible() : OnBecomeInvisible();
     }
 }
 
-void GameObject::show()
+void GameObject::Show()
 {
     if (!m_isVisible)
     {
         m_isVisible = true;
-        onBecomeVisible();
+        OnBecomeVisible();
     }
 }
 
-void GameObject::hide()
+void GameObject::Hide()
 {
     if (m_isVisible)
     {
         m_isVisible = false;
-        onBecomeInvisible();
+        OnBecomeInvisible();
     }
 }
 
-bool GameObject::isActive() const { return m_isActive; }
+bool GameObject::IsActive() const { return m_isActive; }
 
-void GameObject::setIsActive(bool flag)
+void GameObject::SetIsActive(bool flag)
 {
     if (m_isActive != flag)
     {
         m_isActive = flag;
-        flag ? onAcivated() : onDeactivated();
+        flag ? OnAcivated() : OnDeactivated();
     }
 }
 
-ObjectLayer* GameObject::getObjectLayer() const { return m_objectLayer; }
+ObjectLayer* GameObject::GetObjectLayer() const { return m_objectLayer; }
 
-void GameObject::setObjectLayer(ObjectLayer* objectLayer)
+void GameObject::SetObjectLayer(ObjectLayer* objectLayer)
 {
     m_objectLayer = objectLayer;
 }
 
-Scene* GameObject::getScene() const
+Scene* GameObject::GetScene() const
 {
-    return m_objectLayer->getScene();
+    return m_objectLayer->GetScene();
 }
 
-void GameObject::onPositionChanged() {}
-void GameObject::onRotationChanged() {}
-void GameObject::onBecomeVisible() {}
-void GameObject::onBecomeInvisible() {}
-void GameObject::onAcivated() {}
-void GameObject::onDeactivated() {}
+void GameObject::OnPositionChanged() {}
+void GameObject::OnRotationChanged() {}
+void GameObject::OnBecomeVisible() {}
+void GameObject::OnBecomeInvisible() {}
+void GameObject::OnAcivated() {}
+void GameObject::OnDeactivated() {}

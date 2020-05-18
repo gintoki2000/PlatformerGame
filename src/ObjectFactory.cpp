@@ -5,7 +5,7 @@
 
 ObjectFactory::ObjectFactory() {}
 
-void ObjectFactory::resigter(const std::string& type, CreateFunc createFunc)
+void ObjectFactory::Resigter(const std::string& type, CreateFunc createFunc)
 {
     auto iter = m_createFuncs.find(type);
     if (iter != std::end(m_createFuncs))
@@ -15,7 +15,7 @@ void ObjectFactory::resigter(const std::string& type, CreateFunc createFunc)
     m_createFuncs.insert(std::make_pair(type, createFunc));
 }
 
-GameObject* ObjectFactory::createObject(const std::string& type,
+GameObject* ObjectFactory::CreateObject(const std::string& type,
                                         const tmx::Object& objectData)
 {
     auto iter = m_createFuncs.find(type);
@@ -28,7 +28,7 @@ GameObject* ObjectFactory::createObject(const std::string& type,
     return iter->second(objectData);
 }
 
-ObjectFactory* ObjectFactory::getInstance()
+ObjectFactory* ObjectFactory::GetInstance()
 {
     static ObjectFactory instance;
     return &instance;

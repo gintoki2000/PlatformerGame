@@ -8,10 +8,10 @@ class IDestroyable
     IDestroyable();
     virtual ~IDestroyable();
 
-    virtual bool takeDamge(int damage, Direction direction) = 0;
-    virtual int  getHitPoints()                             = 0;
-    virtual int  getMaxHitPoints()                          = 0;
-    virtual bool isDead()                                   = 0;
+    virtual bool TakeDamge(int damage, Direction direction) = 0;
+    virtual int  GetHitPoints()                             = 0;
+    virtual int  GetMaxHitPoints()                          = 0;
+    virtual bool IsDead()                                   = 0;
 };
 
 #endif // DESTROYABLE_H

@@ -3,24 +3,24 @@
 namespace Math 
 {
 template<typename T>
-const T& max(const T& a, const T& b)
+const T& Max(const T& a, const T& b)
 {
 	return a > b ? a : b;
 }
 
 template<typename T>
-const T& min(const T& a, const T& b){
+const T& Min(const T& a, const T& b){
 	return a < b ? a : b;
 }
 
 template<typename T>
-const T& clamp(const T& a, const T& b, float x)
+const T& Clamp(const T& a, const T& b, float x)
 {
-	return max(a, min(b, x));
+	return Max(a, Min(b, x));
 }
-float lerp(float current, float target, float step);
-float sign(float v);
-int rand(int a, int b);
+float Lerp(float current, float target, float step);
+float Sign(float v);
+int Rand(int a, int b);
 }
 
 

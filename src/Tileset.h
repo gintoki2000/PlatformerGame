@@ -9,15 +9,15 @@ class Tileset
 
     ~Tileset();
 
-    Tile* getTile(int ID) const;
+    Tile* GetTile(int ID) const;
 
-    int getFirstGID() const { return m_firstGID; }
+    int GetFirstGID() const { return m_firstGID; }
 
-    int getLastGID() const { return m_firstGID + m_numTiles - 1; }
+    int GetLastGID() const { return m_firstGID + m_numTiles - 1; }
 
-    bool hasTile(int ID) const
+    bool HasTile(int ID) const
     {
-        return ID >= getFirstGID() && ID <= getLastGID();
+        return ID >= GetFirstGID() && ID <= GetLastGID();
     }
 
   private:

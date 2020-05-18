@@ -4,7 +4,7 @@ GameState::GameState() {}
 
 GameState::~GameState() {}
 
-void GameState::hidden() {}
-void GameState::show() {}
-void GameState::pause() {}
-void GameState::resume() {}
+void GameState::Hidden() {}
+void GameState::Show() {}
+void GameState::Pause() {}
+void GameState::Resume() {}

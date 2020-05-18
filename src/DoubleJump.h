@@ -6,7 +6,7 @@ class DoubleJump : public Ability
   public:
     DoubleJump() {}
 
-    void enable(Adventurer& adventurer) override;
-    void disable(Adventurer& adventurer) override;
+    void Enable(Adventurer& adventurer) override;
+    void Disable(Adventurer& adventurer) override;
 };
 #endif // DOUBLE_JUMP_H

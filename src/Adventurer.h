@@ -1,6 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 #include "Ability.h"
+#include "AdventureState.h"
 #include "CollisionHandler.h"
 #include "Constances.h"
 #include "Destroyable.h"
@@ -14,84 +15,6 @@ class Level;
 class Animator;
 class Adventurer;
 class Technique;
-class AdventurerState
-{
-  public:
-    virtual ~AdventurerState();
-    virtual void             enter(Adventurer& adventurer);
-    virtual AdventurerState* tick(Adventurer& adventurer, float deltaTime) = 0;
-    virtual void             exit(Adventurer& adventurer);
-};
-
-class AdventurerOnGroundState : public AdventurerState
-{
-  public:
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-};
-
-class AdventurerIdle1State : public AdventurerOnGroundState
-{
-    void enter(Adventurer& adventurer) override;
-};
-
-class AdventurerIdle2State : public AdventurerOnGroundState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-
-    float m_timer;
-};
-
-class AdventurerRunState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-};
-
-class AdventurerJumpState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-};
-
-class AdventurerSomersaultState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-    void             exit(Adventurer& adventurer) override;
-};
-
-class AdventurerFallState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-};
-
-class AdventurerHurtState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-    void             exit(Adventurer& adventurer) override;
-};
-
-class AdventurerDieState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-    void             exit(Adventurer& adventurer) override;
-};
-
-class AdventurerCrouchState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-};
-
-class AdventurerAirJumpState : public AdventurerState
-{
-    void             enter(Adventurer& adventurer) override;
-    AdventurerState* tick(Adventurer& adventurer, float deltaTime) override;
-};
 class Adventurer : public GameObject,
                    public ICollisionHandler,
                    public IDestroyable
@@ -149,43 +72,46 @@ class Adventurer : public GameObject,
 
   public:
     Adventurer(const Vec2& center);
-    static Adventurer* create(const Vec2& center);
+    static Adventurer* Create(const Vec2& center);
     ~Adventurer() override;
 
     /// GameObject interface
   public:
-    void tick(float deltaTime) override;
-    void paint() override;
-    void cleanup() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
+    void Cleanup() override;
 
-    b2Body*    getBody() const { return m_body; }
-    Animator*  getAnimator() const { return m_animator; }
-    Direction  getDirection() const { return m_direction; }
-    void       setDirection(Direction direction) { m_direction = direction; }
-    void       resetMembers();
-    Technique* getTechniqueA() const { return m_techniqueA; }
-    void       setTechniqueA(Technique* technique) { m_techniqueA = technique; }
-    Technique* getTechniqueB() { return m_techniqueB; }
-    void       setTechniqueB(Technique* technique) { m_techniqueB = technique; }
-    void       resetJumpPressedRemember();
-    bool       isGrounded() const;
-    bool       wasGrounded() const { return m_prevGroundState; }
-    bool       justGrounded() const;
-    void       resetGroundedRemember();
-    void       setUnGrounded() { m_isGrounded = false; }
-    int        getManaPoints() const;
-    int        getMaxManaPoints() const;
-    bool       consumeMana(int amount);
-    void       enableAbilty(int ability);
-    void       disableAbility(int ability);
+    b2Body*    GetBody() const { return m_body; }
+    Animator*  GetAnimator() const { return m_animator; }
+    Direction  GetDirection() const { return m_direction; }
+    void       SetDirection(Direction direction) { m_direction = direction; }
+    void       ResetMembers();
+    Technique* GetTechniqueA() const { return m_techniqueA; }
+    void       SetTechniqueA(Technique* technique) { m_techniqueA = technique; }
+    Technique* GetTechniqueB() { return m_techniqueB; }
+    void       SetTechniqueB(Technique* technique) { m_techniqueB = technique; }
+    void       ResetJumpPressedRemember();
+    bool       IsGrounded() const;
+    bool       WasGrounded() const { return m_prevGroundState; }
+    bool       JustGrounded() const;
+    void       ResetGroundedRemember();
+    void       SetUnGrounded() { m_isGrounded = false; }
+    int        GetManaPoints() const;
+    int        GetMaxManaPoints() const;
+    bool       ConsumeMana(int amount);
+    void       EnableAbilty(int ability);
+    void       DisableAbility(int ability);
+    void       HandleInput();
+    Inventory* GetInventory() const { return m_inventory; }
+    void       ResetExtraJumps();
 
   private:
-    bool initGraphicsComponent();
-    void initPhysicsComponent(const Vec2& center);
-    void updatePhysics(float deltaTime);
-    void updateGraphics(float deltaTime);
-    void updateLogic(float deltaTime);
-    void synchronizeBodyTransform();
+    bool InitGraphicsComponent();
+    void InitPhysicsComponent(const Vec2& center);
+    void UpdatePhysics(float deltaTime);
+    void UpdateGraphics(float deltaTime);
+    void UpdateLogic(float deltaTime);
+    void SynchronizeBodyTransform();
 
     SpriteSheet      m_spriteSheet;
     b2Body*          m_body;
@@ -217,8 +143,8 @@ class Adventurer : public GameObject,
     float     m_jumpPressedRemember;
     float     m_groundedRemember;
     float     m_maxHoriontalSpeed;
-    int       m_totalExtrasJump;
-    int       m_extrasJumpCount;
+    int       m_totalExtraJumps;
+    int       m_extraJumps;
     bool      m_ableToUseTechnique;
     float     m_runAcceleration;
     bool      m_vulnerable;
@@ -236,22 +162,22 @@ class Adventurer : public GameObject,
 
     // ICollisionCallback interface
   public:
-    void onBeginContact(const ContactInfo& info) override;
-    void onEndContact(const ContactInfo& info) override;
-    void onPreSolve(const ContactInfo& info,
+    void OnBeginContact(const ContactInfo& info) override;
+    void OnEndContact(const ContactInfo& info) override;
+    void OnPreSolve(const ContactInfo& info,
                     const b2Manifold&  oldManiflod) override;
-    void onPostSolve(const ContactInfo&      info,
+    void OnPostSolve(const ContactInfo&      info,
                      const b2ContactImpulse& impluse) override;
 
     // IDestroyable interface
   public:
-    bool takeDamge(int damage, Direction direction) override;
-    int  getHitPoints() override;
-    int  getMaxHitPoints() override;
-    bool isDead() override;
+    bool TakeDamge(int damage, Direction direction) override;
+    int  GetHitPoints() override;
+    int  GetMaxHitPoints() override;
+    bool IsDead() override;
 
     // GameObject interface
   protected:
-    void onPositionChanged() override;
+    void OnPositionChanged() override;
 };
 #endif // PLAYER_H

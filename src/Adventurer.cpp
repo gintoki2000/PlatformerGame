@@ -1,12 +1,11 @@
 #include "Adventurer.h"
 #include "Animation.h"
 #include "Animator.h"
-
 #include "Axe.h"
 #include "BasicAttack.h"
 #include "BloodStainParticle.h"
+#include "CastFireball.h"
 #include "Constances.h"
-#include "DirectionalCast.h"
 #include "DoubleJump.h"
 #include "Fireball.h"
 #include "Game.h"
@@ -24,7 +23,8 @@
 #include "SpriteSheet.h"
 #include "Technique.h"
 #include "TextureManager.h"
-#include "ThowAxe.h"
+#include "ThrowAxe.h"
+#include "ThrowGrenade.h"
 #include "Utils.h"
 #include "Vec.h"
 #include "WorldManager.h"
@@ -51,21 +51,20 @@ Adventurer::Adventurer(const Vec2& center)
     m_techniqueA      = nullptr;
     m_techniqueB      = nullptr;
     m_inventory       = new Inventory();
-    m_identifier      = Identifier(TAG_PLAYER, this);
+    m_identifier      = Identifier(TAG_ADVENTURER, this);
 
     m_abilities[ABILITY_DOUBLE_JUMP] = new DoubleJump();
 
     m_techniqueB = new BasicAttack();
-	m_techniqueA = new ThrowAxe();
 
-	m_inventory->addTechnique(new BasicAttack());
-	m_inventory->addTechnique(new ThrowAxe());
+    m_inventory->AddTechnique(m_techniqueA = new ThrowGrenade());
+    m_inventory->AddTechnique(new ThrowAxe());
+    m_inventory->AddTechnique(new CastFireBall());
 
-
-    initGraphicsComponent();
-    initPhysicsComponent(center);
-    enableAbilty(ABILITY_DOUBLE_JUMP);
-    resetMembers();
+    InitGraphicsComponent();
+    InitPhysicsComponent(center);
+    EnableAbilty(ABILITY_DOUBLE_JUMP);
+    ResetMembers();
 }
 
 Adventurer::~Adventurer()
@@ -77,14 +76,13 @@ Adventurer::~Adventurer()
         m_body = nullptr;
     }
     DELETE_NULL(m_animator);
-    DELETE_NULL(m_techniqueA);
-    DELETE_NULL(m_techniqueB);
+    DELETE_NULL(m_inventory);
 }
 
-bool Adventurer::initGraphicsComponent()
+bool Adventurer::InitGraphicsComponent()
 {
-    SDL_Texture* texture = TextureManager::get(TEX_PLAYER);
-    m_spriteSheet.init(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
+    SDL_Texture* texture = TextureManager::Get(TEX_PLAYER);
+    m_spriteSheet.Init(texture, SPRITE_WIDTH, SPRITE_HEIGHT);
     Animation* anims[NUM_ANIMS];
     anims[ANIM_IDLE_1]      = new Animation(&m_spriteSheet, 0, 4, 1.f / 8.f);
     anims[ANIM_CROUCH]      = new Animation(&m_spriteSheet, 4, 4, 1.f / 8.f);
@@ -117,26 +115,25 @@ bool Adventurer::initGraphicsComponent()
         new Animation(&m_spriteSheet, 106, 1, 1.f / 8.f);
     anims[ANIM_DASH] = new Animation(&m_spriteSheet, 77, 1, 1.f);
 
-    anims[ANIM_IDLE_1]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_IDLE_2]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_RUN]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_FALL]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_SLIDE]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_CROUCH]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_CAST_LOOP]->setPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_IDLE_1]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_IDLE_2]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_RUN]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_FALL]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_SLIDE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_CROUCH]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_CAST_LOOP]->SetPlayMode(Animation::PLAY_MODE_LOOP);
 
     m_animator = new Animator(anims, NUM_ANIMS);
     return true;
 }
 
-void Adventurer::initPhysicsComponent(const Vec2& center)
+void Adventurer::InitPhysicsComponent(const Vec2& center)
 {
-    b2World&  world = *WorldManager::getWorld();
+    b2World&  world = *WorldManager::GetWorld();
     b2BodyDef bdef;
     bdef.userData      = &m_identifier;
     bdef.type          = b2_dynamicBody;
     bdef.fixedRotation = true;
-    bdef.allowSleep    = false;
     bdef.position.x    = center.x / Constances::PPM;
     bdef.position.y    = center.y / Constances::PPM;
 
@@ -148,10 +145,11 @@ void Adventurer::initPhysicsComponent(const Vec2& center)
 
     b2FixtureDef fdef;
     fdef.shape               = &box;
-    fdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
-    fdef.filter.maskBits     = CATEGORY_BIT_BLOCK | CATEGORY_BIT_MONSTER;
-    fdef.friction            = 0.0f;
-    fdef.restitution         = 0.f;
+    fdef.filter.categoryBits = CATEGORY_BIT_ADVENTURER;
+    fdef.filter.maskBits =
+        CATEGORY_BIT_BLOCK | CATEGORY_BIT_MONSTER | CATEGORY_BIT_OTHER_OBJECT;
+    fdef.friction    = 0.0f;
+    fdef.restitution = 0.f;
     m_body->CreateFixture(&fdef);
 
     b2CircleShape circle;
@@ -163,13 +161,14 @@ void Adventurer::initPhysicsComponent(const Vec2& center)
     gfdef.restitution         = 0.f;
     gfdef.friction            = 0.f;
     gfdef.density             = 1.f;
-    gfdef.filter.categoryBits = CATEGORY_BIT_PLAYER;
-    gfdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
+    gfdef.filter.categoryBits = CATEGORY_BIT_ADVENTURER;
+    gfdef.filter.maskBits =
+        CATEGORY_BIT_BLOCK | CATEGORY_BIT_MONSTER | CATEGORY_BIT_OTHER_OBJECT;
 
     m_body->CreateFixture(&gfdef);
 }
 
-void Adventurer::resetMembers()
+void Adventurer::ResetMembers()
 {
     m_direction                    = DIRECTION_RIGHT;
     m_maxHitPoints                 = 22;
@@ -186,24 +185,24 @@ void Adventurer::resetMembers()
     m_horizontalDampingWhenStoping = 0.9f;
     m_horizontalDampingBasic       = 0.7f;
     m_horizontalDampingWhenTurning = 0.4f;
-    m_totalExtrasJump              = 1;
-    m_extrasJumpCount              = 0;
+    m_totalExtraJumps              = 1;
+    m_extraJumps                   = 0;
     m_cutJumpHeight                = DEFAULT_CUT_JUMP_HEIGHT;
     m_runAcceleration              = DEFAULT_RUN_ACCELERATION;
     m_ableToUseTechnique           = true;
     m_state                        = &idle1State;
     m_vulnerable                   = true;
-    enableAbilty(ABILITY_DOUBLE_JUMP);
-    m_state->enter(*this);
+    EnableAbilty(ABILITY_DOUBLE_JUMP);
+    m_state->Enter(*this);
     m_body->SetTransform(b2Vec2(10, 10), (float)m_rotation);
 }
 
-void Adventurer::updateGraphics(float deltaTime)
+void Adventurer::UpdateGraphics(float deltaTime)
 {
-    m_animator->tick(deltaTime);
+    m_animator->Tick(deltaTime);
 }
 
-void Adventurer::updatePhysics(float deltaTime)
+void Adventurer::UpdatePhysics(float deltaTime)
 {
     m_positionX       = m_body->GetPosition().x * Constances::PPM;
     m_positionY       = m_body->GetPosition().y * Constances::PPM;
@@ -211,13 +210,13 @@ void Adventurer::updatePhysics(float deltaTime)
     m_prevGroundState = m_isGrounded;
 
     const int checkBoxHeight = 4;
-    FloatRect groundCheckBox;
-    groundCheckBox.x      = getPositionX() - WIDTH / 2 + 2;
-    groundCheckBox.y      = getPositionY() + HEIGHT / 2 - checkBoxHeight / 2;
-    groundCheckBox.width  = WIDTH - 4;
-    groundCheckBox.height = checkBoxHeight;
+    FloatRect box;
+    box.x      = GetPositionX() - WIDTH / 2 + 2;
+    box.y      = GetPositionY() + HEIGHT / 2 - checkBoxHeight / 2;
+    box.width  = WIDTH - 4;
+    box.height = checkBoxHeight;
 
-    m_isGrounded = boxCast(groundCheckBox, CATEGORY_BIT_BLOCK);
+    m_isGrounded = BoxCast(box, CATEGORY_BIT_BLOCK);
 
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x += m_horizontalAcceleration;
@@ -226,7 +225,7 @@ void Adventurer::updatePhysics(float deltaTime)
         vel.x *=
             SDL_powf(1.f - m_horizontalDampingWhenStoping, deltaTime * 10.f);
     }
-    else if (Math::sign(vel.x) != Math::sign(m_horizontalAcceleration))
+    else if (Math::Sign(vel.x) != Math::Sign(m_horizontalAcceleration))
     {
         vel.x *=
             SDL_powf(1.f - m_horizontalDampingWhenTurning, deltaTime * 10.f);
@@ -238,7 +237,7 @@ void Adventurer::updatePhysics(float deltaTime)
     m_body->SetLinearVelocity(vel);
 }
 
-void Adventurer::synchronizeBodyTransform()
+void Adventurer::SynchronizeBodyTransform()
 {
     b2Vec2 position;
     position.x = m_positionX / Constances::PPM;
@@ -246,34 +245,34 @@ void Adventurer::synchronizeBodyTransform()
     m_body->SetTransform(position, (float)m_rotation);
 }
 
-void Adventurer::tick(float deltaTime)
+void Adventurer::Tick(float deltaTime)
 {
-    updatePhysics(deltaTime);
-    updateLogic(deltaTime);
-    updateGraphics(deltaTime);
+    UpdatePhysics(deltaTime);
+    UpdateLogic(deltaTime);
+    UpdateGraphics(deltaTime);
 }
 
-void Adventurer::paint()
+void Adventurer::Paint()
 {
-    SDL_Renderer*   renderer = GAME->renderer();
-    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
-    const Sprite&   sprite   = m_animator->getCurrentSprite();
+    SDL_Renderer*   renderer = GAME->GetRenderer();
+    const SDL_Rect& viewport = GetScene()->GetCamera().GetViewport();
+    const Sprite&   sprite   = m_animator->GetCurrentSprite();
 
     SDL_Rect dstrect;
     dstrect.x = m_positionX - SPRITE_WIDTH / 2 - viewport.x;
     dstrect.y = m_positionY - SPRITE_HEIGHT / 2 - viewport.y;
-    dstrect.w = sprite.getWidth();
-    dstrect.h = sprite.getHeight();
+    dstrect.w = sprite.GetWidth();
+    dstrect.h = sprite.GetHeight();
 
     SDL_RendererFlip flip =
         m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
-    sprite.draw(renderer, &dstrect, 0.f, nullptr, flip);
+    sprite.Draw(renderer, &dstrect, 0.f, nullptr, flip);
 }
 
-void Adventurer::cleanup() { delete this; }
+void Adventurer::Cleanup() { delete this; }
 
-void Adventurer::updateLogic(float deltaTime)
+void Adventurer::UpdateLogic(float deltaTime)
 {
     if (!m_isGrounded)
     {
@@ -281,461 +280,84 @@ void Adventurer::updateLogic(float deltaTime)
     }
     else
     {
-        resetGroundedRemember();
-        m_extrasJumpCount = m_totalExtrasJump;
+        ResetGroundedRemember();
+        ResetExtraJumps();
     }
     m_jumpPressedRemember -= deltaTime;
-    if (Input::isPressed(BUTTON_B))
+    if (Input::IsPressed(BUTTON_B))
     {
-        resetJumpPressedRemember();
+        ResetJumpPressedRemember();
     }
 
     if (m_activeTechnique != nullptr)
     {
-        if (m_activeTechnique->tick(*this, deltaTime))
+        if (m_activeTechnique->Tick(*this, deltaTime))
         {
-            m_activeTechnique->exit(*this);
+            m_activeTechnique->Exit(*this);
             m_activeTechnique = nullptr;
         }
         return;
     }
     if (m_ableToUseTechnique)
     {
-        if (m_techniqueA != nullptr && Input::isJustPressed(BUTTON_A) &&
-            Input::isPressed(BUTTON_PAD_UP) &&
-            consumeMana(m_techniqueA->getMPCost()))
+        if (m_techniqueA != nullptr && Input::IsJustPressed(BUTTON_A) &&
+            Input::IsPressed(BUTTON_PAD_UP) &&
+            ConsumeMana(m_techniqueA->GetMPCost()))
         {
             m_activeTechnique = m_techniqueA;
-            m_activeTechnique->enter(*this);
+            m_activeTechnique->Enter(*this);
             return;
         }
-        if (m_techniqueB != nullptr && Input::isJustPressed(BUTTON_A) &&
-            consumeMana(m_techniqueB->getMPCost()))
+        if (m_techniqueB != nullptr && Input::IsJustPressed(BUTTON_A) &&
+            ConsumeMana(m_techniqueB->GetMPCost()))
         {
             m_activeTechnique = m_techniqueB;
-            m_activeTechnique->enter(*this);
+            m_activeTechnique->Enter(*this);
             return;
         }
     }
-    AdventurerState* newState = m_state->tick(*this, deltaTime);
+    AdventurerState* newState = m_state->Tick(*this, deltaTime);
     if (newState != nullptr)
     {
-        m_state->exit(*this);
+        m_state->Exit(*this);
         m_state = newState;
-        m_state->enter(*this);
+        m_state->Enter(*this);
     }
 }
 
-bool Adventurer::isGrounded() const { return m_isGrounded; }
+bool Adventurer::IsGrounded() const { return m_isGrounded; }
 
-bool Adventurer::justGrounded() const
+bool Adventurer::JustGrounded() const
 {
     return !m_prevGroundState && m_isGrounded;
 }
 
-void Adventurer::resetGroundedRemember()
+void Adventurer::ResetGroundedRemember()
 {
     m_groundedRemember = m_jumpPressedRememberTime;
 }
 
-void Adventurer::resetJumpPressedRemember()
+void Adventurer::ResetJumpPressedRemember()
 {
     m_jumpPressedRemember = m_jumpPressedRememberTime;
 }
 
-//**************************************************************************//
-// 								States
-// 																			//
-//**************************************************************************//
-AdventurerState::~AdventurerState() {}
+void Adventurer::OnBeginContact(const ContactInfo&) {}
 
-void AdventurerState::enter(Adventurer&) {}
+void Adventurer::OnEndContact(const ContactInfo&) {}
 
-void AdventurerState::exit(Adventurer&) {}
+void Adventurer::OnPreSolve(const ContactInfo&, const b2Manifold&) {}
 
-AdventurerState* AdventurerOnGroundState::tick(Adventurer& adventurer, float)
-{
+void Adventurer::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
 
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (Input::isJustPressed(BUTTON_A))
-    {
-    }
-    if (adventurer.m_jumpPressedRemember > 0.f)
-    {
-        return &Adventurer::jumpState;
-    }
-    if (Input::isPressed(BUTTON_PAD_DOWN))
-    {
-        return &Adventurer::crouchState;
-    }
-    else if (inputDirection != 0)
-    {
-        return &Adventurer::runState;
-    }
-    else if (!adventurer.isGrounded())
-    {
-        return &Adventurer::fallState;
-    }
-    return nullptr;
-}
-
-void AdventurerIdle1State::enter(Adventurer& adventurer)
-{
-    adventurer.m_horizontalAcceleration = 0.f;
-    adventurer.getAnimator()->play(Adventurer::ANIM_IDLE_1, 0.f);
-}
-
-void AdventurerIdle2State::enter(Adventurer& adventurer)
-{
-    m_timer                             = 0.f;
-    adventurer.m_horizontalAcceleration = 0;
-    adventurer.getAnimator()->play(Adventurer::ANIM_IDLE_2, 0.f);
-}
-
-AdventurerState* AdventurerIdle2State::tick(Adventurer& adventurer,
-                                            float       deltaTime)
-{
-    AdventurerState* newState =
-        AdventurerOnGroundState::tick(adventurer, deltaTime);
-    m_timer += deltaTime;
-    if (newState != nullptr)
-    {
-        return newState;
-    }
-    else if (m_timer > 3.f)
-    {
-        return &Adventurer::idle1State;
-    }
-    return nullptr;
-}
-
-void AdventurerRunState::enter(Adventurer& adventurer)
-{
-    adventurer.getAnimator()->play(Adventurer::ANIM_RUN, 0.f);
-}
-
-AdventurerState* AdventurerRunState::tick(Adventurer& adventurer, float)
-{
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection < 0)
-    {
-        adventurer.setDirection(DIRECTION_LEFT);
-    }
-    if (inputDirection > 0)
-    {
-        adventurer.setDirection(DIRECTION_RIGHT);
-    }
-    if (adventurer.m_jumpPressedRemember > 0.f)
-    {
-        return &Adventurer::jumpState;
-    }
-    else if (!adventurer.isGrounded())
-    {
-        return &Adventurer::fallState;
-    }
-    else if (inputDirection == 0)
-    {
-        return &Adventurer::idle1State;
-    }
-    else
-    {
-        adventurer.m_horizontalAcceleration =
-            adventurer.m_runAcceleration * inputDirection;
-    }
-    return nullptr;
-}
-
-void AdventurerJumpState::enter(Adventurer& adventurer)
-{
-    b2Vec2 vel = adventurer.getBody()->GetLinearVelocity();
-    vel.y      = -Adventurer::JUMP_VEL;
-    adventurer.getBody()->SetLinearVelocity(vel);
-    adventurer.getAnimator()->play(Adventurer::ANIM_JUMP, 0.f);
-    adventurer.setUnGrounded();
-    adventurer.m_jumpPressedRemember = 0.f;
-    adventurer.m_groundedRemember    = 0.f;
-}
-
-AdventurerState* AdventurerJumpState::tick(Adventurer& adventurer, float)
-{
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection < 0)
-    {
-        adventurer.setDirection(DIRECTION_LEFT);
-    }
-    if (inputDirection > 0)
-    {
-        adventurer.setDirection(DIRECTION_RIGHT);
-    }
-    if (Input::isReleased(BUTTON_B))
-    {
-        b2Vec2 vel = adventurer.getBody()->GetLinearVelocity();
-        if (vel.y < 0.f)
-        {
-            vel.y *= adventurer.m_cutJumpHeight;
-            adventurer.getBody()->SetLinearVelocity(vel);
-        }
-    }
-    if (adventurer.isGrounded())
-    {
-        return &Adventurer::idle1State;
-    }
-    else if (Input::isJustPressed(BUTTON_B) && adventurer.m_extrasJumpCount > 0)
-    {
-        --adventurer.m_extrasJumpCount;
-        return &Adventurer::airJumpState;
-    }
-    else if (adventurer.getBody()->GetLinearVelocity().y > 0.f)
-    {
-        return &Adventurer::fallState;
-    }
-    else if (inputDirection != 0)
-    {
-        adventurer.m_horizontalAcceleration =
-            adventurer.m_runAcceleration * inputDirection;
-    }
-    else
-    {
-        adventurer.m_horizontalAcceleration = 0.f;
-    }
-    return nullptr;
-}
-
-void AdventurerSomersaultState::enter(Adventurer& adventurer)
-{
-    adventurer.getAnimator()->play(Adventurer::ANIM_SOMERSULT, 0.f);
-    adventurer.m_ableToUseTechnique = false;
-}
-
-AdventurerState* AdventurerSomersaultState::tick(Adventurer& adventurer, float)
-{
-
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection < 0)
-    {
-        adventurer.m_direction = DIRECTION_LEFT;
-    }
-    if (inputDirection > 0)
-    {
-        adventurer.m_direction = DIRECTION_RIGHT;
-    }
-    if (adventurer.isGrounded())
-    {
-        return &Adventurer::idle1State;
-    }
-    else if (adventurer.getAnimator()->isCurrentAnimationFinshed())
-    {
-        return &Adventurer::fallState;
-    }
-
-    if (Input::isReleased(BUTTON_B))
-    {
-        b2Vec2 vel = adventurer.getBody()->GetLinearVelocity();
-        if (vel.y < 0.f)
-        {
-            vel.y *= adventurer.m_cutJumpHeight;
-            adventurer.getBody()->SetLinearVelocity(vel);
-        }
-    }
-    if (inputDirection != 0)
-    {
-        adventurer.m_horizontalAcceleration =
-            adventurer.m_runAcceleration * inputDirection;
-    }
-    else
-    {
-        adventurer.m_horizontalAcceleration = 0.f;
-    }
-    return nullptr;
-}
-
-void AdventurerSomersaultState::exit(Adventurer& adventurer)
-{
-    adventurer.m_ableToUseTechnique = true;
-}
-
-void AdventurerFallState::enter(Adventurer& adventurer)
-{
-    adventurer.getAnimator()->play(Adventurer::ANIM_FALL, 0.f);
-}
-
-AdventurerState* AdventurerFallState::tick(Adventurer& adventurer, float)
-{
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection < 0)
-    {
-        adventurer.setDirection(DIRECTION_LEFT);
-    }
-    if (inputDirection > 0)
-    {
-        adventurer.setDirection(DIRECTION_RIGHT);
-    }
-    if (adventurer.m_jumpPressedRemember > 0.f &&
-        adventurer.m_groundedRemember > 0.f)
-    {
-        return &Adventurer::jumpState;
-    }
-    else if (adventurer.isGrounded())
-    {
-        if (inputDirection == 0)
-        {
-            return &Adventurer::idle1State;
-        }
-        else
-        {
-            return &Adventurer::runState;
-        }
-    }
-    else if (Input::isJustPressed(BUTTON_B) && adventurer.m_extrasJumpCount > 0)
-    {
-        --adventurer.m_extrasJumpCount;
-        return &Adventurer::airJumpState;
-    }
-    else if (inputDirection != 0)
-    {
-        adventurer.m_horizontalAcceleration =
-            adventurer.m_runAcceleration * inputDirection;
-    }
-    else
-    {
-        adventurer.m_horizontalAcceleration = 0.f;
-    }
-    return nullptr;
-}
-
-void AdventurerHurtState::enter(Adventurer& adventurer)
-{
-    adventurer.m_horizontalAcceleration = 0.f;
-    adventurer.getAnimator()->play(Adventurer::ANIM_HURT, 0.f);
-    adventurer.m_ableToUseTechnique = false;
-    adventurer.m_vulnerable         = false;
-    adventurer.getBody()->SetLinearVelocity(b2Vec2_zero);
-}
-
-AdventurerState* AdventurerHurtState::tick(Adventurer& adventurer, float)
-{
-    if (adventurer.getAnimator()->isCurrentAnimationFinshed() &&
-        adventurer.isGrounded())
-    {
-        return &Adventurer::idle1State;
-    }
-    return nullptr;
-}
-
-void AdventurerHurtState::exit(Adventurer& adventurer)
-{
-    adventurer.m_ableToUseTechnique = true;
-    adventurer.m_vulnerable         = true;
-}
-
-void AdventurerDieState::enter(Adventurer& adventurer)
-{
-    adventurer.getAnimator()->play(Adventurer::ANIM_DIE);
-    adventurer.m_ableToUseTechnique     = false;
-    adventurer.m_vulnerable             = false;
-    adventurer.m_horizontalAcceleration = 0.f;
-    adventurer.getBody()->SetLinearVelocity(b2Vec2_zero);
-}
-
-AdventurerState* AdventurerDieState::tick(Adventurer& adventurer, float)
-{
-    if (adventurer.getAnimator()->isCurrentAnimationFinshed())
-    {
-        adventurer.resetMembers();
-    }
-    return nullptr;
-}
-
-void AdventurerDieState::exit(Adventurer& adventurer)
-{
-    adventurer.m_ableToUseTechnique = true;
-    adventurer.m_vulnerable         = true;
-}
-
-void AdventurerCrouchState::enter(Adventurer& adventurer)
-{
-    adventurer.getAnimator()->play(Adventurer::ANIM_CROUCH);
-}
-
-AdventurerState* AdventurerCrouchState::tick(Adventurer& adventurer, float)
-{
-    if (Input::isReleased(BUTTON_PAD_DOWN))
-    {
-        return &Adventurer::idle1State;
-    }
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection < 0)
-    {
-        adventurer.setDirection(DIRECTION_LEFT);
-    }
-    if (inputDirection > 0)
-    {
-        adventurer.setDirection(DIRECTION_RIGHT);
-    }
-    return nullptr;
-}
-
-void AdventurerAirJumpState::enter(Adventurer& adventurer)
-{
-    adventurer.getAnimator()->play(Adventurer::ANIM_JUMP);
-    b2Vec2 vel = adventurer.getBody()->GetLinearVelocity();
-    vel.y      = -Adventurer::JUMP_VEL;
-    adventurer.getBody()->SetLinearVelocity(vel);
-}
-
-AdventurerState* AdventurerAirJumpState::tick(Adventurer& adventurer, float)
-{
-    int inputDirection = Input::getHorizontalInputDirection();
-    if (inputDirection < 0)
-    {
-        adventurer.setDirection(DIRECTION_LEFT);
-    }
-    if (inputDirection > 0)
-    {
-        adventurer.setDirection(DIRECTION_RIGHT);
-    }
-    if (adventurer.getAnimator()->isCurrentAnimationFinshed())
-    {
-        return &Adventurer::somersaultState;
-    }
-    if (Input::isReleased(BUTTON_B))
-    {
-        b2Vec2 vel = adventurer.getBody()->GetLinearVelocity();
-        if (vel.y < 0.f)
-        {
-            vel.y *= adventurer.m_cutJumpHeight;
-            adventurer.getBody()->SetLinearVelocity(vel);
-        }
-    }
-
-    if (inputDirection != 0)
-    {
-        adventurer.m_horizontalAcceleration =
-            adventurer.m_runAcceleration * inputDirection;
-    }
-    else
-    {
-        adventurer.m_horizontalAcceleration = 0.f;
-    }
-    return nullptr;
-}
-
-void Adventurer::onBeginContact(const ContactInfo&) {}
-
-void Adventurer::onEndContact(const ContactInfo&) {}
-
-void Adventurer::onPreSolve(const ContactInfo&, const b2Manifold&) {}
-
-void Adventurer::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
-
-bool Adventurer::takeDamge(int damage, Direction direction)
+bool Adventurer::TakeDamge(int damage, Direction direction)
 {
     if (damage <= 0)
         return false;
     if (m_vulnerable)
     {
-        Level* level = static_cast<Level*>(getScene());
-        level->getParticleSystem()->create<BloodStainParticle>(getPosition());
+        Level* level = static_cast<Level*>(GetScene());
+        level->GetParticleSystem()->Create<BloodStainParticle>(GetPosition());
         if (direction != DIRECTION_NONE)
         {
             m_direction = direction;
@@ -744,30 +366,30 @@ bool Adventurer::takeDamge(int damage, Direction direction)
         if (m_hitPoints <= 0)
         {
             m_hitPoints = 0;
-            m_state->exit(*this);
+            m_state->Exit(*this);
             m_state = &dieState;
-            m_state->enter(*this);
+            m_state->Enter(*this);
         }
         else
         {
-            m_state->exit(*this);
+            m_state->Exit(*this);
             m_state = &hurtState;
-            m_state->enter(*this);
+            m_state->Enter(*this);
         }
         return true;
     }
     return false;
 }
 
-int Adventurer::getHitPoints() { return m_hitPoints; }
+int Adventurer::GetHitPoints() { return m_hitPoints; }
 
-int Adventurer::getMaxHitPoints() { return m_maxHitPoints; }
+int Adventurer::GetMaxHitPoints() { return m_maxHitPoints; }
 
-bool Adventurer::isDead() { return m_hitPoints == 0; }
+bool Adventurer::IsDead() { return m_hitPoints == 0; }
 
-int  Adventurer::getManaPoints() const { return m_manaPoints; }
-int  Adventurer::getMaxManaPoints() const { return m_maxManaPoints; }
-bool Adventurer::consumeMana(int amount)
+int  Adventurer::GetManaPoints() const { return m_manaPoints; }
+int  Adventurer::GetMaxManaPoints() const { return m_maxManaPoints; }
+bool Adventurer::ConsumeMana(int amount)
 {
     if (m_manaPoints >= amount)
     {
@@ -777,14 +399,36 @@ bool Adventurer::consumeMana(int amount)
     return false;
 }
 
-void Adventurer::onPositionChanged() { synchronizeBodyTransform(); }
+void Adventurer::OnPositionChanged() { SynchronizeBodyTransform(); }
 
-void Adventurer::enableAbilty(int ability)
+void Adventurer::EnableAbilty(int ability)
 {
-    m_abilities[ability]->enable(*this);
+    m_abilities[ability]->Enable(*this);
 }
 
-void Adventurer::disableAbility(int ability)
+void Adventurer::DisableAbility(int ability)
 {
-    m_abilities[ability]->disable(*this);
+    m_abilities[ability]->Disable(*this);
 }
+
+void Adventurer::HandleInput()
+{
+    if (m_activeTechnique != nullptr)
+    {
+        if (m_activeTechnique->HandleInput(*this))
+        {
+            m_activeTechnique->Exit(*this);
+            m_activeTechnique = nullptr;
+        }
+        return;
+    }
+    AdventurerState* newState = m_state->HandleInput(*this);
+    if (newState != nullptr)
+    {
+        m_state->Exit(*this);
+        m_state = newState;
+        m_state->Enter(*this);
+    }
+}
+
+void Adventurer::ResetExtraJumps() { m_extraJumps = m_totalExtraJumps; }

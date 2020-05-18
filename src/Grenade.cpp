@@ -30,10 +30,10 @@ Grenade::~Grenade()
     }
 }
 
-Grenade* Grenade::create(const Vec2& pos, Direction dir)
+Grenade* Grenade::Create(const Vec2& pos, Direction dir)
 {
     Grenade* ret = new Grenade;
-    if (ret->init(pos, dir))
+    if (ret->Init(pos, dir))
     {
         return ret;
     }
@@ -41,9 +41,9 @@ Grenade* Grenade::create(const Vec2& pos, Direction dir)
     return nullptr;
 }
 
-bool Grenade::init(const Vec2& pos, Direction dir)
+bool Grenade::Init(const Vec2& pos, Direction dir)
 {
-    m_sprite = makeSprite(TEX_GRENADE);
+    m_sprite = MakeSprite(TEX_GRENADE);
 
     b2BodyDef bdef;
     bdef.position.x    = pos.x / Constances::PPM;
@@ -51,22 +51,22 @@ bool Grenade::init(const Vec2& pos, Direction dir)
     bdef.type          = b2_dynamicBody;
     bdef.fixedRotation = false;
 
-    float sign            = directionToSign(dir);
+    float sign            = DirectionToSign(dir);
     bdef.linearVelocity.x = sign * 5.f;
     bdef.linearVelocity.y = -5.f;
 
     bdef.angularVelocity = sign * 3.14 * 2.f;
 
-    m_body = WorldManager::getWorld()->CreateBody(&bdef);
+    m_body = WorldManager::GetWorld()->CreateBody(&bdef);
 
     b2CircleShape circle;
     circle.m_radius = 6.f / Constances::PPM;
 
     b2FixtureDef fdef;
     fdef.shape               = &circle;
-    fdef.filter.categoryBits = CATEGORY_BIT_SPELL;
+    fdef.filter.categoryBits = CATEGORY_BIT_PROJECTILE;
     fdef.filter.maskBits     = CATEGORY_BIT_BLOCK;
-    fdef.restitution         = 0.5f;
+    fdef.restitution         = 0.7f;
     fdef.friction            = 0.1f;
 
     m_body->CreateFixture(&fdef);
@@ -76,7 +76,7 @@ bool Grenade::init(const Vec2& pos, Direction dir)
     return true;
 }
 
-void Grenade::tick(float deltaTime)
+void Grenade::Tick(float deltaTime)
 {
     m_positionX = m_body->GetPosition().x * Constances::PPM;
     m_positionY = m_body->GetPosition().y * Constances::PPM;
@@ -88,48 +88,48 @@ void Grenade::tick(float deltaTime)
 
     if (m_timer >= 1.f)
     {
-        remove();
-        Level* level = static_cast<Level*>(getScene());
+        Remove();
+        Level* level = static_cast<Level*>(GetScene());
 
-        Vec2 position = getPosition() + Vec2(0.f, -20.f);
-        level->getParticleSystem()->create<FireBustParticle>(position);
-        level->getCameraShaker()->shake(0.1f, 5, 20);
+        Vec2 position = GetPosition() + Vec2(0.f, -20.f);
+        level->GetParticleSystem()->Create<FireBustParticle>(position);
+        level->GetCameraShaker()->Shake(0.1f, 5, 20);
 
         const int  MAX = 10;
         b2Fixture* fixtures[MAX];
         int        n = 0;
-        FloatRect  rect(getPosition() - Vec2(25.f, 25.f), Vec2(50.f, 50.f));
-        boxQuery(rect, CATEGORY_BIT_MONSTER, fixtures, n, MAX);
+        FloatRect  rect(GetPosition() - Vec2(25.f, 25.f), Vec2(50.f, 50.f));
+        BoxQuery(rect, CATEGORY_BIT_MONSTER, fixtures, n, MAX);
 
         for (int i = 0; i < n; ++i)
         {
             const Identifier* idr = static_cast<const Identifier*>(
                 fixtures[i]->GetBody()->GetUserData());
             Monster* monster = static_cast<Monster*>(idr->object);
-            monster->takeDamge(5, DIRECTION_NONE);
+            monster->TakeDamge(5, DIRECTION_NONE);
         }
 
-        Audio::play(SOUND_EXPLOSION);
+        Audio::Play(SOUND_EXPLOSION);
     }
 }
 
-void Grenade::paint()
+void Grenade::Paint()
 {
-    SDL_Renderer*   renderer = Game::getInstance()->renderer();
-    const SDL_Rect& viewport = getScene()->getCamera().getViewport();
+    SDL_Renderer*   renderer = Game::GetInstance()->GetRenderer();
+    const SDL_Rect& viewport = GetScene()->GetCamera().GetViewport();
 
     SDL_Rect dstrect;
     dstrect.x = m_positionX - 6 - viewport.x;
     dstrect.y = m_positionY - 6 - viewport.y;
-    dstrect.w = m_sprite.getWidth();
-    dstrect.h = m_sprite.getHeight();
+    dstrect.w = m_sprite.GetWidth();
+    dstrect.h = m_sprite.GetHeight();
 
-    m_sprite.draw(renderer, &dstrect, m_rotation, nullptr, m_flip);
+    m_sprite.Draw(renderer, &dstrect, m_rotation, nullptr, m_flip);
 }
 
-void Grenade::cleanup() { delete this; }
+void Grenade::Cleanup() { delete this; }
 
-void Grenade::onBeginContact(const ContactInfo&) {}
-void Grenade::onEndContact(const ContactInfo&) {}
-void Grenade::onPreSolve(const ContactInfo&, const b2Manifold&) {}
-void Grenade::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
+void Grenade::OnBeginContact(const ContactInfo&) {}
+void Grenade::OnEndContact(const ContactInfo&) {}
+void Grenade::OnPreSolve(const ContactInfo&, const b2Manifold&) {}
+void Grenade::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

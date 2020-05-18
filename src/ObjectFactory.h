@@ -10,11 +10,11 @@ class ObjectFactory
   public:
     typedef std::function<GameObject*(const tmx::Object&)> CreateFunc;
 
-    void resigter(const std::string& type, CreateFunc createFunc);
+    void Resigter(const std::string& type, CreateFunc createFunc);
 
-    GameObject* createObject(const std::string& type, const tmx::Object& objectData);
+    GameObject* CreateObject(const std::string& type, const tmx::Object& objectData);
 
-	static ObjectFactory* getInstance();
+	static ObjectFactory* GetInstance();
 
   private:
     ObjectFactory();

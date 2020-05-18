@@ -8,7 +8,7 @@ class FireExplosionParticle : public AnimatedParticle,
     // GameObject interface
   public:
     typedef AnimatedParticlePool<FireExplosionParticle> Pool;
-    void cleanup() override;
+    void Cleanup() override;
 
   private:
     friend Pool;

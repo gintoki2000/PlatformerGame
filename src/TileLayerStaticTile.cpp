@@ -1,6 +1,6 @@
 #include "TileLayerStaticTile.h"
 
-const TextureRegion& TileLayerStaticTile::getTextureRegion()
+const TextureRegion& TileLayerStaticTile::GetTextureRegion()
 {
     return m_textureRegion;
 }

@@ -11,10 +11,10 @@ enum SoundID
 class Audio 
 {
 	public:
-		static bool init();
-		static void terminate();
-		static void play(SoundID soundID);
-		static void volumeSound(SoundID soundID, int volume);
+		static bool Init();
+		static void Terminate();
+		static void Play(SoundID soundID);
+		static void VolumeSound(SoundID soundID, int volume);
 	
 	private:
 		Audio() {}

@@ -9,7 +9,7 @@ class TileLayerStaticTile : public TileLayerTile
     {
     }
 
-    const TextureRegion& getTextureRegion() override;
+    const TextureRegion& GetTextureRegion() override;
 
   private:
     TextureRegion m_textureRegion;

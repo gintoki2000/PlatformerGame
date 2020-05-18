@@ -13,14 +13,15 @@ enum TextureID
     TEX_STATUS_BAR,
     TEX_BLOOD_STAIN,
     TEX_ICONS,
+	TEX_FOODS,
     NUM_TEXTURES
 };
 class TextureManager
 {
   public:
-    static bool         load(SDL_Renderer* renderer);
-    static void         unload();
-    static SDL_Texture* get(int textureID);
+    static bool         Load(SDL_Renderer* renderer);
+    static void         Unload();
+    static SDL_Texture* Get(int textureID);
   private:
 	static SDL_Texture** textures;
 };

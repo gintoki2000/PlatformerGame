@@ -4,7 +4,7 @@
 
 Mix_Chunk* Audio::sounds[NUM_SOUNDS] = {};
 
-bool Audio::init()
+bool Audio::Init()
 {
     struct Pair
     {
@@ -29,7 +29,7 @@ bool Audio::init()
 	return true;
 }
 
-void Audio::terminate() 
+void Audio::Terminate() 
 {
 	for (int i = 0; i < NUM_SOUNDS; ++i)
 	{
@@ -38,13 +38,13 @@ void Audio::terminate()
 	}
 }
 
-void Audio::play(SoundID soundID)
+void Audio::Play(SoundID soundID)
 {
 	Mix_Chunk* sound = sounds[soundID];
 	Mix_PlayChannel(-1, sound, 0);
 }
 
-void Audio::volumeSound(SoundID soundID, int volume)
+void Audio::VolumeSound(SoundID soundID, int volume)
 {
 	Mix_Chunk* sound = sounds[soundID];
 	Mix_VolumeChunk(sound, volume);

@@ -10,22 +10,22 @@ class Slime : public Monster
 	Slime(Level* level);
     ~Slime();
 
-    void getHit(int damage) override;
+    void GetHit(int damage) override;
 
   private:
     Slime();
-	void updateLogic(float deltaTime) override;
-    bool init(Level*);
-    void resetMembers();
-    void checkAttackCollision();
-    void checkDirection();
+	void UpdateLogic(float deltaTime) override;
+    bool Init(Level*);
+    void ResetMembers();
+    void CheckAttackCollision();
+    void CheckDirection();
 
-    void idle();
-    void wait();
-    void move();
-    void attack();
-    void hurt();
-    void die();
+    void Idle();
+    void Wait();
+    void Move();
+    void Attack();
+    void Hurt();
+    void Die();
     enum
     {
         ANIM_IDLE,
@@ -46,7 +46,7 @@ class Slime : public Monster
         STATE_DIE
     };
 
-    void         setState(State newState, float initialTime);
+    void         SetState(State newState, float initialTime);
     State        m_state;
     float        m_timer;
     float        m_changingDirTimer;

@@ -6,6 +6,6 @@ public:
   TileLayerTile(){}
   virtual ~TileLayerTile() {}
 
-  virtual const TextureRegion &getTextureRegion() = 0;
+  virtual const TextureRegion &GetTextureRegion() = 0;
 };
 #endif // TILED_MAP_TILE_H

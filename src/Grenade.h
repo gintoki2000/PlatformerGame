@@ -10,27 +10,27 @@
 class Grenade : public Spell, public ICollisionHandler
 {
   public:
-    static Grenade* create(const Vec2& pos, Direction dir);
+    static Grenade* Create(const Vec2& pos, Direction dir);
     ~Grenade();
 
     /// GameObject interface
   public:
-    void tick(float deltaTime) override;
-    void paint() override;
-    void cleanup() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
+    void Cleanup() override;
 
     /// ICollisionHandler interface
   public:
-    void onPreSolve(const ContactInfo& info,
+    void OnPreSolve(const ContactInfo& info,
                     const b2Manifold&  oldManiflod) override;
-    void onBeginContact(const ContactInfo& info) override;
-    void onEndContact(const ContactInfo& info) override;
-    void onPostSolve(const ContactInfo&      info,
+    void OnBeginContact(const ContactInfo& info) override;
+    void OnEndContact(const ContactInfo& info) override;
+    void OnPostSolve(const ContactInfo&      info,
                      const b2ContactImpulse& impluse) override;
 
   private:
     Grenade();
-    bool init(const Vec2& pos, Direction dir);
+    bool Init(const Vec2& pos, Direction dir);
 
     Sprite           m_sprite;
     b2Body*          m_body;

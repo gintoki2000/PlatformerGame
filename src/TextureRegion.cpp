@@ -12,19 +12,19 @@ TextureRegion::TextureRegion(SDL_Texture *_texture) : texture(_texture) {
 TextureRegion::TextureRegion(SDL_Texture *_texture, const SDL_Rect &_rect)
     : texture(_texture), rect(_rect) {}
 
-int TextureRegion::draw(SDL_Renderer *renderer,
+int TextureRegion::Draw(SDL_Renderer *renderer,
                           const SDL_Rect *dstrect) const {
   return SDL_RenderCopy(renderer, texture, &rect, dstrect);
 }
 
-int TextureRegion::draw(SDL_Renderer *renderer, const SDL_Rect *dstrect,
+int TextureRegion::Draw(SDL_Renderer *renderer, const SDL_Rect *dstrect,
                           double angle, const SDL_Point *center,
                           SDL_RendererFlip flip) const {
   return SDL_RenderCopyEx(renderer, texture, &rect, dstrect, angle, center,
                           flip);
 }
 
-int TextureRegion::draw(SDL_Renderer* renderer, int x, int y) const
+int TextureRegion::Draw(SDL_Renderer* renderer, int x, int y) const
 {
 	SDL_Rect dstrect;
 	dstrect.x = x;
@@ -34,7 +34,7 @@ int TextureRegion::draw(SDL_Renderer* renderer, int x, int y) const
 	return SDL_RenderCopy(renderer, texture, &rect, &dstrect);
 }
 
-int TextureRegion::draw(SDL_Renderer* renderer, int x, int y, SDL_RendererFlip flip) const
+int TextureRegion::Draw(SDL_Renderer* renderer, int x, int y, SDL_RendererFlip flip) const
 {
 
 	SDL_Rect dstrect;

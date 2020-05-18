@@ -2,12 +2,12 @@
 #include "SDL_render.h"
 #include "TextureManager.h"
 
-Sprite makeSprite(int textureID, const SDL_Rect& rect)
+Sprite MakeSprite(int textureID, const SDL_Rect& rect)
 {
-    return Sprite(TextureManager::get(textureID), rect);
+    return Sprite(TextureManager::Get(textureID), rect);
 }
 
-Sprite makeSprite(int textureID)
+Sprite MakeSprite(int textureID)
 {
-    return Sprite(TextureManager::get(textureID));
+    return Sprite(TextureManager::Get(textureID));
 }

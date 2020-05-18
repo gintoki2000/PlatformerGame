@@ -18,27 +18,27 @@ ContactInfo::ContactInfo(b2Contact *contact, b2Fixture *collider, b2Fixture *oth
 
 }
 
-b2Fixture &ContactInfo::getCollider() const
+b2Fixture &ContactInfo::GetCollider() const
 {
     return *m_collider;
 }
 
-void ContactInfo::setIsEnabled(bool flag) const
+void ContactInfo::SetIsEnabled(bool flag) const
 {
     m_contact->SetEnabled(flag);
 }
 
-bool ContactInfo::isEnabled() const
+bool ContactInfo::IsEnabled() const
 {
     return m_contact->IsEnabled();
 }
 
-b2Fixture &ContactInfo::getOtherCollider() const
+b2Fixture &ContactInfo::GetOtherCollider() const
 {
     return *m_otherCollider;
 }
 
-const Identifier* ContactInfo::getOtherIdentifier() const 
+const Identifier* ContactInfo::GetOtherIdentifier() const 
 {
 	return m_identifier;
 }

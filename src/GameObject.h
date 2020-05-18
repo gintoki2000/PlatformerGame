@@ -11,47 +11,47 @@ class GameObject
     GameObject();
     virtual ~GameObject();
     /// stuffs
-    virtual void tick(float deltaTime) = 0;
-    virtual void paint()               = 0;
-    virtual void cleanup();
-    virtual void start();
-    void         show();
-    void         hide();
+    virtual void Tick(float deltaTime);
+    virtual void Paint(); 
+    virtual void Cleanup();
+    virtual void Start();
+    void         Show();
+    void         Hide();
 
     /// setter && getter
-    float getPositionX() const;
-    void  setPositionX(float x);
+    float GetPositionX() const;
+    void  SetPositionX(float x);
 
-    float getPositionY() const;
-    void  setPositionY(float y);
+    float GetPositionY() const;
+    void  SetPositionY(float y);
 
-    Vec2 getPosition() const;
-    void setPosition(float x, float y);
-    void setPosition(const Vec2& pos);
+    Vec2 GetPosition() const;
+    void SetPosition(float x, float y);
+    void SetPosition(const Vec2& pos);
 
-    double getRotation() const;
-    void   setRotation(double rotation);
+    double GetRotation() const;
+    void   SetRotation(double rotation);
 
-    void remove();
+    void Remove();
 
-    bool isVisible() const;
-    void setIsVisible(bool isVisible);
+    bool IsVisible() const;
+    void SetIsVisible(bool isVisible);
 
-    bool isActive() const;
-    void setIsActive(bool isActive);
+    bool IsActive() const;
+    void SetIsActive(bool isActive);
 
-    ObjectLayer* getObjectLayer() const;
-    void         setObjectLayer(ObjectLayer* objectLayer);
+    ObjectLayer* GetObjectLayer() const;
+    void         SetObjectLayer(ObjectLayer* objectLayer);
 
-    Scene* getScene() const;
+    Scene* GetScene() const;
 
   protected:
-    virtual void onPositionChanged();
-    virtual void onRotationChanged();
-    virtual void onAcivated();
-    virtual void onDeactivated();
-    virtual void onBecomeVisible();
-    virtual void onBecomeInvisible();
+    virtual void OnPositionChanged();
+    virtual void OnRotationChanged();
+    virtual void OnAcivated();
+    virtual void OnDeactivated();
+    virtual void OnBecomeVisible();
+    virtual void OnBecomeInvisible();
 
     ObjectLayer*  m_objectLayer;
     float         m_positionX;

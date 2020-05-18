@@ -9,11 +9,11 @@ class ContactInfo
     ContactInfo(b2Contact* contact, b2Fixture* collider,
                 b2Fixture* otherCollider, Identifier* indentifier);
 
-    b2Fixture&        getCollider() const;
-    b2Fixture&        getOtherCollider() const;
-    void              setIsEnabled(bool flag) const;
-    bool              isEnabled() const;
-    const Identifier* getOtherIdentifier() const;
+    b2Fixture&        GetCollider() const;
+    b2Fixture&        GetOtherCollider() const;
+    void              SetIsEnabled(bool flag) const;
+    bool              IsEnabled() const;
+    const Identifier* GetOtherIdentifier() const;
 
   private:
     b2Contact*  m_contact;
@@ -28,11 +28,11 @@ class ICollisionHandler
     ICollisionHandler();
     virtual ~ICollisionHandler();
 
-    virtual void onPreSolve(const ContactInfo& info,
+    virtual void OnPreSolve(const ContactInfo& info,
                             const b2Manifold&  oldManiflod)    = 0;
-    virtual void onBeginContact(const ContactInfo& info)      = 0;
-    virtual void onEndContact(const ContactInfo& info)        = 0;
-    virtual void onPostSolve(const ContactInfo&      info,
+    virtual void OnBeginContact(const ContactInfo& info)      = 0;
+    virtual void OnEndContact(const ContactInfo& info)        = 0;
+    virtual void OnPostSolve(const ContactInfo&      info,
                              const b2ContactImpulse& impluse) = 0;
 };
 

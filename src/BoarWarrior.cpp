@@ -10,6 +10,7 @@
 #include "Level.h"
 #include "ObjectLayer.h"
 #include "Adventurer.h"
+#include "PickupObjMeat.h"
 #include "Rect.h"
 #include "SDL_blendmode.h"
 #include "SDL_rect.h"
@@ -28,10 +29,10 @@ BoarWarrior::BoarWarrior() { m_animator = nullptr; }
 
 BoarWarrior::~BoarWarrior() { delete m_animator; }
 
-BoarWarrior* BoarWarrior::create(const tmx::Object& data)
+BoarWarrior* BoarWarrior::Create(const tmx::Object& data)
 {
     BoarWarrior* ret = new BoarWarrior;
-    if (ret->init(data))
+    if (ret->Init(data))
     {
         return ret;
     }
@@ -39,10 +40,10 @@ BoarWarrior* BoarWarrior::create(const tmx::Object& data)
     return nullptr;
 }
 /*
-BoarWarrior* BoarWarrior::create(const Vec2& leftTop)
+BoarWarrior* BoarWarrior::Create(const Vec2& leftTop)
 {
         BoarWarrior* ret = new BoarWarrior;
-        if(ret->init(leftTop))
+        If(ret->Init(leftTop))
         {
                 return ret;
         }
@@ -50,19 +51,19 @@ BoarWarrior* BoarWarrior::create(const Vec2& leftTop)
         return nullptr;
 }
 */
-bool BoarWarrior::init(const tmx::Object& data)
+bool BoarWarrior::Init(const tmx::Object& data)
 {
     Vec2 leftTop;
     leftTop.x = data.getAABB().left;
     leftTop.y = data.getAABB().top;
-    return init(leftTop);
+    return Init(leftTop);
 }
 
-bool BoarWarrior::init(const Vec2& leftTop)
+bool BoarWarrior::Init(const Vec2& leftTop)
 {
-    Monster::init(FloatRect(leftTop, SIZE));
-    m_texture = TextureManager::get(TEX_BOAR_WARRIOR);
-    m_spriteSheet.init(m_texture, 120, 100);
+    Monster::Init(FloatRect(leftTop, SIZE));
+    m_texture = TextureManager::Get(TEX_BOAR_WARRIOR);
+    m_spriteSheet.Init(m_texture, 120, 100);
     Animation* anims[NUM_ANIMS];
 
     anims[ANIM_IDLE]             = new Animation(&m_spriteSheet, 0, 10, 0.2f);
@@ -73,18 +74,18 @@ bool BoarWarrior::init(const Vec2& leftTop)
     anims[ANIM_PRE_HEAVY_ATTACK] = new Animation(&m_spriteSheet, 38, 9, 0.1f);
     anims[ANIM_HEAVY_ATTACK]     = new Animation(&m_spriteSheet, 47, 7, 0.1f);
 
-    anims[ANIM_IDLE]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_MOVE_FORWARD]->setPlayMode(Animation::PLAY_MODE_LOOP);
-    anims[ANIM_MOVE_BACKWARD]->setPlayMode(Animation::PLAY_MODE_LOOP_REVERSE);
+    anims[ANIM_IDLE]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_MOVE_FORWARD]->SetPlayMode(Animation::PLAY_MODE_LOOP);
+    anims[ANIM_MOVE_BACKWARD]->SetPlayMode(Animation::PLAY_MODE_LOOP_REVERSE);
 
     m_animator  = new Animator(anims, NUM_ANIMS);
     m_waitTimer = 0.f;
 
-    resetMembers();
+    ResetMembers();
     return true;
 }
 
-bool BoarWarrior::takeDamge(int damage, Direction direction)
+bool BoarWarrior::TakeDamge(int damage, Direction direction)
 {
     if (m_state != STATE_DIE && m_hurtTimer <= 0.f)
     {
@@ -94,11 +95,11 @@ bool BoarWarrior::takeDamge(int damage, Direction direction)
             if (m_hitPoints < 0)
             {
                 m_hitPoints = 0;
-                die();
+                Die();
             }
             else
             {
-                hurt();
+                Hurt();
             }
         }
         if (direction != DIRECTION_NONE)
@@ -110,35 +111,13 @@ bool BoarWarrior::takeDamge(int damage, Direction direction)
     return false;
 }
 
-void BoarWarrior::onPreSolve(const ContactInfo& info, const b2Manifold&)
+void BoarWarrior::Tick(float deltaTime)
 {
-    const Identifier* otherIDR = info.getOtherIdentifier();
-    if (otherIDR != nullptr && otherIDR->tag == TAG_PLAYER)
-    {
-        if (!isDead())
-        {
-            Adventurer*   adventurer = static_cast<Adventurer*>(otherIDR->object);
-            Direction direction =
-                relativeDirection(adventurer->getPositionX(), getPositionX());
-            if (adventurer->takeDamge(1, direction) && adventurer->isGrounded())
-            {
-                b2Vec2 f;
-                f.x = -directionToSign(direction) * 20.f;
-                f.y = -10.f;
-                adventurer->getBody()->ApplyLinearImpulseToCenter(f, true);
-            }
-        }
-        info.setIsEnabled(false);
-    }
-}
-
-void BoarWarrior::tick(float deltaTime)
-{
-    Monster::tick(deltaTime);
+    Monster::Tick(deltaTime);
     m_timer += deltaTime;
     ++m_counter;
-    m_animator->tick(deltaTime);
-    m_isFacingToAdventurer = rayCast(8);
+    m_animator->Tick(deltaTime);
+    m_isFacingToAdventurer = RayCast(8);
 
     if (m_hurtTimer > 0)
     {
@@ -159,28 +138,28 @@ void BoarWarrior::tick(float deltaTime)
     {
     case STATE_IDLE:
     {
-        followAdventurerDir();
+        FollowAdventurerDir();
         if (m_isFacingToAdventurer)
         {
-            moveForward();
+            MoveForward();
         }
     }
     break;
     case STATE_TRIGGER_MOVE_FORWARD:
     {
-        followAdventurerDir();
+        FollowAdventurerDir();
         if (!m_isFacingToAdventurer)
         {
-            idle();
+            Idle();
         }
-        else if (rayCast(2))
+        else if (RayCast(2))
         {
-            rand() % 2 == 0 ? preAttack() : preHeavyAttack();
+            rand() % 2 == 0 ? PreAttack() : PreHeavyAttack();
         }
         else
         {
             b2Vec2 vel = m_body->GetLinearVelocity();
-            vel.x      = 2.f * directionToSign(m_direction);
+            vel.x      = 2.f * DirectionToSign(m_direction);
             m_body->SetLinearVelocity(vel);
         }
     }
@@ -189,7 +168,7 @@ void BoarWarrior::tick(float deltaTime)
     {
         if (m_phrase == 0)
         {
-            if (m_animator->isCurrentAnimationFinshed())
+            if (m_animator->IsCurrentAnimationFinshed())
             {
                 m_timer  = 0.f;
                 m_phrase = 1;
@@ -200,25 +179,25 @@ void BoarWarrior::tick(float deltaTime)
             /// wait 1s
             if (m_timer >= 0.5f)
             {
-                attack();
+                Attack();
 
                 FloatRect rect;
-                int       sign = directionToSign(m_direction);
+                int       sign = DirectionToSign(m_direction);
 
                 rect.x      = m_positionX + sign * 32;
                 rect.y      = m_positionY - 10;
                 rect.width  = 42;
                 rect.height = 35;
 
-                if (boxCast(rect, CATEGORY_BIT_PLAYER))
+                if (BoxCast(rect, CATEGORY_BIT_ADVENTURER))
                 {
-                    Level*  level  = static_cast<Level*>(getScene());
-                    Adventurer* adventurer = level->getAdventurer();
-                    if (adventurer->takeDamge(
-                            2, relativeDirection(adventurer->getPositionX(),
-                                                 getPositionX())))
+                    Level*  level  = static_cast<Level*>(GetScene());
+                    Adventurer* adventurer = level->GetAdventurer();
+                    if (adventurer->TakeDamge(
+                            2, RelativeDirection(adventurer->GetPositionX(),
+                                                 GetPositionX())))
                     {
-                        adventurer->getBody()->ApplyForceToCenter(
+                        adventurer->GetBody()->ApplyForceToCenter(
                             b2Vec2(sign * 1000.f, 0.f), true);
                     }
                 }
@@ -230,7 +209,7 @@ void BoarWarrior::tick(float deltaTime)
     {
         if (m_phrase == 0)
         {
-            if (m_animator->isCurrentAnimationFinshed())
+            if (m_animator->IsCurrentAnimationFinshed())
             {
                 m_timer  = 0.f;
                 m_phrase = 1;
@@ -240,7 +219,7 @@ void BoarWarrior::tick(float deltaTime)
         {
             if (m_timer > 0.2f)
             {
-                moveBackward();
+                MoveBackward();
                 m_moveBackwardTime = rand() % 10 * 0.1f + 0.5f;
                 m_timer            = 0.f;
             }
@@ -249,20 +228,20 @@ void BoarWarrior::tick(float deltaTime)
     break;
     case STATE_TRIGGER_MOVE_BACKWARD:
     {
-        followAdventurerDir();
+        FollowAdventurerDir();
         if (!m_isFacingToAdventurer)
         {
-            idle();
+            Idle();
         }
         else if (m_timer >= m_moveBackwardTime)
         {
-            idle();
+            Idle();
         }
         else
         {
 
             b2Vec2 vel = m_body->GetLinearVelocity();
-            vel.x      = -1.f * directionToSign(m_direction);
+            vel.x      = -1.f * DirectionToSign(m_direction);
             m_body->SetLinearVelocity(vel);
         }
     }
@@ -272,7 +251,7 @@ void BoarWarrior::tick(float deltaTime)
 
         if (m_phrase == 0)
         {
-            if (m_animator->isCurrentAnimationFinshed())
+            if (m_animator->IsCurrentAnimationFinshed())
             {
                 m_timer  = 0.f;
                 m_phrase = 1;
@@ -283,29 +262,29 @@ void BoarWarrior::tick(float deltaTime)
             /// wait 1s
             if (m_timer >= 0.6f)
             {
-                heavyAttack();
-                Level* level = static_cast<Level*>(getScene());
+                HeavyAttack();
+                Level* level = static_cast<Level*>(GetScene());
 
                 FloatRect rect;
-                int       sign = directionToSign(m_direction);
+                int       sign = DirectionToSign(m_direction);
 
                 rect.x      = m_positionX - 43 / 2 + sign * 32;
                 rect.y      = m_positionY - 32;
                 rect.width  = 43;
                 rect.height = 64;
 
-                if (boxCast(rect, CATEGORY_BIT_PLAYER))
+                if (BoxCast(rect, CATEGORY_BIT_ADVENTURER))
                 {
-                    Adventurer*   adventurer    = level->getAdventurer();
-                    Direction direction = relativeDirection(
-                        adventurer->getPositionX(), getPositionX());
-                    if (adventurer->takeDamge(2, direction))
+                    Adventurer*   adventurer    = level->GetAdventurer();
+                    Direction direction = RelativeDirection(
+                        adventurer->GetPositionX(), GetPositionX());
+                    if (adventurer->TakeDamge(2, direction))
                     {
-                        adventurer->getBody()->ApplyForceToCenter(
+                        adventurer->GetBody()->ApplyForceToCenter(
                             b2Vec2(0.f, -500.f), true);
                     }
                 }
-                level->getCameraShaker()->shake(.1f, 5, 15);
+                level->GetCameraShaker()->Shake(.1f, 5, 15);
             }
         }
     }
@@ -314,7 +293,7 @@ void BoarWarrior::tick(float deltaTime)
     {
         if (m_phrase == 0)
         {
-            if (m_animator->isCurrentAnimationFinshed())
+            if (m_animator->IsCurrentAnimationFinshed())
             {
                 m_timer  = 0.f;
                 m_phrase = 1;
@@ -327,11 +306,11 @@ void BoarWarrior::tick(float deltaTime)
                 if (rand() % 2 == 0)
                 {
                     m_waitTimer = 2.f;
-                    idle();
+                    Idle();
                 }
                 else
                 {
-                    moveBackward();
+                    MoveBackward();
                 }
             }
         }
@@ -348,8 +327,8 @@ void BoarWarrior::tick(float deltaTime)
 
                 Level*            level;
                 FireBustParticle* particle;
-                level = (Level*)getScene();
-                level->getParticleSystem()->create<FireBustParticle>(Vec2(x, y));
+                level = (Level*)GetScene();
+                level->GetParticleSystem()->Create<FireBustParticle>(Vec2(x, y));
             }
             if (m_alpha > 0)
             {
@@ -367,25 +346,27 @@ void BoarWarrior::tick(float deltaTime)
         }
         else
         {
-            remove();
+            Remove();
+			Level* level = static_cast<Level*>(GetScene());
+			level->GetSpriteLayer()->AddObject(new PickupObjectMeat(GetPosition()));
         }
     }
     break;
     }
 }
 
-void BoarWarrior::paint()
+void BoarWarrior::Paint()
 {
-    const Camera&   camera   = getScene()->getCamera();
-    const SDL_Rect& viewport = camera.getViewport();
-    SDL_Renderer*   renderer = Game::getInstance()->renderer();
-    const Sprite&   sprite   = m_animator->getCurrentSprite();
+    const Camera&   camera   = GetScene()->GetCamera();
+    const SDL_Rect& viewport = camera.GetViewport();
+    SDL_Renderer*   renderer = Game::GetInstance()->GetRenderer();
+    const Sprite&   sprite   = m_animator->GetCurrentSprite();
 
     SDL_Rect dstrect;
     dstrect.x = m_positionX - 60;
     dstrect.y = m_positionY - 64;
-    dstrect.w = sprite.getWidth();
-    dstrect.h = sprite.getHeight();
+    dstrect.w = sprite.GetWidth();
+    dstrect.h = sprite.GetHeight();
     SDL_RendererFlip flip =
         m_direction == DIRECTION_LEFT ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
@@ -401,108 +382,108 @@ void BoarWarrior::paint()
             Uint8 r, g, b;
             SDL_GetTextureColorMod(m_texture, &r, &g, &b);
             SDL_SetTextureColorMod(m_texture, 0xff, 0x00, 0x0);
-            sprite.draw(renderer, &dstrect, 0.0, nullptr, flip);
+            sprite.Draw(renderer, &dstrect, 0.0, nullptr, flip);
             SDL_SetTextureColorMod(m_texture, r, g, b);
         }
         else
         {
-            sprite.draw(renderer, &dstrect, 0.0, nullptr, flip);
+            sprite.Draw(renderer, &dstrect, 0.0, nullptr, flip);
         }
         SDL_SetTextureAlphaMod(m_texture, a);
     }
 }
 
-void BoarWarrior::cleanup() { delete this; }
+void BoarWarrior::Cleanup() { delete this; }
 
-void BoarWarrior::resetMembers()
+void BoarWarrior::ResetMembers()
 {
     m_direction = DIRECTION_LEFT;
     m_timer     = 0.f;
     m_hurtTimer = 0.f;
     m_hitPoints = 50;
     m_alpha     = 255;
-    idle();
+    Idle();
 }
 
-void BoarWarrior::idle()
+void BoarWarrior::Idle()
 {
     m_timer = 0.f;
     m_state = STATE_IDLE;
-    m_animator->play(ANIM_IDLE);
+    m_animator->Play(ANIM_IDLE);
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x      = 0.f;
     m_body->SetLinearVelocity(vel);
 }
 
-void BoarWarrior::moveForward()
+void BoarWarrior::MoveForward()
 {
     m_state = STATE_TRIGGER_MOVE_FORWARD;
-    m_animator->play(ANIM_MOVE_FORWARD);
+    m_animator->Play(ANIM_MOVE_FORWARD);
 }
 
-void BoarWarrior::moveBackward()
+void BoarWarrior::MoveBackward()
 {
     m_state = STATE_TRIGGER_MOVE_BACKWARD;
-    m_animator->play(ANIM_MOVE_BACKWARD);
+    m_animator->Play(ANIM_MOVE_BACKWARD);
     m_phrase = 0;
     m_timer  = 0.f;
 }
 
-void BoarWarrior::preAttack()
+void BoarWarrior::PreAttack()
 {
     m_state = STATE_PRE_ATTACK;
-    m_animator->play(ANIM_PRE_ATTACK);
+    m_animator->Play(ANIM_PRE_ATTACK);
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x      = 0.f;
     m_body->SetLinearVelocity(vel);
     m_phrase = 0;
 }
 
-void BoarWarrior::attack()
+void BoarWarrior::Attack()
 {
     m_state = STATE_ATTACK;
-    m_animator->play(ANIM_ATTACK);
+    m_animator->Play(ANIM_ATTACK);
     m_phrase = 0;
 }
 
-void BoarWarrior::preHeavyAttack()
+void BoarWarrior::PreHeavyAttack()
 {
 
     m_state = STATE_PRE_HEAVY_ATTACK;
-    m_animator->play(ANIM_PRE_HEAVY_ATTACK);
+    m_animator->Play(ANIM_PRE_HEAVY_ATTACK);
     b2Vec2 vel = m_body->GetLinearVelocity();
     vel.x      = 0.f;
     m_body->SetLinearVelocity(vel);
     m_phrase = 0;
 }
-void BoarWarrior::heavyAttack()
+void BoarWarrior::HeavyAttack()
 {
     m_state = STATE_HEAVY_ATTACK;
-    m_animator->play(ANIM_HEAVY_ATTACK);
+    m_animator->Play(ANIM_HEAVY_ATTACK);
     m_phrase = 0;
 }
 
-void BoarWarrior::hurt() { m_hurtTimer = 17; }
+void BoarWarrior::Hurt() { m_hurtTimer = 17; }
 
-void BoarWarrior::die()
+void BoarWarrior::Die()
 {
     m_state     = STATE_DIE;
     m_counter   = 0;
     m_timer     = 0.f;
     m_waitTimer = 0.f;
-    m_animator->play(ANIM_IDLE);
+    m_animator->Play(ANIM_IDLE);
     m_body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
     m_body->SetGravityScale(0.f);
 }
 
-void BoarWarrior::wait() { m_state = STATE_WAIT; }
+void BoarWarrior::Wait() { m_state = STATE_WAIT; }
 
-bool BoarWarrior::rayCast(int dis)
+bool BoarWarrior::RayCast(int dis)
 {
-    Adventurer* adventurer     = ((Level*)getScene())->getAdventurer();
-    b2Body* adventurerBody = adventurer->getBody();
+    Adventurer* adventurer     = ((Level*)GetScene())->GetAdventurer();
+    b2Body* adventurerBody = adventurer->GetBody();
 
-    float sign = directionToSign(m_direction);
+    float sign = DirectionToSign(m_direction);
 
     b2RayCastInput input;
     input.maxFraction = dis;
@@ -524,11 +505,11 @@ bool BoarWarrior::rayCast(int dis)
     return false;
 }
 
-void BoarWarrior::followAdventurerDir()
+void BoarWarrior::FollowAdventurerDir()
 {
 
-    Adventurer* adventurer     = ((Level*)getScene())->getAdventurer();
-    float   adventurerPosX = adventurer->getPositionX();
+    Adventurer* adventurer     = ((Level*)GetScene())->GetAdventurer();
+    float   adventurerPosX = adventurer->GetPositionX();
 
     if (adventurerPosX < m_positionX)
     {

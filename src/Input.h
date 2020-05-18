@@ -21,17 +21,17 @@ enum Button
 class Input
 {
   public:
-    static int  getHorizontalInputDirection();
-    //static int  getVerticalInputDirection();
+    static int  GetHorizontalInputDirection();
+    //static int  GetVerticalInputDirection();
 
-    static bool isPressed(Button button);
-    static bool isReleased(Button button);
-    static bool isJustPressed(Button button);
-    static bool isJustReleased(Button button);
+    static bool IsPressed(Button button);
+    static bool IsReleased(Button button);
+    static bool IsJustPressed(Button button);
+    static bool IsJustReleased(Button button);
 
-	static void init();
-
-    static void update();
+	static void Init();
+    static void Update();
+	static void ResetState();
 
   private:
     static int  mappingToScancode[NUM_BUTTONS];

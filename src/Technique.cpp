@@ -7,6 +7,10 @@ Technique::Technique(int MPCost, const Sprite& sprite) :
 
 Technique::~Technique() {}
 
-void Technique::enter(Adventurer&) {}
+bool Technique::Tick(Adventurer&, float) { return false; }
 
-void Technique::exit(Adventurer&) {}
+bool Technique::HandleInput(Adventurer&) { return false; }
+
+void Technique::Enter(Adventurer&) {}
+
+void Technique::Exit(Adventurer&) {}

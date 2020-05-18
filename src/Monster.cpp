@@ -1,6 +1,6 @@
 #include "Monster.h"
-#include "Constances.h"
 #include "Adventurer.h"
+#include "Constances.h"
 #include "Utils.h"
 #include "WorldManager.h"
 #include "box2d/b2_fixture.h"
@@ -25,9 +25,9 @@ Monster::~Monster()
     }
 }
 
-bool Monster::init(const FloatRect& aabb)
+bool Monster::Init(const FloatRect& aabb)
 {
-    b2World&  world = *WorldManager::getWorld();
+    b2World&  world = *WorldManager::GetWorld();
     b2BodyDef bdef;
     bdef.fixedRotation = true;
     bdef.type          = b2_dynamicBody;
@@ -53,7 +53,7 @@ bool Monster::init(const FloatRect& aabb)
     b2FixtureDef fdef;
     fdef.filter.categoryBits = CATEGORY_BIT_MONSTER;
     fdef.filter.maskBits =
-        CATEGORY_BIT_PLAYER | CATEGORY_BIT_BLOCK | CATEGORY_BIT_SPELL;
+        CATEGORY_BIT_ADVENTURER | CATEGORY_BIT_BLOCK | CATEGORY_BIT_PROJECTILE;
     fdef.restitution = 0;
     fdef.shape       = &box;
 
@@ -76,31 +76,39 @@ bool Monster::init(const FloatRect& aabb)
     return true;
 }
 
-void Monster::tick(float)
+void Monster::Tick(float)
 {
     m_positionX = m_body->GetPosition().x * Constances::PPM;
     m_positionY = m_body->GetPosition().y * Constances::PPM;
 }
 
-bool Monster::takeDamge(int, Direction) {}
+bool Monster::TakeDamge(int, Direction) {}
 
-int  Monster::getHitPoints() { return m_hitPoints; }
-int  Monster::getMaxHitPoints() { return m_maxHitPoints; }
-bool Monster::isDead() { return m_hitPoints == 0; }
+int  Monster::GetHitPoints() { return m_hitPoints; }
+int  Monster::GetMaxHitPoints() { return m_maxHitPoints; }
+bool Monster::IsDead() { return m_hitPoints == 0; }
 
-void Monster::onBeginContact(const ContactInfo&) {}
-void Monster::onEndContact(const ContactInfo&) {}
-void Monster::onPreSolve(const ContactInfo& info, const b2Manifold&)
+void Monster::OnBeginContact(const ContactInfo&) {}
+void Monster::OnEndContact(const ContactInfo&) {}
+void Monster::OnPreSolve(const ContactInfo& info, const b2Manifold&)
 {
-    if (isDead())
-        return;
-    if (info.getOtherIdentifier()->tag == TAG_PLAYER)
+    const Identifier* otherIDR = info.GetOtherIdentifier();
+    if (otherIDR != nullptr && otherIDR->tag == TAG_ADVENTURER)
     {
-        Adventurer* adventurer =
-            static_cast<Adventurer*>(info.getOtherIdentifier()->object);
-        adventurer->takeDamge(
-            m_damageWhenTouching,
-            relativeDirection(adventurer->getPositionX(), getPositionX()));
+        if (!IsDead())
+        {
+            Adventurer* adventurer = static_cast<Adventurer*>(otherIDR->object);
+            Direction   direction =
+                RelativeDirection(adventurer->GetPositionX(), GetPositionX());
+            if (adventurer->TakeDamge(1, direction) && adventurer->IsGrounded())
+            {
+                b2Vec2 f;
+                f.x = -DirectionToSign(direction) * 20.f;
+                f.y = -5.f;
+                adventurer->GetBody()->ApplyLinearImpulseToCenter(f, true);
+            }
+        }
+        info.SetIsEnabled(false);
     }
 }
-void Monster::onPostSolve(const ContactInfo&, const b2ContactImpulse&) {}
+void Monster::OnPostSolve(const ContactInfo&, const b2ContactImpulse&) {}

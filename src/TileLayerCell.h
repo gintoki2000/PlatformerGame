@@ -9,9 +9,9 @@ public:
 
   virtual ~TileLayerCell();
 
-  virtual TileLayerTile *getTile();
+  virtual TileLayerTile *GetTile();
 
-  virtual void setTile(TileLayerTile *tile);
+  virtual void SetTile(TileLayerTile *tile);
 
 protected:
   TileLayerTile *m_tile;

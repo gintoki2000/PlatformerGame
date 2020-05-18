@@ -10,16 +10,16 @@ class Game
     Game();
     ~Game();
 
-    bool init();
-    void render(float dt);
-    void stop();
-    bool isRunning() const { return m_isRunning; }
+    bool Init();
+    void Render(float dt);
+    void Stop();
+    bool IsRunning() const { return m_isRunning; }
 
-    StateManager&   stateMGR() const { return *m_stateMGR; }
-    SDL_Renderer*   renderer() const { return m_renderer; }
-    SDL_Window*     window() const { return m_window; }
+    StateManager&   GetStateManager() const { return *m_stateMGR; }
+    SDL_Renderer*   GetRenderer() const { return m_renderer; }
+    SDL_Window*     GetWindow() const { return m_window; }
 
-    static Game* getInstance() { return instance; }
+    static Game* GetInstance() { return instance; }
 
   private:
     bool            m_isRunning;
@@ -30,6 +30,6 @@ class Game
     static Game* instance;
 };
 
-#define GAME Game::getInstance()
+#define GAME Game::GetInstance()
 
 #endif // GAME_H

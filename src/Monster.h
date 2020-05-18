@@ -14,23 +14,23 @@ class Monster : public GameObject, public ICollisionHandler, public IDestroyable
   public:
     ~Monster();
 
-    bool init(const FloatRect& bounding);
-    void tick(float deltaTime) override;
+    bool Init(const FloatRect& bounding);
+    void Tick(float deltaTime) override;
 
     // IDestroyable interface
   public:
-    bool takeDamge(int damage, Direction direction) override;
-    int  getHitPoints() override;
-    int  getMaxHitPoints() override;
-    bool isDead() override;
+    bool TakeDamge(int damage, Direction direction) override;
+    int  GetHitPoints() override;
+    int  GetMaxHitPoints() override;
+    bool IsDead() override;
 
     // ICollisionHandler interface
   public:
-    void onBeginContact(const ContactInfo& info) override;
-    void onEndContact(const ContactInfo& info) override;
-    void onPreSolve(const ContactInfo& info,
+    void OnBeginContact(const ContactInfo& info) override;
+    void OnEndContact(const ContactInfo& info) override;
+    void OnPreSolve(const ContactInfo& info,
                     const b2Manifold&  oldManiflod) override;
-    void onPostSolve(const ContactInfo&      info,
+    void OnPostSolve(const ContactInfo&      info,
                      const b2ContactImpulse& impluse) override;
 
   protected:

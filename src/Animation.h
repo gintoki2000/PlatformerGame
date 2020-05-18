@@ -23,22 +23,22 @@ class Animation
     ~Animation();
 
     /// stuffs
-    int           getCurrentIndex(float elapsedTime) const;
-    const Sprite* getCurrentSprite(float elapsedTime) const;
-    bool          isFinished(float elapsedTime) const;
-    void          paint(SDL_Renderer* renderer, int x, int y);
-    void paint(SDL_Renderer* renderer, int x, int y, SDL_RendererFlip flip);
-    void paint(SDL_Renderer* renderer, int x, int y, const SDL_Point* center,
+    int           GetCurrentIndex(float elapsedTime) const;
+    const Sprite* GetCurrentSprite(float elapsedTime) const;
+    bool          IsFinished(float elapsedTime) const;
+    void          Paint(SDL_Renderer* renderer, int x, int y);
+    void Paint(SDL_Renderer* renderer, int x, int y, SDL_RendererFlip flip);
+    void Paint(SDL_Renderer* renderer, int x, int y, const SDL_Point* center,
                double rotation, SDL_RendererFlip flip);
 
     /// setter & getter
-    const Sprite** getSprites() const { return m_sprites; }
-    int            getNumSprites() const { return m_numSprites; }
-    void           setSprites(const Sprite* sprites[], int numSprites);
-    int            getPlayMode() const { return m_playMode; }
-    void           setPlayMode(int mode) { m_playMode = mode; }
-    float          getDuration() const { return m_duration; }
-    void           setDuration(float duration) { m_duration = duration; }
+    const Sprite** GetSprites() const { return m_sprites; }
+    int            GetNumSprites() const { return m_numSprites; }
+    void           SetSprites(const Sprite* sprites[], int numSprites);
+    int            GetPlayMode() const { return m_playMode; }
+    void           SetPlayMode(int mode) { m_playMode = mode; }
+    float          GetDuration() const { return m_duration; }
+    void           SetDuration(float duration) { m_duration = duration; }
 
   private:
     const Sprite** m_sprites;

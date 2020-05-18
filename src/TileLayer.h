@@ -7,19 +7,19 @@ class TileLayer : public PositionalLayer
 
   public:
 	
-	static TileLayer* create(int width, int height, int tileWidth, int tileHeight);
+	static TileLayer* Create(int width, int height, int tileWidth, int tileHeight);
 
     ~TileLayer();
 
-    int getWidth() const { return m_width; }
-    int getHeight() const { return m_height; }
-    int getTileWidth() const { return m_tileWidth; }
-    int getTileHeight() const { return m_tileHeight; }
+    int GetWidth() const { return m_width; }
+    int GetHeight() const { return m_height; }
+    int GetTileWidth() const { return m_tileWidth; }
+    int GetTileHeight() const { return m_tileHeight; }
 
-    void           update(float deltaTime) override;
-    void           render() override;
-    TileLayerCell* getCellAt(int x, int y);
-    void           setCellAt(int x, int y, TileLayerCell* cell);
+    void           Tick(float deltaTime) override;
+    void           Paint() override;
+    TileLayerCell* GetCellAt(int x, int y);
+    void           SetCellAt(int x, int y, TileLayerCell* cell);
 
   private:
     int             m_width;
@@ -30,6 +30,6 @@ class TileLayer : public PositionalLayer
 
   protected:
 	TileLayer();
-	bool init(int width, int height, int tileWidth, int tileHeight);
+	bool Init(int width, int height, int tileWidth, int tileHeight);
 };
 #endif // TILED_MAP_H

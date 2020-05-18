@@ -5,18 +5,18 @@ class Level;
 class MainState : public GameState
 {
 public:
-		static MainState* create();
+		static MainState* Create();
 
 		~MainState() override;
-		void render(float deltaTime) override;
-		void show() override;
-		void hidden() override;
-		void pause() override;
-		void resume() override;
+		void Render(float deltaTime) override;
+		void Show() override;
+		void Hidden() override;
+		void Pause() override;
+		void Resume() override;
 private:
 		MainState();
 
-		bool init();
+		bool Init();
 
 		Level* m_level;
 };

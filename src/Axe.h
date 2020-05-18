@@ -8,27 +8,27 @@
 class Axe : public Spell, public ICollisionHandler
 {
   public:
-    static Axe* create(const Vec2& adventurerPos, Direction adventurerDir);
+    static Axe* Create(const Vec2& adventurerPos, Direction adventurerDir);
     ~Axe();
 
     /// GameObject interface
   public:
-    void tick(float deltaTime) override;
-    void paint() override;
-    void cleanup() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
+    void Cleanup() override;
 
     /// ICollisionHandler interface
   public:
-    void onBeginContact(const ContactInfo& info) override;
-    void onEndContact(const ContactInfo& info) override;
-    void onPreSolve(const ContactInfo& info,
+    void OnBeginContact(const ContactInfo& info) override;
+    void OnEndContact(const ContactInfo& info) override;
+    void OnPreSolve(const ContactInfo& info,
                     const b2Manifold&  oldManiflod) override;
-    void onPostSolve(const ContactInfo&      info,
+    void OnPostSolve(const ContactInfo&      info,
                      const b2ContactImpulse& impluse) override;
 
   private:
     Axe();
-    bool init(const Vec2& pos, Direction dir);
+    bool Init(const Vec2& pos, Direction dir);
 
     Sprite           m_sprite;
     SDL_RendererFlip m_flip;

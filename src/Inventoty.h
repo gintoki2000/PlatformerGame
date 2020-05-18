@@ -1,23 +1,24 @@
 #ifndef INVENTORY_H
 #define INVENTORY_H
-
+#include <vector>
 class Technique;
+class Item;
 class Inventory
 {
   public:
     Inventory();
     ~Inventory();
 
-    void       addTechnique(Technique* technique);
-    Technique* getTechnique(int i);
-    int        getNumTechniques();
+    void       AddTechnique(Technique* technique);
+    Technique* GetTechnique(int i);
+    int        GetNumTechniques() const;
+
+    void  AddItem(Item* item);
+    Item* GetItem(int i);
+    int   GetNumItems() const;
 
   private:
-    bool init();
-
-    static constexpr int MAX_TECHNIQUES = 5;
-
-    Technique* m_techinques[MAX_TECHNIQUES];
-    int        m_numTechniques;
+    std::vector<Technique*> m_techinques;
+    std::vector<Item*>      m_items;
 };
 #endif // INVENTORY_H

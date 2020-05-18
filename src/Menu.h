@@ -6,17 +6,17 @@
 class Menu
 {
   public:
-    typedef std::function<void(const std::string&)> CallbackFunc;
+    typedef std::function<Void(const std::string&)> CallbackFunc;
     Menu();
     ~Menu();
 
-    void tick();
-    void paint();
+    void Tick();
+    void Paint();
 
-	void setOptions(const std::vector<std::string>& options);
-	void setCallbackFunc(const CallbackFunc& callback);
+	void SetOptions(const std::vector<std::string>& options);
+	void SetCallbackFunc(const CallbackFunc& callback);
 
-    const CallbackFunc& getCallback();
+    const CallbackFunc& GetCallback();
 
   private:
     int                      m_positionX;

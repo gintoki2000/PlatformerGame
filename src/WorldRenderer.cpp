@@ -51,17 +51,21 @@ void WorldRenderer::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount,
 
 void WorldRenderer::DrawCircle(const b2Vec2& p, float r, const b2Color& c)
 {
-    circleRGBA(m_renderer, p.x * m_ppm - m_viewport.x,
-               p.y * m_ppm - m_viewport.y, r * m_ppm, c.r * 255, c.g * 255,
-               c.b * 255, c.a * 255);
+    /*
+circleRGBA(m_renderer, p.x * m_ppm - m_viewport.x,
+   p.y * m_ppm - m_viewport.y, r * m_ppm, c.r * 255, c.g * 255,
+   c.b * 255, c.a * 255);
+               */
 }
 
 void WorldRenderer::DrawSolidCircle(const b2Vec2& p, float r, const b2Vec2&,
                                     const b2Color& c)
 {
-    circleRGBA(m_renderer, p.x * m_ppm - m_viewport.x,
-               p.y * m_ppm - m_viewport.y, r * m_ppm, c.r * 255, c.g * 255,
-               c.b * 255, c.a * 255);
+    /*
+circleRGBA(m_renderer, p.x * m_ppm - m_viewport.x,
+   p.y * m_ppm - m_viewport.y, r * m_ppm, c.r * 255, c.g * 255,
+   c.b * 255, c.a * 255);
+               */
 }
 
 void WorldRenderer::DrawSegment(const b2Vec2&, const b2Vec2&, const b2Color&) {}
@@ -70,4 +74,4 @@ void WorldRenderer::DrawTransform(const b2Transform&) {}
 
 void WorldRenderer::DrawPoint(const b2Vec2&, float, const b2Color&) {}
 
-void WorldRenderer::setViewport(const Rect& viewport) { m_viewport = viewport; }
+void WorldRenderer::SetViewport(const Rect& viewport) { m_viewport = viewport; }

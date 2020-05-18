@@ -10,30 +10,30 @@
 class Fireball : public Spell, public ICollisionHandler
 {
   public:
-    static Fireball* create(const Vec2& position, Direction direction,
+    static Fireball* Create(const Vec2& position, Direction direction,
                             float speed);
-	static Fireball* create(const Vec2& position, Direction direction);
+	static Fireball* Create(const Vec2& position, Direction direction);
     ~Fireball();
 
   public:
     // GameObject interface
-    void tick(float deltaTime) override;
-    void paint() override;
-	void start() override;
-    void cleanup() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
+	void Start() override;
+    void Cleanup() override;
 
     // ICollisionHandler interface
   public:
-    void onBeginContact(const ContactInfo& info) override;
-    void onEndContact(const ContactInfo& info) override;
-    void onPostSolve(const ContactInfo&      info,
+    void OnBeginContact(const ContactInfo& info) override;
+    void OnEndContact(const ContactInfo& info) override;
+    void OnPostSolve(const ContactInfo&      info,
                      const b2ContactImpulse& impluse) override;
-    void onPreSolve(const ContactInfo& info,
+    void OnPreSolve(const ContactInfo& info,
                     const b2Manifold&  oldManiflod) override;
 
   private:
     Fireball();
-    bool        init(const Vec2& position, Direction direction, float speed);
+    bool        Init(const Vec2& position, Direction direction, float speed);
     SpriteSheet m_spriteSheet;
     Animation*  m_animation;
     b2Body*     m_body;

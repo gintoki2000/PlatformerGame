@@ -8,9 +8,9 @@ class SpriteSheet
   public:
     SpriteSheet();
 
-    void init(SDL_Texture* texture, int spriteWidth, int spriteHeight);
+    void Init(SDL_Texture* texture, int spriteWidth, int spriteHeight);
 
-    void init(SDL_Texture* texture, int startX, int startY, int rows, int cols,
+    void Init(SDL_Texture* texture, int startX, int startY, int rows, int cols,
               int spriteWidth, int spriteHeight);
 
     SpriteSheet(const SpriteSheet&);
@@ -19,19 +19,19 @@ class SpriteSheet
 
     ~SpriteSheet();
 
-    int getNumSprites() const { return m_numSprites; }
+    int GetNumSprites() const { return m_numSprites; }
 
-    const Sprite& getSprite(int index) const;
+    const Sprite& GetSprite(int index) const;
 
-    void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect) const;
+    void Draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect) const;
 
-    void draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect,
+    void Draw(SDL_Renderer* renderer, int index, const SDL_Rect* dstrect,
               double angle, const SDL_Point* center,
               SDL_RendererFlip flip) const;
 
-    void draw(SDL_Renderer* renderer, int index, int x, int y) const;
+    void Draw(SDL_Renderer* renderer, int index, int x, int y) const;
 
-    void draw(SDL_Renderer* renderer, int index, int x, int y,
+    void Draw(SDL_Renderer* renderer, int index, int x, int y,
               SDL_RendererFlip flip) const;
 
   private:

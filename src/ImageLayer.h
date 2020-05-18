@@ -8,9 +8,9 @@ class ImageLayer : public PositionalLayer
     ImageLayer(SDL_Texture* texture);
     ImageLayer(const TextureRegion& image);
 
-    const TextureRegion& getImage() const;
-    void                 setImage(const TextureRegion& image);
-    void                 render() override;
+    const TextureRegion& GetImage() const;
+    void                 SetImage(const TextureRegion& image);
+    void                 Paint() override;
 
   private:
     TextureRegion m_image;

@@ -1,11 +1,12 @@
 #include "TextureManager.h"
 #include "SDL_image.h"
+#include "SDL_log.h"
 #include "SDL_render.h"
 #include "SDL_stdinc.h"
 
 SDL_Texture** TextureManager::textures = nullptr;
 
-bool TextureManager::load(SDL_Renderer* renderer)
+bool TextureManager::Load(SDL_Renderer* renderer)
 {
     struct Pair
     {
@@ -13,7 +14,7 @@ bool TextureManager::load(SDL_Renderer* renderer)
         const char* file;
     };
 
-    unload();
+    Unload();
 
     textures = (SDL_Texture**)SDL_calloc(NUM_TEXTURES, sizeof(SDL_Texture*));
 
@@ -28,6 +29,7 @@ bool TextureManager::load(SDL_Renderer* renderer)
         {TEX_STATUS_BAR, "asserts/spritesheets/status-bar-2.png"},
         {TEX_BLOOD_STAIN, "asserts/spritesheets/blood-stain.png"},
         {TEX_ICONS, "asserts/spritesheets/icons.png"},
+		{TEX_FOODS, "asserts/spritesheets/food.png"}
     };
     int numTextures = sizeof(pairs) / sizeof(Pair);
     for (int i = 0; i < numTextures; ++i)
@@ -35,13 +37,16 @@ bool TextureManager::load(SDL_Renderer* renderer)
         if ((textures[pairs[i].id] =
                  IMG_LoadTexture(renderer, pairs[i].file)) == nullptr)
         {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to load \'%s\': %s", pairs[i].file,
+                         IMG_GetError());
             return false;
         }
     }
     return true;
 }
 
-void TextureManager::unload()
+void TextureManager::Unload()
 {
     if (textures != nullptr)
     {
@@ -54,4 +59,4 @@ void TextureManager::unload()
     }
 }
 
-SDL_Texture* TextureManager::get(int textureID) { return textures[textureID]; }
+SDL_Texture* TextureManager::Get(int textureID) { return textures[textureID]; }

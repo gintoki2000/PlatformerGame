@@ -6,6 +6,6 @@ TileLayerCell::TileLayerCell(TileLayerTile* tile) : m_tile(tile) {}
 
 TileLayerCell::~TileLayerCell() {}
 
-TileLayerTile* TileLayerCell::getTile() { return m_tile; }
+TileLayerTile* TileLayerCell::GetTile() { return m_tile; }
 
-void TileLayerCell::setTile(TileLayerTile* tile) { m_tile = tile; }
+void TileLayerCell::SetTile(TileLayerTile* tile) { m_tile = tile; }

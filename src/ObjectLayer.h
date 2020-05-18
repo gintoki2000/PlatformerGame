@@ -8,20 +8,20 @@ class ObjectLayer : public Layer
     ObjectLayer();
     ~ObjectLayer();
 
-    void update(float deltaTime) override;
-    void render() override;
-	void start() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
+	void Start() override;
 
-    GameObject* getObjectAt(int index) const;
-    void        addObject(GameObject* obj);
-    int         indexOf(GameObject* obj) const;
-    int         getNumObjects() const;
+    GameObject* GetObjectAt(int index) const;
+    void        AddObject(GameObject* obj);
+    int         IndexOf(GameObject* obj) const;
+    int         GetNumObjects() const;
 
   private:
-    void         growIfNeed();
-    void         swapAndPop(int i);
-    void         refresh();
-    int          sortRemovedObjects();
+    void         GrowIfNeed();
+    void         SwapAndPop(int i);
+    void         Refresh();
+    int          SortRemovedObjects();
     GameObject** m_objects;
     int          m_numObjects;
     int          m_capacity;

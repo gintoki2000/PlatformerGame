@@ -4,8 +4,8 @@
 struct IPool
 {
     virtual ~IPool() {}
-    virtual void* alloc()         = 0;
-    virtual void  free(void* obj) = 0;
+    virtual void* Alloc()         = 0;
+    virtual void  Free(void* obj) = 0;
 };
 
 template <class TObject> class BasePool;
@@ -14,7 +14,7 @@ template <class TObject> class PoolableObject
 {
 
   public:
-    BasePool<TObject>* getPool() const { return m_pool; }
+    BasePool<TObject>* GetPool() const { return m_pool; }
 
   private:
     TObject*           m_next;
@@ -45,7 +45,7 @@ template <class TObject> class BasePool : public IPool
 
     ~BasePool() { delete[] m_objects; }
 
-    void* alloc() override
+    void* Alloc() override
     {
         SDL_assert(m_freeList != nullptr && "No object available");
         TObject* newObject = m_freeList;
@@ -54,7 +54,7 @@ template <class TObject> class BasePool : public IPool
         return newObject;
     }
 
-    void free(void* object) override
+    void Free(void* object) override
     {
         SDL_assert(object >= m_objects && object < m_objects + m_numObjects);
         TObject* _object = static_cast<TObject*>(object);
@@ -63,9 +63,9 @@ template <class TObject> class BasePool : public IPool
         ++m_numFreeObjects;
     }
 
-    int getNumObjects() const { return m_numObjects; }
+    int GetNumObjects() const { return m_numObjects; }
 
-    int getNumFreeObjects() const { return m_numFreeObjects; }
+    int GetNumFreeObjects() const { return m_numFreeObjects; }
 
   protected:
     TObject* m_objects;

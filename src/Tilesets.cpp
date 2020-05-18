@@ -23,12 +23,12 @@ Tilesets::~Tilesets()
     delete[] m_items;
 }
 
-Tile* Tilesets::getTile(int tileID) const
+Tile* Tilesets::GetTile(int tileID) const
 {
     for (int i = 0; i < m_numTilesets; ++i)
     {
         Tile* tile = nullptr;
-        if ((tile = m_items[i]->getTile(tileID)) != nullptr)
+        if ((tile = m_items[i]->GetTile(tileID)) != nullptr)
         {
             return tile;
         }
@@ -36,11 +36,11 @@ Tile* Tilesets::getTile(int tileID) const
     return nullptr;
 }
 
-bool Tilesets::hasTile(int tileID) const
+bool Tilesets::HasTile(int tileID) const
 {
     for (int i = 0; i < m_numTilesets; ++i)
     {
-        if (m_items[i]->hasTile(tileID))
+        if (m_items[i]->HasTile(tileID))
         {
             return true;
         }

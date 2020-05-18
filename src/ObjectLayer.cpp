@@ -12,66 +12,66 @@ ObjectLayer::~ObjectLayer()
 {
     for (int i = 0; i < m_numObjects; ++i)
     {
-        m_objects[i]->cleanup();
+        m_objects[i]->Cleanup();
     }
     delete[] m_objects;
 }
 
-void ObjectLayer::update(float deltaTime)
+void ObjectLayer::Tick(float deltaTime)
 {
-    refresh();
+    Refresh();
     int numObjects = m_numObjects;
     for (int i = 0; i < numObjects; ++i)
     {
-        if (m_objects[i]->isActive())
+        if (m_objects[i]->IsActive())
         {
-            m_objects[i]->tick(deltaTime);
+            m_objects[i]->Tick(deltaTime);
         }
     }
 }
 
-void ObjectLayer::render()
+void ObjectLayer::Paint()
 {
     int numObjects = m_numObjects;
     for (int i = 0; i < numObjects; ++i)
     {
-        if (m_objects[i]->isVisible())
+        if (m_objects[i]->IsVisible())
         {
-            m_objects[i]->paint();
+            m_objects[i]->Paint();
         }
     }
 }
 
-void ObjectLayer::start()
+void ObjectLayer::Start()
 {
     if (!m_isStarted)
     {
         for (int i = 0; i < m_numObjects; ++i)
         {
-            m_objects[i]->start();
+            m_objects[i]->Start();
         }
         m_isStarted = true;
     }
 }
 
-GameObject* ObjectLayer::getObjectAt(int index) const
+GameObject* ObjectLayer::GetObjectAt(int index) const
 {
     return m_objects[index];
 }
 
-void ObjectLayer::addObject(GameObject* obj)
+void ObjectLayer::AddObject(GameObject* obj)
 {
-    SDL_assert(obj != nullptr && obj->getObjectLayer() == nullptr);
-    growIfNeed();
+    SDL_assert(obj != nullptr && obj->GetObjectLayer() == nullptr);
+    GrowIfNeed();
     m_objects[m_numObjects++] = obj;
-    obj->setObjectLayer(this);
+    obj->SetObjectLayer(this);
     if (m_isStarted)
     {
-        obj->start();
+        obj->Start();
     }
 }
 
-int ObjectLayer::indexOf(GameObject* obj) const
+int ObjectLayer::IndexOf(GameObject* obj) const
 {
     for (int i = 0; i < m_numObjects; ++i)
     {
@@ -83,9 +83,9 @@ int ObjectLayer::indexOf(GameObject* obj) const
     return -1;
 }
 
-int ObjectLayer::getNumObjects() const { return m_numObjects; }
+int ObjectLayer::GetNumObjects() const { return m_numObjects; }
 
-void ObjectLayer::growIfNeed()
+void ObjectLayer::GrowIfNeed()
 {
     if (m_numObjects == m_capacity)
     {
@@ -98,16 +98,16 @@ void ObjectLayer::growIfNeed()
     }
 }
 
-void ObjectLayer::refresh()
+void ObjectLayer::Refresh()
 {
     int i = 0;
     while (i < m_numObjects)
     {
         if (m_objects[i]->m_needToRemove)
         {
-            m_objects[i]->setObjectLayer(nullptr);
+            m_objects[i]->SetObjectLayer(nullptr);
             m_objects[i]->m_needToRemove = false;
-            m_objects[i]->cleanup();
+            m_objects[i]->Cleanup();
 
             m_objects[i] = m_objects[m_numObjects - 1];
 			--m_numObjects;

@@ -12,40 +12,35 @@ class BoarWarrior : public Monster
   public:
     BoarWarrior();
     ~BoarWarrior();
-    static BoarWarrior* create(const tmx::Object& data);
+    static BoarWarrior* Create(const tmx::Object& data);
 
     // IDestroyable interface
   public:
-    bool takeDamge(int damage, Direction direction) override;
-
-    // ICollisionHandler interface
-  public:
-    void onPreSolve(const ContactInfo& info,
-                    const b2Manifold&  oldManiflod) override;
+    bool TakeDamge(int damage, Direction direction) override;
 
     // GameObject interface
   public:
-    void tick(float deltaTime) override;
-    void paint() override;
-    void cleanup() override;
+    void Tick(float deltaTime) override;
+    void Paint() override;
+    void Cleanup() override;
 
   private:
-    bool init(const Vec2& leftTop);
-    bool init(const tmx::Object& data);
-    void resetMembers();
-    void idle();
-    void moveForward();
-    void moveBackward();
-    void preAttack();
-    void attack();
-    void preHeavyAttack();
-    void heavyAttack();
-    void hurt();
-    void die();
-    void wait();
+    bool Init(const Vec2& leftTop);
+    bool Init(const tmx::Object& data);
+    void ResetMembers();
+    void Idle();
+    void MoveForward();
+    void MoveBackward();
+    void PreAttack();
+    void Attack();
+    void PreHeavyAttack();
+    void HeavyAttack();
+    void Hurt();
+    void Die();
+    void Wait();
 
-    void followAdventurerDir();
-    bool rayCast(int dis);
+    void FollowAdventurerDir();
+    bool RayCast(int dis);
     enum State
     {
         STATE_IDLE,
