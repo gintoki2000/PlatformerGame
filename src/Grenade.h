@@ -3,6 +3,7 @@
 #include "Animation.h"
 #include "CollisionHandler.h"
 #include "Projectile.h"
+#include "Painter.h"
 #include "SpriteSheet.h"
 #include "Utils.h"
 #include "Vec.h"
@@ -35,8 +36,8 @@ class Grenade : public Projectile, public ICollisionHandler
     Sprite           m_sprite;
     b2Body*          m_body;
     float            m_timer;
-    SDL_RendererFlip m_flip;
     Identifier       m_identifier;
+    SpritePainter*   m_spritePainter;
 
     static constexpr int SPRITE_WIDTH  = 12;
     static constexpr int SPRITE_HEIGHT = 12;

@@ -53,6 +53,7 @@ struct Identifier
         tag(_tag), object(_object)
     {
     }
+
     Tag                tag;
     ICollisionHandler* object;
 };

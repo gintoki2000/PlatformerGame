@@ -9,10 +9,12 @@
 #include "Monster.h"
 #include "ObjectLayer.h"
 #include "ParticleSystem.h"
+#include "Pool.h"
 #include "SDL_mixer.h"
 #include "SDL_render.h"
 #include "Scene.h"
 #include "Sprite.h"
+#include "SpritePainter.h"
 #include "TextureManager.h"
 #include "Utils.h"
 #include "WorldManager.h"
@@ -28,6 +30,7 @@ Grenade::~Grenade()
         m_body->GetWorld()->DestroyBody(m_body);
         m_body = nullptr;
     }
+    delete m_spritePainter;
 }
 
 Grenade* Grenade::Create(const Vec2& pos, Direction dir)
@@ -44,6 +47,8 @@ Grenade* Grenade::Create(const Vec2& pos, Direction dir)
 bool Grenade::Init(const Vec2& pos, Direction dir)
 {
     m_sprite = MakeSprite(TEX_GRENADE);
+
+    m_spritePainter = new SpritePainter(&m_sprite);
 
     b2BodyDef bdef;
     bdef.position.x    = pos.x / Constances::PPM;
@@ -72,7 +77,8 @@ bool Grenade::Init(const Vec2& pos, Direction dir)
     m_body->CreateFixture(&fdef);
 
     m_timer = 0.f;
-    m_flip  = dir == DIRECTION_LEFT ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+    m_spritePainter->SetFlip(dir == DIRECTION_LEFT ? SDL_FLIP_NONE
+                                                   : SDL_FLIP_HORIZONTAL);
     return true;
 }
 
@@ -92,6 +98,7 @@ void Grenade::Tick(float deltaTime)
         Level* level = static_cast<Level*>(GetScene());
 
         Vec2 position = GetPosition() + Vec2(0.f, -20.f);
+
         level->GetParticleSystem()->Create<FireBustParticle>(position);
         level->GetCameraShaker()->Shake(0.1f, 5, 20);
 
@@ -113,19 +120,7 @@ void Grenade::Tick(float deltaTime)
     }
 }
 
-void Grenade::Paint()
-{
-    SDL_Renderer*   renderer = Game::GetInstance()->GetRenderer();
-    const SDL_Rect& viewport = GetScene()->GetCamera().GetViewport();
-
-    SDL_Rect dstrect;
-    dstrect.x = m_positionX - 6 - viewport.x;
-    dstrect.y = m_positionY - 6 - viewport.y;
-    dstrect.w = m_sprite.GetWidth();
-    dstrect.h = m_sprite.GetHeight();
-
-    m_sprite.Draw(renderer, &dstrect, m_rotation, nullptr, m_flip);
-}
+void Grenade::Paint() { m_spritePainter->Paint(*this); }
 
 void Grenade::Cleanup() { delete this; }
 
